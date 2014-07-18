@@ -1,0 +1,39 @@
+[
+    {
+        "OR": [
+            {
+                "OR": [
+                    {
+                        "ARGLIST": [
+                            "cmd1",
+                            "-l"
+                        ]
+                    },
+                    {
+                        "AND": [
+                            {
+                                "ARGLIST": [
+                                    "cmd2",
+                                    "-a",
+                                    {
+                                        "VARVAL": "foo"
+                                    }
+                                ]
+                            },
+                            {
+                                "ARGLIST": [
+                                    "cmd3"
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "cmd4"
+                ]
+            }
+        ]
+    }
+]

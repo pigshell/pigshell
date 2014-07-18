@@ -1,0 +1,40 @@
+[
+    {
+        "FOR": [
+            "i",
+            {
+                "ARGLIST": [
+                    "/facebook/friends/*"
+                ]
+            },
+            [
+                {
+                    "ARGLIST": [
+                        "printf",
+                        {
+                            "DQUOTED_STRING": "%(something)s"
+                        },
+                        {
+                            "VARVAL": "i"
+                        }
+                    ]
+                },
+                {
+                    "PIPE": [
+                        {
+                            "ARGLIST": [
+                                "echo",
+                                "blah"
+                            ]
+                        },
+                        {
+                            "ARGLIST": [
+                                "bar"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        ]
+    }
+]

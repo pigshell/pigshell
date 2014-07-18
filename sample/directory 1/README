@@ -1,0 +1,317 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>pigshell - unix the cloud</title>
+        <meta name="Description" content="pigshell - unix the cloud"/>
+        <meta name="title" content="pigshell - unix the cloud" />
+        <meta property="og:image" content="images/pigshell-logo-320x240.png" />
+        <link href="css/pigshell.css" rel="stylesheet"/>
+        <link href="css/pmarkdown.css" rel="stylesheet"/>
+        <link href="css/codemirror.css" rel="stylesheet"/>
+        <link rel="icon" type="image/png" href="images/pigshell-logo-320x240.png">
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-34205966-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+    </head>
+    <body>
+        <div id="fb-root"></div>
+        <script>(function(d, s, id) {
+          var js, fjs = d.getElementsByTagName(s)[0];
+          if (d.getElementById(id)) return;
+          js = d.createElement(s); js.id = id;
+          js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+          fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));</script>
+        <div class="wrap">
+            <div class="main" id="main">
+            <div class="pmarkdown">
+<h1>Pigshell</h1>
+<p>Interact with your cloud data, Unix style.
+
+</p>
+<p>Your data on Google drive, Picasa albums, Facebook and Twitter are represented
+as files in a hierarchical file system. You can construct pipelines of simple
+commands to filter, transform and display your data.
+
+</p>
+<p>A quick way to try out <em>Pigshell</em>:  Connect your Facebook account, type
+<code>fbstats</code> at the prompt and hit Enter.
+
+</p>
+<h2>Simple Examples</h2>
+<ol>
+<li><p>First, connect your Facebook account. <em>(Data privacy is assured:
+<em>Pigshell</em> is a pure Javascript app, no access tokens or user data are
+visible to or stored by the server.)</em></p>
+<p>Then,</p>
+<pre><code>pig&gt; cd /facebook/friends
+pig&gt; ls</code></pre>
+<p>will give you a list of your friends with thumbnails. Commands issued on
+the CLI are asynchronous, so each command will fill its output area as
+and when it gets data. The <code>pig&gt;</code> prompt may glow green to indicate that a
+command or pipeline is running.</p>
+</li>
+<li><p><strong>Where in the world are my friends?</strong></p>
+<pre><code>pig&gt; map /facebook/friends/*</code></pre>
+<p><code>map</code> is a command which examines each file for a location attribute. In
+case one is present, it will be plotted on a map. Another way of doing
+this would be</p>
+<pre><code>pig&gt; ls /facebook/friends/ | map</code></pre>
+<p><em>Pigshell</em> passes objects over pipes. In this case, <code>ls</code> emits a stream of
+<em>file</em> objects, which are consumed by map.</p>
+<p>Let&#39;s refine the above query: <strong>Where are all my male friends?</strong></p>
+<pre><code>pig&gt; ls /facebook/friends | grep -f gender &quot;^male&quot; | map</code></pre>
+<p><code>grep</code> is a generic filter command, which may filter either by an object&#39;s text representation, or a specific field - in this case, gender.</p>
+</li>
+<li><p><strong>Facebook statistics</strong></p>
+<p><strong>How many friends do I have?</strong></p>
+<pre><code>pig&gt; ls /facebook/friends | sum</code></pre>
+<p><strong>Pie chart of relationship status of all female friends:</strong></p>
+<pre><code>pig&gt; ls /facebook/friends | grep -f gender &quot;female&quot; | chart -f relationship_status</code></pre>
+</li>
+</ol>
+<h1>Frequently Asked Questions</h1>
+<h2>Basic Usage</h2>
+<ol>
+<li><p><strong>What about the privacy of my data?</strong></p>
+<p><strong>Your data stays 100% private.</strong> The app is all static files and
+runs completely as client-side Javascript. The server cannot see any
+data or access tokens.</p>
+</li>
+<li><p><strong>I typed a command, and it immediately came back to the prompt, and the
+old prompt is pulsing green! What&#39;s happening?</strong></p>
+<p>Interactive commands are asynchronous, because fetching stuff from the
+network takes time. The command will display output when it&#39;s done.
+Meanwhile, you can start on your next command.</p>
+<p>A pulsing green prompt is displayed next to a pipeline which is running.
+When it completes, the prompt will go black, or red if its &quot;exit&quot;ed with a
+non-true exit status.</p>
+</li>
+<li><p><strong>How do I see a list of running commands?</strong></p>
+<p><code>ps</code> will show you a list of running pipelines. Pipelines are the unit
+of process management in <em>pigshell</em>.</p>
+</li>
+<li><p><strong>How do I kill a command? It&#39;s been glowing green forever!</strong></p>
+<p>Use <code>ps</code> to find its PID and <code>kill</code>. You can also <code>stop</code> and <code>start</code>
+pipelines, which is roughly the equivalient of <code>kill -STOP</code> and
+<code>kill -CONT</code>. Stopped commands will have their prompt turn amber.</p>
+</li>
+<li><p><strong>Why does <code>ls | cat</code> in <em>pigshell</em> behave like <code>ls | xargs cat</code> in Unix?</strong></p>
+<p><em>Pigshell</em> passes objects (rather than opaque data) over the pipe. <code>ls</code>
+in its normal incarnation emits <em>file</em> objects. <code>cat</code> (and other filter
+commands) receiving file objects will process them not as text, but as
+files. You can think of it as an implicit <code>xargs</code>.</p>
+<p><code>ls -l</code> emits text strings, so <code>ls -l | cat</code> will behave the same on
+both <em>pigshell</em> and a Unix shell. While initially confusing, this
+is the more natural behaviour in a web environment thickly populated with
+structured objects. See the <a href="pigshell.html">User guide</a> for more details.</p>
+</li>
+<li><p><strong>I can&#39;t see the cursor.</strong></p>
+<p>Long-running or CPU-intensive commands may sometimes freeze the page for
+a few seconds. It is also possible that keyboard focus has gone elsewhere.
+Click on the last prompt and focus should return there.</p>
+</li>
+<li><p><strong>There are two cursors on the screen. What do I do now?</strong></p>
+<p>You probably ran a command which is reading something from standard
+input, and it has opened up a little line just below its command line
+with a cursor. You may click on that line to move focus there and
+enter input. You can use <strong>Ctrl-D</strong> at the beginning of a new line
+to signal end of input.</p>
+<p>If it was a mistake, then you can simply click on the latest prompt
+and continue issuing new commands. You can ignore or kill the old
+command.</p>
+</li>
+<li><p><strong>How do I reboot?</strong></p>
+<p>Reload the page. Hold down Shift while reloading may help, clearing your
+browser cache.</p>
+</li>
+<li><p><strong>What commands are available?</strong></p>
+<p>Most commands are built-in, while a few are scripts found in <code>/bin</code>.
+You can see a list of commands using the <code>help</code> command. Help for a
+specific command like <code>ls</code> may be seen either using <code>ls -h</code> or <code>help ls</code>.</p>
+</li>
+<li><p><strong>What browsers are supported?</strong></p>
+<p><em>Pigshell</em> should work on most modern browsers. We use Chrome on MacOS
+as our primary dev/test platform, but Firefox, Safari on MacOS,
+Chrome and Firefox on Linux, and Chrome on Windows work as well.</p>
+<p>Firefox on Windows has known issues with stack overflows.</p>
+<p>Nothing on the iPad works currently due to keyboard input issues.</p>
+</li>
+<li><p><strong>Can I write my own scripts?</strong></p>
+<p>Of course, that&#39;s the whole idea. The syntax is close enough to bash, and
+looking through existing scripts in <code>/bin</code> should give you enough of an
+idea to start writing your own. A trip to the <a href="pigshell.html">User Guide</a>
+is definitely recommended, though.</p>
+</li>
+</ol>
+<h2>How do I..</h2>
+<ol>
+<li><p><strong>How do I copy files to my desktop?</strong></p>
+<p>Copying  the files to /downloads will do the trick. Note that you cannot
+see anything inside the /downloads directory, it&#39;s just a pseudo-target
+to trigger a browser download. For example,</p>
+<p><code>cp /picasa/albums/foo/DSC_1290.JPG /downloads</code></p>
+</li>
+<li><p><strong>How do I upload a photo from my desktop to Facebook, or Google Drive?</strong></p>
+<p>Click on <em>Upload Files</em> and select a file or files from your desktop.
+These files are now visible under the directory <code>/uploads</code>. Use <code>ls</code>
+to verify that they&#39;re there. Now use <code>cp</code> to copy them to the
+target directory.</p>
+<p><code>cp /uploads/cat.jpg /gdrive</code><br><code>cp /uploads/cat.jpg /facebook/me/albums/MyCat/</code></p>
+</li>
+<li><p><strong>How do I copy Picasa photos to Facebook?</strong></p>
+<p><code>cp /picasa/albums/FooAlbum/photo1 /facebook/me/albums/BarAlbum/</code></p>
+</li>
+<li><p><strong>How do I create a new album on Facebook?</strong></p>
+<p><code>mkdir /facebook/me/albums/Hawaii2012</code></p>
+</li>
+<li><p><strong>How do I tweet?</strong></p>
+<p>`echo &quot;hello, world!&quot; &gt;/twitter/me/tweets/</p>
+</li>
+<li><p><strong>How do I post to Facebook?</strong></p>
+<p>`echo &quot;hello, world!&quot; &gt;/facebook/me/posts/</p>
+</li>
+<li><p><strong>How do I write scripts?</strong></p>
+<p>The <code>edit</code> command implements a simple, minimal editor using
+<a href="http://codemirror.net">CodeMirror</a>.</p>
+</li>
+<li><p><strong>How do I store scripts so that they survive a &quot;reboot&quot;?</strong></p>
+<p>The /local filesystem uses the browser&#39;s HTML5 localStorage as its
+backing store. Files stored there will survive a page reload (aka &quot;reboot&quot;)
+Note that localStorage is typically limited to about 5 MB per site, so
+this is only suitable for saving small files like scripts.</p>
+</li>
+<li><p><strong>How do I rename files?</strong></p>
+<p>Sorry, renaming files is not supported at the moment.</p>
+</li>
+<li><p><strong>How do I figure out what attributes a file object contains?</strong></p>
+<p>Use <code>stat &lt;file&gt;</code> or <code>printf -j &lt;file&gt;</code>. Most files have a <code>raw</code>
+attribute containing all the information returned by the backend
+API.</p>
+</li>
+<li><p><strong>How do I make sense of these errors? I get parse error for a line
+which is most certainly correct. Expected &quot;#&quot;, &quot;\n&quot;, &quot;\r&quot;, &quot;\r\n&quot;? WTF?</strong></p>
+<p>Sorry. Error reporting is still in the &quot;PC Load Letter&quot; era. The line
+number indicates the <em>beginning</em> of a block which failed to parse. So if you
+have a long multi-line <code>if</code> construct with an error somewhere in the
+middle, it will flag the <code>if</code> line as the source of the error.</p>
+<p>The best way right now is to comment out chunks of the block to figure out
+which one is causing the real trouble.</p>
+</li>
+<li><p><strong>What data sources are supported, and what operations work on those files?</strong></p>
+<ul>
+<li><p><strong>Facebook:</strong> Creating new albums, reading (but not editing!) photos,
+writing new photos. Photos created with <em>Pigshell</em> can be deleted.
+Reading of posts, writing of text posts.</p>
+</li>
+<li><p><strong>Google Drive:</strong> Reading, creating, deleting files.</p>
+</li>
+<li><p>**Picasa: Reading and editing of photos. Creating and deleting
+photos is not supported.</p>
+</li>
+<li><p>Twitter: Reading and posting tweets. Deletion is not supported.</p>
+</li>
+</ul>
+<p>So you can copy a photo from Picasa to Facebook, but not vice-versa.
+Many of the above limitations are due to
+<a href="http://en.wikipedia.org/wiki/Cross-origin_resource_sharing">CORS</a>
+issues, and will hopefully go away in the future.</p>
+</li>
+</ol>
+<h2>Philosophy</h2>
+<ol>
+<li><p><strong>What is unique about <em>pigshell</em>? How is this different from IFTTT/YQL/
+<insert-web-api>?</strong></p>
+<p><em>Pigshell</em> provides a Unix-like CLI environment to converse with your
+cloud data in an exploratory style, composing commands with simple
+commands and pipes to process files. It occupies the same evolutionary
+niche as the Unix shell and shell-scripting - everyday, casual programming.</p>
+<p>Services like IFTTT are about setting up data flows, like cron jobs.
+<em>Pigshell</em> is about exploring, analyzing and processing data. Somewhat
+like YQL, but based around Unix/shell/file idioms rather than SQL.</p>
+</li>
+<li><p><strong>What are the common use cases for <em>pigshell</em>?</strong></p>
+<ol>
+<li>Quick and dirty personal and social analytics</li>
+<li>Data movement across the cloud: e.g. copying photos from Picasa to
+Facebook and vice versa.</li>
+<li>Write scripts to customize and personalize the experience of
+navigating the cloud.</li>
+</ol>
+</li>
+</ol>
+<h2>Advanced Examples</h2>
+<ol>
+<li><p><strong>Top 10 liked photos in my albums</strong></p>
+<pre><code>pig&gt; cd /facebook/me/albums
+pig&gt; ls -R | sort -rf likes | printf -H &quot;&lt;img src=&#39;%(thumbnail)s&#39;/&gt;&lt;p&gt;Likes: %(likes)s&lt;/p&gt;&quot; | head</code></pre>
+</li>
+<li><p>Now let&#39;s take a photo from Picasa, convert it to grayscale and post it
+to Facebook. Make sure your Google and Facebook accounts are connected.</p>
+<pre><code>pig&gt; mkdir /facebook/me/albums/frompicasa
+pig&gt; cat /picasa/albums/FooAlbum/foopic | pixastic -d &gt;/facebook/me/albums/frompicasa/foopic</code></pre>
+</li>
+<li><p><strong>Mirror, mirror on the wall, who&#39;s the most social of &#39;em all?</strong></p>
+<p>Suppose you want to find out who&#39;s got the most followers or friends in
+your immediate circle, across Twitter and Facebook.</p>
+<pre><code>pig&gt; ls /facebook/friends /twitter/followers | fmap -s friend_count,followers -t xcount | sort -rf xcount | printf &quot;%(name)-20s %(xcount)s&quot; | head</code></pre>
+<p>Here&#39;s what we did: first, we got a list of your FB friends and Twitter
+followers. Each file corresponding to an FB person has a <code>friend_count</code>
+attribute, and each Twitter person-file has a <code>followers</code> attribute. We map
+both these to a new attribute, <code>xcount</code>, and sort on that field. Finally,
+we print the people with the top 10 <code>xcount</code>s.</p>
+</li>
+</ol>
+<h2>More</h2>
+<p>The <a href="pigshell.html">user guide</a> has more detailed coverage of <em>pigshell</em> concepts and the
+scripting language.
+
+</p>
+<h2>Contact</h2>
+<p>Email us at dev@pigshell.com or tweet @pigshell
+</p>
+
+            </div>
+            </div>
+            <div class="sidebar" id="sidebar">
+            <div class="topright" id="topright">
+                <h3>unix the cloud</h3>
+                <a href="https://pigshell.com"><img src="images/pigshell-logo-320x240.png" width=96></img></a>
+                <br /><br />
+            <a href="https://twitter.com/pigshell" class="twitter-follow-button" data-show-count="false" data-dnt="true">Follow @pigshell</a>
+            <div class="share">
+            <div class="fb-like" data-href="https://pigshell.com" data-send="false" data-layout="button_count" data-show-faces="false" data-show-count="false"></div>
+            <a href="https://twitter.com/share" class="twitter-share-button" data-via="pigshell" data-lang="en" data-text="Pigshell: See your FB/Google/Twitter data as files, talk to them with a CLI - Unix style!" data-url="https://pigshell.com" data-count="none">Tweet</a>
+            <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+            </div>
+            <br />
+            <div class="clear" />
+            <div>
+                <h3>Documentation</h3>
+                <a href="README.html">README</a>
+                <a href="pigshell.html">User Guide</a>
+            </div>
+            <div class="bottom">
+                <a href="about.html">About</a>
+                <a href="tos.html">Terms</a>
+                <a href="privacy.html">Privacy</a>
+            </div>
+            </div>
+            </div>
+        <div class="clear" />
+        </div>
+    </body>
+</html>

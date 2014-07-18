@@ -1,0 +1,10 @@
+if ! T -d /facebook/me; then echo Connect Facebook first; exit 1; fi
+
+mylat=$(printf "%(raw.current_location.latitude)s" /facebook/me)
+mylon=$(printf "%(raw.current_location.longitude)s" /facebook/me)
+if T -z $mylat || T -z $mylon; then
+    echo "Your home location is not set"
+    exit 1
+fi
+printf -sH "<h1>Friends who have moved to my current location</h1>"
+ls /facebook/friends | grep -e "x.raw.current_location && x.raw.current_location.latitude == "$mylat" && x.raw.current_location.longitude == "$mylon | grep -e "x.raw.hometown_location && (x.raw.hometown_location.latitude != "$mylat" || x.raw.hometown_location.longitude != "$mylon")" | map

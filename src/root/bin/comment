@@ -1,0 +1,16 @@
+usage="comment      -- comment on a Facebook entity\
+\
+Usage:\
+    comment <file> <message>\
+    comment -h | --help\
+Options:\
+    -h --help   Show this message.\
+    <file>      Facebook file.\
+    <message>   Message to post.\
+"
+
+if ! docopt $usage $*; then
+    exit false
+fi
+
+ls $file | grep -e "x.constructor === FacebookFile && typeof x.comment === 'function' && x.comment(x.handler, '"$message"')"

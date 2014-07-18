@@ -1,0 +1,67 @@
+grep(1) -- Object pattern searcher
+==========================
+
+## SYNOPSIS
+
+`grep` [-iv] [-f <field>] <regex> [<obj>...]<br>
+`grep` [-v] -e <expr> [<obj>...]
+
+## DESCRIPTION
+
+**grep** searches input objects, selecting those which match a condition and
+outputs them. In the first form, the condition is specified as a regexp(3)
+pattern and is matched against the string representation of the <field>
+attribute, if specified, or the string representation of the object. In the
+second form, the condition is evaluated by a Javascript expression specified
+in <expr> where `x` corresponds to a given input object.
+
+Input objects which are strings or blobs are split into lines of text,
+and each line is treated as a separate input object.
+
+If no <obj> arguments are supplied, **grep** reads objects from standard input. 
+
+The following options are available:
+
+  * `-i`:
+    Case insensitive matching. By default, **grep** is case sensitive.
+
+  * `-v`:
+    Selected objects are those _not_ matching the specified condition.
+
+  * <regex>:
+    A Javascript regular expression in the regexp(3) format.
+
+  * `-e` <expr>:
+    A Javascript expression in `x`, evaluated with `x` bound to the current
+    input object.
+
+## DIAGNOSTICS
+
+**grep** exits with `true` if there was at least one match. Otherwise it
+exits with a non-`true` value.
+
+## NOTE
+
+It must be stressed that **grep** is an _object_ grep, not a file grep. In
+other words, `grep '[Pp]igshell' /home/doc/*md` treats the arguments as string
+objects, not files whose contents must be matched against the given pattern.
+
+To grep files in the manner of UNIX grep, use the fgrep(1) script.
+
+## EXAMPLES
+
+Find GDrive files whose mime type field contains the string 'spreadsheet':
+
+    $ ls /gdrive | grep -f mime spreadsheet
+
+Find text within an HTML file:
+
+    $ cat http://pigshell.com/sample/life-expectancy.html | grep -i india
+
+Find countries with life expectancy < 50:
+
+    $ cat http://pigshell.com/sample/life-expectancy.html | table2js -e "tr" foo country data | grep -e '+x.data < 50' | printf
+
+## SEE ALSO
+
+fgrep(1), regexp(3)

@@ -1,0 +1,89 @@
+jf(1) -- Javascript filter
+==========================
+
+## SYNOPSIS
+
+`jf` [-g] <expr> [<obj>...]
+
+## DESCRIPTION
+
+**jf** takes a Javascript expression in `x`, applies it to each input object
+and outputs the result. **jf** is _pigshell_'s replacement for `sed`, `awk` et
+al. It can be used to quickly shift into Javascript and cleanup, extract, add
+data to objects without learning yet another awkward DSL.
+
+If <obj> is not specified on the command line, then jf read standard input
+and applies <expr> to each object, until it encounters an EOF.
+
+The control flow is as follows:
+
+  * If the result of <expr> is _undefined_, then **jf** proceeds to read and
+    process the next object.
+  * If the evaluating <expr> throws an exception, then **jf** prints an error
+    message to standard error and proceeds to read and process the next object.
+  * If the result of <expr> is _null_, then **jf** terminates and outputs EOF.
+  * Otherwise **jf** outputs the result.
+
+The following options are available:
+
+  * `-g`:
+    All input objects are gathered into an array which is passed to the
+    expression as `x`.
+
+<expr> can call non-async functions, including _pigshell_ internal functions,
+but must not invoke any async functions (i.e. those which take a callback).
+Typically, the Javascript comma operator is used to string together multiple
+expressions, of which the last is the result of <expr>. For more complicated
+cases, immediately-invoked function expressions (IIFEs) may be used.
+
+## DIAGNOSTICS
+
+The **jf** command exits with `true` on success and non-`true` if an error
+occurs.
+
+## EXAMPLES
+
+Find the length of a string
+
+    $ jf 'x.length' "foobar"
+
+Print the length of each input string:
+
+    $ jf 'x.length + "\\n"' foo bar buzz
+
+Convert a JSON string to Javascript objects:
+
+    $ echo '{"name": "Pooh", "type": "bear"}' | jf 'JSON.parse(x)' | printf
+
+Join a list of strings with a comma:
+
+    $ countries=(AFG IND PAK LKA); echo -r $countries | jf -g 'x.join(",")'
+
+Output a string. Note that in constant expressions, the value of `x` is
+irrelevant.
+
+    $ jf '"foo"' 1
+
+Output as many hashes as there are elements in `a`
+
+    $ a=(foo bar baz); jf '"#"' $a
+
+Output an object (Note that object syntax is Javascript, not JSON):
+
+    $ jf '{name: "Pooh", type: "bear"}' 1
+
+Goldilocks expression:
+
+    $ jf '{name: x, type: "bear"}' Mama Papa Baby | printf 
+
+Coerce a field from a CSV to a numeric type:
+
+    $ echo "country,data\nIND,1870\nPAK,238" | csv2js | jf 'x.data = +x.data, x' | printf
+
+Extract timestamp from git log:
+
+    $ wsh sh -c "git log | grep ^Date" | to -g text | jf '(function(){var lines = x.split("\\n"); return lines.map(function(d) { var m = d.match(/Date:\\s+(\w+.*)/); return m ? {timestamp: m[1]} : null; }).filter(function(d) { return !!d; })})()'
+
+## SEE ALSO
+
+echo(1)

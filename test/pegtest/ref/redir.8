@@ -1,0 +1,42 @@
+[
+    {
+        "PIPE": [
+            {
+                "ARGLIST": [
+                    "ls",
+                    "-l"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "grep",
+                    "foo"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "sum",
+                    "-f",
+                    "some"
+                ]
+            }
+        ],
+        "TAIL": [
+            {
+                "REDIROUT": "/dev/null"
+            },
+            {
+                "REDIR2OUT": "/dev/null"
+            },
+            {
+                "REDIRIN": "/dev/foo"
+            },
+            {
+                "REDIRAPPEND": "/tmo"
+            },
+            {
+                "REDIR2APPEND": "/tmo2"
+            }
+        ]
+    }
+]

@@ -1,0 +1,51 @@
+printf(1) -- formatted output
+=============================
+
+## SYNOPSIS
+
+printf <format> [<obj>...]<br>
+printf -j [<obj>...]<br>
+printf
+printf -s <format> [<arg>...]
+
+## DESCRIPTION
+
+**printf** prints formatted representations of its arguments. The syntax of the
+<format> string is described in sprintf(3).
+
+In the first form, **printf** prints a formatted representation of each <obj>
+as per the <format> string, which must used the "named arguments" syntax as
+described in sprintf(3). If no <obj> are specified, it reads objects from
+standard input.
+
+In the second and third form, **printf** prints a JSON representation of <obj>. If no <obj> argument is present, **printf** reads objects from standard input.
+File(2) objects are treated specially. The entire stack of file objects is
+printed, after removing fields which cause circular references and excess
+verbosity.
+
+In the fourth form, <arg>s are assumed to be strings, and the <format> must use
+"positional syntax" as described in sprintf(3).
+
+## DIAGNOSTICS
+
+The **printf** command exits with `true` on success and non-`true` if an error
+occurs.
+
+## EXAMPLES
+
+Print JSON representation of an object:
+
+    $ echo '{"name": "Pooh", "type": "bear"}' | jf 'JSON.parse(x)' | printf
+
+Print the "ident" field of the files in the current directory:
+
+    $ ls | printf "%(ident)s\n"
+
+A two-line implementation of `ps`:
+
+    $ format="%-6s %-8s %s\n"
+    $ cd /proc; for i in *; do printf -s $format $i $(cat $i/status) $(cat $i/cmdline); done
+
+## SEE ALSO
+
+jf(1), sprintf(3)

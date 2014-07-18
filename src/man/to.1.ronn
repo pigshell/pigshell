@@ -1,0 +1,63 @@
+to(1) -- convert to type
+========================
+
+## SYNOPSIS
+
+`to` [-g] [-m <mime>] [<type>] [<obj>...]
+
+## DESCRIPTION
+
+**to** is a utility to convert data from one type to another. The source
+type is inferred from the object and <type> is the destination type. Supported
+types include `text`, `blob`, `canvas` and `arraybuffer`. Not all combinations
+are possible or supported. 
+
+**to** is typically used to bridge the gap between commands which expect data
+in a format different from that produced by the one upstream.  It is also used
+as the terminal command in a pipeline to force data to be displayed in a
+certain format.
+
+The following options are supported:
+
+  * `-g`:
+    Gathers all available input objects before attempting the conversion. In
+    the absence of this option, each input object is converted and output
+    individually.
+
+  * `-m` <mime>:
+    In case the destination <type> is `blob`, this option can be used to
+    specify the mime type of the blob.
+
+  * <type>:
+    Specifies the destination type, and is one of `text`, `blob`, `canvas`
+    and `arraybuffer`. Not all possible combinations are supported.
+
+
+## NOTE
+
+Most commands which require data in a given format already use to(3) internally
+to carry out the conversion. However, generic filters like jf(1) usually need
+a to(1) to coerce data into whatever is expected by the filter expression.
+
+## DIAGNOSTICS
+
+The **to** command exits with `true` on success and non-`true` if an error
+occurs.
+
+## EXAMPLES
+
+Force HTML to be displayed as text, rather than in an iframe:
+
+    $ cat http://pigshell.com/sample/gdp-ppp.html | to text
+
+Gather all the data fragments produced by wsh into a single blob:
+
+    $ cat http://pigshell.com/sample/oslogos.png | wsh convert -implode 1 - - | to -g blob
+
+Convert a JSON file into Javascript objects.
+
+    $ cat /some/file.json | to text | jf 'JSON.parse(x)' | head | printf
+
+## SEE ALSO
+
+jf(1), to(3)

@@ -1,0 +1,59 @@
+usage='bday         -- list upcoming birthdays\
+\
+Usage:\
+    bday [-n <weeks>] [<date>]\
+    bday -h | --help\
+\
+Options:\
+    -h --help   Show this message.\
+    -n <weeks>  Number of weeks ahead [default: 1]\
+    <date>      Start date, e.g. "Jan 23 2013", defaults to today\
+'
+
+if ! T -d /facebook/me; then echo Connect Facebook first; exit 1; fi
+
+if ! docopt $usage $*; then
+    exit false
+fi
+
+if T $n -ge 52; then n=52; fi
+if T $n -lt 1; then n=1; fi
+
+if T $#date -eq 0; then start=$(date -f u); else start=$(date -f u -t $date); fi
+
+sm=$(date -t $start -f M)
+sd=$(date -t $start -f D)
+sy=$(date -t $start -f YYYY)
+
+end=$(date -t $start -v $(E $n '*' 7)d -f u)
+
+friends=()
+for i in $(ls /facebook/friends); do
+    day=$(printf "%(birthday)s" $i)
+    if ! T $day = 'null'; then 
+        m=$(date -t $day -f M)
+        d=$(date -t $day -f D)
+        mm=$(date -t $day -f MM)
+        dd=$(date -t $day -f DD)
+        if T $m -le $sm && T $d -le $sd; then
+            tcheck=$(date -t $(E $sy + 1)-$mm-$dd -f u)
+        else
+            tcheck=$(date -t $sy-$mm-$dd -f u)
+        fi
+        if T $tcheck -ge $start && T $tcheck -le $end; then
+            friends=($friends $i)
+        fi
+    fi
+done
+
+if T $n -eq 1; then wstr="week"; else wstr="weeks"; fi
+dstr=($n $wstr of $(date -t $start -f "MMM d YYYY"))
+
+if T $#friends -eq 0; then echo No friends with birthdays within $dstr; exit; fi
+
+echo Friends with birthdays within $n $wstr of $(date -t $start -f "MMM D YYYY")
+friendobjs=$(sort -e "x.birthday.format('MMDD')" $friends)
+for i in $friendobjs; do
+    bday=$(date -t $(printf "%(birthday)s" $i) -f "MMMM D")
+    echo $(echo $i | printf "%(name)-20s") $(date -t $(echo $i | printf "%(birthday)s") -f "MMMM D")
+done

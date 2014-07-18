@@ -1,0 +1,13 @@
+*.sw*
+test/ptest/results/*
+test/pegtest/results/*
+doc/*html
+usr/share/doc/*html
+usr/share/man/*html
+src/commands.js
+src/version.js
+build/pigpeg.js
+libs.js
+pigshell.js
+pigshell.css
+root.tar

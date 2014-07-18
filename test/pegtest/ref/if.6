@@ -1,0 +1,84 @@
+[
+    {
+        "IF": [
+            [
+                [
+                    "IFNOT",
+                    {
+                        "ARGLIST": [
+                            "T",
+                            {
+                                "VARVAL": "i"
+                            },
+                            {
+                                "SQUOTED_STRING": "<="
+                            },
+                            "4"
+                        ]
+                    },
+                    [
+                        {
+                            "ARGLIST": [
+                                "dosome",
+                                "thing"
+                            ]
+                        },
+                        {
+                            "PIPE": [
+                                {
+                                    "ARGLIST": [
+                                        "echo",
+                                        "foo"
+                                    ]
+                                },
+                                {
+                                    "ARGLIST": [
+                                        "cat",
+                                        "bar"
+                                    ]
+                                }
+                            ],
+                            "TAIL": [
+                                {
+                                    "REDIROUT": "/dev/null"
+                                }
+                            ]
+                        }
+                    ]
+                ]
+            ],
+            [
+                {
+                    "ARGLIST": [
+                        "blah",
+                        "blah",
+                        "blah"
+                    ]
+                },
+                {
+                    "ASSIGN": {
+                        "a": {
+                            "BACKQUOTE": [
+                                {
+                                    "PIPE": [
+                                        {
+                                            "ARGLIST": [
+                                                "ls",
+                                                "-l"
+                                            ]
+                                        },
+                                        {
+                                            "ARGLIST": [
+                                                "foo"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        ]
+    }
+]

@@ -1,0 +1,11 @@
+if ! T -d /facebook/me; then echo Connect Facebook first; exit 1; fi
+
+printf -Hs "<h1>My Facebook Stats</h1>"
+# my post breakdown by type
+t2='<h2>{{title}}</h2><img src="{{{canvas file}}}"></img>'
+printf -Hs "<h2>Most Liked Photos</h2>"
+mostliked photo
+printf -Hs "<h2>Most Liked Posts</h2>"
+mostliked post
+title="Posts By Type"
+chart -f type -H 150 -t " " /facebook/me/posts/* | template -c title -s $t2

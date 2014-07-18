@@ -1,0 +1,15 @@
+usage="unlike       -- unlike a Facebook entity\
+\
+Usage:\
+    unlike <file>\
+    unlike -h | --help\
+Options:\
+    -h --help   Show this message.\
+    <file>      Facebook file.\
+"
+
+if ! docopt $usage $*; then
+    exit false
+fi
+
+ls $file | grep -e "x.constructor === FacebookFile && typeof x.unlike === 'function' && x.unlike(x.handler)"

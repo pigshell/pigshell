@@ -1,0 +1,777 @@
+[
+    {
+        "ARGLIST": [
+            "boo",
+            "bar5",
+            "baz",
+            {
+                "DQUOTED_STRING": "bar2"
+            },
+            {
+                "SQUOTED_STRING": "bar5.1"
+            },
+            {
+                "DQUOTED_STRING": "bar 4"
+            },
+            {
+                "SQUOTED_STRING": "bar 5"
+            },
+            "bar 6"
+        ]
+    },
+    {
+        "ARGLIST": [
+            "echo",
+            "bar"
+        ]
+    },
+    {
+        "ARGLIST": [
+            "coo",
+            "bar6",
+            "baz",
+            {
+                "DQUOTED_STRING": "bar2"
+            },
+            {
+                "SQUOTED_STRING": "bar3"
+            },
+            {
+                "DQUOTED_STRING": "bar 4"
+            },
+            {
+                "SQUOTED_STRING": "bar 5"
+            },
+            "bar 6"
+        ]
+    },
+    "",
+    {
+        "ARGLIST": [
+            "echo",
+            {
+                "VARVAL": "a"
+            },
+            {
+                "VARVAL": "b"
+            }
+        ]
+    },
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    {
+        "FUNCTION": [
+            "formula1",
+            [
+                {
+                    "ARGLIST": [
+                        "bar16",
+                        {
+                            "BACKQUOTE": [
+                                {
+                                    "AND": [
+                                        {
+                                            "ARGLIST": [
+                                                "ls"
+                                            ]
+                                        },
+                                        {
+                                            "ARGLIST": [
+                                                "echo",
+                                                "bar17"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "OR": [
+                        {
+                            "OR": [
+                                {
+                                    "AND": [
+                                        {
+                                            "AND": [
+                                                {
+                                                    "PIPE": [
+                                                        {
+                                                            "ARGLIST": [
+                                                                "ls",
+                                                                "-l"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "ARGLIST": [
+                                                                "grep",
+                                                                "-f",
+                                                                "gender",
+                                                                "female"
+                                                            ]
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "ARGLIST": [
+                                                        "echo",
+                                                        "bar"
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "ARGLIST": [
+                                                "echo",
+                                                "baz"
+                                            ],
+                                            "TAIL": [
+                                                {
+                                                    "REDIROUT": "/tmp/foo"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "ARGLIST": [
+                                        "some",
+                                        "thing"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "AND": [
+                                {
+                                    "ARGLIST": [
+                                        "someother",
+                                        "thing"
+                                    ]
+                                },
+                                {
+                                    "ARGLIST": [
+                                        "yetanother",
+                                        "thing"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "ASSIGN": {
+                        "a": {
+                            "BACKQUOTE": [
+                                {
+                                    "PIPE": [
+                                        {
+                                            "ARGLIST": [
+                                                "ls",
+                                                "-l"
+                                            ]
+                                        },
+                                        {
+                                            "ARGLIST": [
+                                                "foo"
+                                            ]
+                                        }
+                                    ],
+                                    "TAIL": [
+                                        {
+                                            "REDIROUT": "/dev/null"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        ]
+    },
+    "",
+    {
+        "ARGLIST": [
+            "eoo",
+            {
+                "^": [
+                    {
+                        "^": [
+                            {
+                                "VARVAL": "bc"
+                            },
+                            {
+                                "VARVAL": "ef"
+                            }
+                        ]
+                    },
+                    "foo"
+                ]
+            },
+            "bar11"
+        ]
+    },
+    {
+        "ARGLIST": [
+            "foo",
+            {
+                "BACKQUOTE": [
+                    {
+                        "PIPE": [
+                            {
+                                "ARGLIST": [
+                                    "ls",
+                                    "-l"
+                                ]
+                            },
+                            {
+                                "ARGLIST": [
+                                    "foo"
+                                ]
+                            }
+                        ],
+                        "TAIL": [
+                            {
+                                "REDIROUT": "/dev/null"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "PIPE": [
+            {
+                "ARGLIST": [
+                    "ls",
+                    "-l",
+                    "/facebook/friends"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "chart",
+                    "-f",
+                    {
+                        "DQUOTED_STRING": "relationship_status"
+                    }
+                ]
+            }
+        ],
+        "TAIL": [
+            {
+                "REDIROUT": "/tmp/redirout"
+            },
+            {
+                "REDIRAPPEND": "/tmp/redirapp"
+            },
+            {
+                "REDIRIN": "blah"
+            }
+        ]
+    },
+    {
+        "AND": [
+            {
+                "ARGLIST": [
+                    "a"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "b"
+                ]
+            }
+        ]
+    },
+    {
+        "ARGLIST": [
+            "bar16",
+            {
+                "BACKQUOTE": [
+                    {
+                        "AND": [
+                            {
+                                "ARGLIST": [
+                                    "ls"
+                                ]
+                            },
+                            {
+                                "ARGLIST": [
+                                    "echo",
+                                    "bar17"
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "OR": [
+            {
+                "OR": [
+                    {
+                        "AND": [
+                            {
+                                "AND": [
+                                    {
+                                        "PIPE": [
+                                            {
+                                                "ARGLIST": [
+                                                    "ls",
+                                                    "-l"
+                                                ]
+                                            },
+                                            {
+                                                "ARGLIST": [
+                                                    "grep",
+                                                    "-f",
+                                                    "gender",
+                                                    "female"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "ARGLIST": [
+                                            "echo",
+                                            "bar"
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "ARGLIST": [
+                                    "echo",
+                                    "baz"
+                                ],
+                                "TAIL": [
+                                    {
+                                        "REDIROUT": "/tmp/foo"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "ARGLIST": [
+                            "some",
+                            "thing"
+                        ]
+                    }
+                ]
+            },
+            {
+                "AND": [
+                    {
+                        "ARGLIST": [
+                            "someother",
+                            "thing"
+                        ]
+                    },
+                    {
+                        "ARGLIST": [
+                            "yetanother",
+                            "thing"
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "ASSIGN": {
+            "a": {
+                "BACKQUOTE": [
+                    {
+                        "PIPE": [
+                            {
+                                "ARGLIST": [
+                                    "ls",
+                                    "-l"
+                                ]
+                            },
+                            {
+                                "ARGLIST": [
+                                    "foo"
+                                ]
+                            }
+                        ],
+                        "TAIL": [
+                            {
+                                "REDIROUT": "/dev/null"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "IF": [
+            [
+                [
+                    "IF",
+                    {
+                        "ARGLIST": [
+                            "ls",
+                            "-l",
+                            "file1"
+                        ]
+                    },
+                    [
+                        {
+                            "ARGLIST": [
+                                "echo",
+                                "file2"
+                            ]
+                        },
+                        {
+                            "ARGLIST": [
+                                "echo",
+                                "file3"
+                            ]
+                        }
+                    ]
+                ]
+            ],
+            [
+                {
+                    "ARGLIST": [
+                        "echo",
+                        "file4"
+                    ]
+                }
+            ]
+        ]
+    },
+    "",
+    {
+        "FUNCTION": [
+            "formula2",
+            [
+                {
+                    "ASSIGN": {
+                        "a": {
+                            "BACKQUOTE": [
+                                {
+                                    "PIPE": [
+                                        {
+                                            "ARGLIST": [
+                                                "ls",
+                                                "-l"
+                                            ]
+                                        },
+                                        {
+                                            "ARGLIST": [
+                                                "foo"
+                                            ]
+                                        }
+                                    ],
+                                    "TAIL": [
+                                        {
+                                            "REDIROUT": "/dev/null"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "IF": [
+                        [
+                            [
+                                "IF",
+                                {
+                                    "ARGLIST": [
+                                        "ls",
+                                        "-l",
+                                        "file1"
+                                    ]
+                                },
+                                [
+                                    {
+                                        "ARGLIST": [
+                                            "echo",
+                                            "file2"
+                                        ]
+                                    },
+                                    {
+                                        "ARGLIST": [
+                                            "echo",
+                                            "file3"
+                                        ]
+                                    }
+                                ]
+                            ]
+                        ],
+                        [
+                            {
+                                "ARGLIST": [
+                                    "echo",
+                                    "file4"
+                                ]
+                            }
+                        ]
+                    ]
+                }
+            ]
+        ]
+    },
+    "",
+    {
+        "IF": [
+            [
+                [
+                    "IFNOT",
+                    {
+                        "ARGLIST": [
+                            "cond2"
+                        ]
+                    },
+                    [
+                        "",
+                        "",
+                        "",
+                        {
+                            "ARGLIST": [
+                                "echo",
+                                "res2"
+                            ]
+                        },
+                        {
+                            "ARGLIST": [
+                                "echo",
+                                "res3"
+                            ]
+                        }
+                    ]
+                ]
+            ],
+            [
+                "",
+                {
+                    "ARGLIST": [
+                        "echo",
+                        "res4"
+                    ]
+                },
+                {
+                    "PIPE": [
+                        {
+                            "ARGLIST": [
+                                "grep",
+                                "-f",
+                                "something"
+                            ]
+                        },
+                        {
+                            "ARGLIST": [
+                                "what"
+                            ]
+                        }
+                    ],
+                    "TAIL": [
+                        {
+                            "REDIRIN": "/dev/term"
+                        },
+                        {
+                            "REDIROUT": "/dev/null"
+                        }
+                    ]
+                }
+            ]
+        ]
+    },
+    "",
+    {
+        "FOR": [
+            "i",
+            {
+                "ARGLIST": [
+                    "able",
+                    "baker",
+                    "charlie"
+                ]
+            },
+            [
+                {
+                    "ARGLIST": [
+                        "echo",
+                        {
+                            "VARVAL": "i"
+                        }
+                    ]
+                }
+            ]
+        ]
+    },
+    "",
+    {
+        "FOR": [
+            "i",
+            {
+                "ARGLIST": [
+                    {
+                        "VARVAL": "foo"
+                    },
+                    {
+                        "BACKQUOTE": [
+                            {
+                                "ARGLIST": [
+                                    "ls"
+                                ]
+                            }
+                        ]
+                    },
+                    "charlie"
+                ]
+            },
+            [
+                "",
+                {
+                    "ARGLIST": [
+                        "echo",
+                        "something",
+                        {
+                            "VARVAL": "i"
+                        }
+                    ],
+                    "TAIL": [
+                        {
+                            "REDIROUT": "/tmp/junk"
+                        }
+                    ]
+                },
+                {
+                    "PIPE": [
+                        {
+                            "ARGLIST": [
+                                "cat"
+                            ]
+                        },
+                        {
+                            "ARGLIST": [
+                                "blah"
+                            ]
+                        },
+                        {
+                            "ARGLIST": [
+                                "baz"
+                            ]
+                        }
+                    ],
+                    "TAIL": [
+                        {
+                            "REDIROUT": "/something"
+                        }
+                    ]
+                },
+                "",
+                "",
+                "",
+                "",
+                ""
+            ]
+        ]
+    },
+    "",
+    {
+        "WHILE": [
+            {
+                "ARGLIST": [
+                    "E",
+                    {
+                        "VARVAL": "a"
+                    },
+                    {
+                        "SQUOTED_STRING": "<"
+                    },
+                    "3"
+                ]
+            },
+            [
+                {
+                    "ARGLIST": [
+                        "echo",
+                        "still",
+                        "here"
+                    ]
+                }
+            ]
+        ]
+    },
+    "",
+    {
+        "WHILE": [
+            {
+                "PIPE": [
+                    {
+                        "ARGLIST": [
+                            "a1"
+                        ]
+                    },
+                    {
+                        "ARGLIST": [
+                            "b2"
+                        ]
+                    },
+                    {
+                        "ARGLIST": [
+                            "c3"
+                        ]
+                    }
+                ]
+            },
+            [
+                "",
+                {
+                    "ARGLIST": [
+                        "echo",
+                        "still",
+                        "here"
+                    ]
+                },
+                {
+                    "PIPE": [
+                        {
+                            "ARGLIST": [
+                                "cat"
+                            ]
+                        },
+                        {
+                            "ARGLIST": [
+                                "blah"
+                            ]
+                        },
+                        {
+                            "ARGLIST": [
+                                "baz"
+                            ]
+                        }
+                    ],
+                    "TAIL": [
+                        {
+                            "REDIROUT": "/something"
+                        }
+                    ]
+                },
+                "",
+                "",
+                "",
+                "",
+                ""
+            ]
+        ]
+    }
+]

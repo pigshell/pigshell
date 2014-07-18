@@ -1,0 +1,76 @@
+[
+    {
+        "IF": [
+            [
+                [
+                    "IF",
+                    {
+                        "ARGLIST": [
+                            "cond"
+                        ]
+                    },
+                    [
+                        {
+                            "ARGLIST": [
+                                "foo"
+                            ]
+                        },
+                        {
+                            "ARGLIST": [
+                                "bar"
+                            ]
+                        },
+                        {
+                            "ARGLIST": [
+                                "baz"
+                            ]
+                        }
+                    ]
+                ],
+                [
+                    "IF",
+                    {
+                        "ARGLIST": [
+                            "cond2"
+                        ]
+                    },
+                    [
+                        {
+                            "ARGLIST": [
+                                "foo2",
+                                "bar2"
+                            ]
+                        },
+                        {
+                            "ARGLIST": [
+                                "baz2"
+                            ]
+                        }
+                    ]
+                ],
+                [
+                    "IFNOT",
+                    {
+                        "ARGLIST": [
+                            "cond3"
+                        ]
+                    },
+                    [
+                        {
+                            "ARGLIST": [
+                                "foo3",
+                                "bar3"
+                            ]
+                        },
+                        {
+                            "ARGLIST": [
+                                "baz3"
+                            ]
+                        }
+                    ]
+                ]
+            ],
+            []
+        ]
+    }
+]

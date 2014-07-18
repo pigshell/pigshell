@@ -1,0 +1,10 @@
+This directory holds files which are
+- common across releases, and therefore don't belong in the build/release folder
+- are visible and referred to by an absolute, unversioned URL.
+
+Currently, they hold OAuth2 libraries and redirect pages, which must exist
+at the same location. Tamper with these files and URLs at the peril of
+breaking backward compatibility.
+
+e.g. http://pigshell.com/common/goog-oauth2-redirect.html is the redirect URL
+set in the Google API console for the pigshell application.

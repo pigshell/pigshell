@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <link href="pigshell.css" rel="stylesheet"/>
+    </head>
+    <body>
+        <div class="pigshell">
+        <div class="pmain" id="pmain">
+        <!--[if lte IE 11]>
+        <p class="warning">Pigshell is known to  work on recent (~2013-14) versions of Firefox and Chrome on Mac OS and Linux. It is unlikely to work on other browsers like IE and platforms like the iPad.</p>
+        </p>
+        <![endif]-->
+        <p id="loading" class="info">Loading kernel...</p>
+        </div>
+        </div>
+    <![if gte IE 11]>
+    <script src="libs.js"></script>
+    <script src="pigshell.js"></script>
+    <![endif]>
+    <![if gte IE 11]>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var ps = pigshell;
+            ps.init({}, function() {
+                var p = ps.popen("ish", {stdout: "#pmain"}).read({}, function(err, res) {
+                    if (err) {
+                        $("#pmain").prepend("<p class='warning'>" + err.toString() + "</p>");
+                    }
+                    return;
+                });
+            });
+        });
+    </script>
+    <![endif]>
+    </body>
+</html>

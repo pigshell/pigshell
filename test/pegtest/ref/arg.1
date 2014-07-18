@@ -1,0 +1,54 @@
+[
+    {
+        "ARGLIST": [
+            "able",
+            {
+                "VARVAL": "baker"
+            },
+            {
+                "BACKQUOTE": [
+                    {
+                        "ARGLIST": [
+                            "ls"
+                        ]
+                    }
+                ]
+            },
+            {
+                "BACKQUOTE": [
+                    {
+                        "PIPE": [
+                            {
+                                "ARGLIST": [
+                                    "ls",
+                                    "-l"
+                                ]
+                            },
+                            {
+                                "ARGLIST": [
+                                    "grep",
+                                    "foo"
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "VARVAL": "#"
+            },
+            {
+                "VARVAL": "!"
+            },
+            {
+                "VARVAL": "1"
+            },
+            {
+                "VARVAL": "2"
+            },
+            {
+                "VARVAL": "*"
+            }
+        ]
+    }
+]

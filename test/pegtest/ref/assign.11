@@ -1,0 +1,45 @@
+[
+    {
+        "ASSIGN": {
+            "d1": {
+                "DQUOTED_STRING": "abc\"'\\ \\fala\nbala"
+            }
+        }
+    },
+    {
+        "ASSIGN": {
+            "d2": {
+                "DQUOTED_STRING": "abc\"'\n\\fala\nbala"
+            }
+        }
+    },
+    {
+        "ASSIGN": {
+            "d3": {
+                "DQUOTED_STRING": "\u0000\b\t\n\u000b\f\r3ሴ"
+            }
+        }
+    },
+    "",
+    {
+        "ASSIGN": {
+            "s1": {
+                "SQUOTED_STRING": "abc\"'\\ \\fala\nbala"
+            }
+        }
+    },
+    {
+        "ASSIGN": {
+            "s2": {
+                "SQUOTED_STRING": "abc\"'\n\\fala\nbala"
+            }
+        }
+    },
+    {
+        "ASSIGN": {
+            "s3": {
+                "DQUOTED_STRING": "\u0000\b\t\n\u000b\f\r3ሴ"
+            }
+        }
+    }
+]

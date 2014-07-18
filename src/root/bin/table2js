@@ -1,0 +1,17 @@
+usage='table2js     -- convert html table to json\
+\
+Usage:\
+    table2js [-e <expr>] <cols>...\
+    table2js -h | --help\
+\
+Options:\
+    -h --help   Show this message.\
+    -e <expr>   JQuery selector, e.g. "table.wiki tr" [default: "tr"]\
+    <cols>      List of column headers, e.g. name, age\
+'
+
+if ! docopt $usage $*; then
+    exit false
+fi
+
+to text | jf '$$(x).find("'^$e^'").toArray().map(function(e){var r = $$(e).find("td").toArray().map(function(e) { return $$(e).text(); }); return r.length ? zip_object(self.shell.vars["cols"], r) : null;}).filter(function(el){return !!el;})'

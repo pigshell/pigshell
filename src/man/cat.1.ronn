@@ -1,0 +1,75 @@
+cat(1) -- concatenate and print files
+=====================================
+
+## SYNOPSIS
+
+`cat` [-o <opts>] [<file>...]
+
+## DESCRIPTION
+
+The **cat** command reads files sequentially, writing them to standard output.
+If <file> operands are present, they are assumed to be either strings
+representing pathnames or objects which implement the read(2) interface and
+are processed in command-line order. In case of pathnames, these are converted
+into File objects by lookup(2). The read(2) method is invoked on those objects
+which implement it and the results of the read are returned to standard output.
+Those objects which do not support read(2) are simply passed through to standard
+output.
+
+If <file> is absent, then **cat** reads from the standard input until EOF.
+As with the <file> arguments, objects which support read(2) are read and the
+contents returned, and those which don't are simply passed through. Strings
+are passed through and not assumed to be filenames.
+
+By default, the entire contents of the read(2)able object are returned. These
+are usually in the form of Blob(5), and must be converted to the desired type
+using to(1).
+
+The following options are available:
+
+  * `-o ` <opts>:
+    Options in the options(7) format which are passed down to read(2). **cat**
+    does not inspect any of the options.
+    
+## DIAGNOSTICS
+
+The **cat** command exits with `true` on success and non-`true` if an error
+occurs.
+
+## EXAMPLES
+
+Read a file and display contents on terminal:
+
+    $ cat /etc/motd
+
+Read multiple files and display contents on terminal:
+
+    $ cat /etc/motd /etc/rc.sh
+
+Same as above, but as File(2) objects from standard input:
+
+    $ ls /etc/motd /etc/rc.sh | cat
+
+Read a URL:
+
+    $ cat http://pigshell.com/sample/photos/bchips.jpg
+
+Display a PDF:
+
+    $ cat http://pigshell.com/sample/clickingofcuthbert.pdf
+
+Read this manpage:
+
+    $ cat http://pigshell.com/v/0.6.0/usr/share/man/cat.1.html
+
+Convert the manpage to text:
+
+    $ cat http://pigshell.com/v/0.6.0/usr/share/man/cat.1.html | to text
+
+Read a pipeline:
+
+    $ cat ${echo hello world; echo hello again}
+
+## SEE ALSO
+
+to(1), options(7), read(2)

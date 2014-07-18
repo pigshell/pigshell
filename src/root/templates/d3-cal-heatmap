@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<!--
+Calendar heatmap, based on http://bl.ocks.org/mbostock/4063318
+
+This template takes a list of Javascript objects, e.g.
+[ { "timestamp": "Wed Jan 8 17:39:15 2014 +0530", "value": 4 },
+  { "timestamp": "Wed Jan 8 17:49:15 2014 +0530", "value": 2 },
+  { "timestamp": "Wed Jan 9 17:49:15 2014 +0530", "value": 2 }...
+]
+Values are rolled up by day, e.g. multiple entries for Jan 8 are allowed, and
+will be summed up to 6. A missing "value" attribute will be considered as 1.
+
+Range of values to distribute among the 6 colors can be supplied as template
+options: minval and maxval, defaulting to 0 and 10.
+
+Example:
+wsh sh -c "git log | grep ^Date" | to -g text | jf '(function(){var lines = x.split("\\n"); return lines.map(function(d) { var m = d.match(/Date:\\s+(\w+.*)/); return m ? {timestamp: m[1]} : null; }).filter(function(d) { return !!d; })})()' | template -o minval=0,maxval=10 -ig /templates/d3-cal-heatmap
+
+will print a calendar heatmap of git commits.
+-->
+
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+  shape-rendering: crispEdges;
+}
+
+.day {
+  fill: #fff;
+  stroke: #ccc;
+}
+
+.month {
+  fill: none;
+  stroke: #000;
+  stroke-width: 2px;
+}
+
+.RdYlGn .q0-6{fill:rgb(255,255,191)}
+.RdYlGn .q1-6{fill:rgb(217,239,139)}
+.RdYlGn .q2-6{fill:rgb(166,217,106)}
+.RdYlGn .q3-6{fill:rgb(102,189,99)}
+.RdYlGn .q4-6{fill:rgb(26,152,80)}
+.RdYlGn .q5-6{fill:rgb(0,104,55)}
+
+</style>
+<body>
+<script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var width = 960,
+    height = 142,
+    cellSize = 17; // cell size
+
+var day = d3.time.format("%w"),
+    week = d3.time.format("%U"),
+    percent = d3.format(".1%"),
+    format = d3.time.format("%Y-%m-%d");
+
+var defaults = {
+    minval: 0,
+    maxval: 10
+};
+
+window.addEventListener('message', function(e) {
+    var opts = e.data[0],
+        data = e.data[1];
+
+    return main(opts, data);
+});
+
+function main(o, tsdata) {
+    var opts = $.extend(true, {}, defaults, o);
+    var color = d3.scale.quantize()
+        .domain([opts.minval, opts.maxval])
+        .range(d3.range(6).map(function(d) { return "q" + d + "-6"; }));
+    var data = d3.nest()
+      .key(function(d) { return format(new Date(d.timestamp)); })
+      .rollup(function(d) { return d3.sum(d, function(d) { return isNaN(+d.value) ? 1 : +d.value; });})
+      .map(tsdata);
+  
+    var years = Object.keys(data).map(function(d) { return (new Date(d)).getFullYear(); });
+    var svg = d3.select("body").selectAll("svg")
+        .data(d3.range(d3.min(years), d3.max(years) + 1))
+      .enter().append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("class", "RdYlGn")
+      .append("g")
+        .attr("transform", "translate(" + ((width - cellSize * 53) / 2) + "," + (height - cellSize * 7 - 1) + ")");
+
+    svg.append("text")
+        .attr("transform", "translate(-20," + cellSize * 3.5 + ")rotate(-90)")
+        .style("text-anchor", "middle")
+        .style("font-weight", "bold")
+        .style("font-size", "12px")
+        .text(function(d) { return d; });
+
+    ["M", "W", "F"].forEach(function(day, i) {
+        svg.append("text")
+            .attr("transform", "translate(-8," + cellSize * (2 * i + 1.5) + ")")
+            .attr("dy", ".35em")
+            .style("text-anchor", "middle")
+            .text(function(d) { return day; });
+    });
+
+    ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].forEach(function(month, i) {
+        svg.append("text")
+            .attr("transform", function(d) {
+                return "translate(" + (+week(new Date(d, i, 15)) + 0.5) * cellSize + ",-6)";
+            })
+            .style("text-anchor", "middle")
+            .text(function(d) { return month; });
+    });
+    var rect = svg.selectAll(".day")
+        .data(function(d) { return d3.time.days(new Date(d, 0, 1), new Date(d + 1, 0, 1)); })
+      .enter().append("rect")
+        .attr("class", "day")
+        .attr("width", cellSize)
+        .attr("height", cellSize)
+        .attr("x", function(d) { return week(d) * cellSize; })
+        .attr("y", function(d) { return day(d) * cellSize; })
+        .datum(format);
+
+    rect.append("title")
+        .text(function(d) { return d; });
+
+    svg.selectAll(".month")
+        .data(function(d) { return d3.time.months(new Date(d, 0, 1), new Date(d + 1, 0, 1)); })
+      .enter().append("path")
+        .attr("class", "month")
+        .attr("d", monthPath);
+
+    rect.filter(function(d) { return d in data; })
+        .attr("class", function(d) { return "day " + color(data[d]); })
+      .select("title")
+        .text(function(d) { return d + ": " + data[d]; });
+
+    window.parent.postMessage(document.documentElement.scrollHeight || document.body.scrollHeight, '*');
+}
+
+function monthPath(t0) {
+  var t1 = new Date(t0.getFullYear(), t0.getMonth() + 1, 0),
+      d0 = +day(t0), w0 = +week(t0),
+      d1 = +day(t1), w1 = +week(t1);
+  return "M" + (w0 + 1) * cellSize + "," + d0 * cellSize
+      + "H" + w0 * cellSize + "V" + 7 * cellSize
+      + "H" + w1 * cellSize + "V" + (d1 + 1) * cellSize
+      + "H" + (w1 + 1) * cellSize + "V" + 0
+      + "H" + (w0 + 1) * cellSize + "Z";
+}
+
+
+</script>

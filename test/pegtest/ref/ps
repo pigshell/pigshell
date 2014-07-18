@@ -1,0 +1,111 @@
+[
+    {
+        "ASSIGN": {
+            "usage": {
+                "DQUOTED_STRING": "ps           -- pipeline status"
+            }
+        }
+    },
+    "",
+    {
+        "ASSIGN": {
+            "format": {
+                "DQUOTED_STRING": "%-6s %-8s %s"
+            }
+        }
+    },
+    {
+        "ARGLIST": [
+            "echo",
+            {
+                "BACKQUOTE": [
+                    {
+                        "ARGLIST": [
+                            "printf",
+                            "-s",
+                            {
+                                "VARVAL": "format"
+                            },
+                            "PID",
+                            "STATE",
+                            "CMD"
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "ARGLIST": [
+            "cd",
+            "/proc"
+        ]
+    },
+    {
+        "FOR": [
+            "i",
+            {
+                "ARGLIST": [
+                    "*"
+                ]
+            },
+            [
+                {
+                    "ARGLIST": [
+                        "echo",
+                        {
+                            "BACKQUOTE": [
+                                {
+                                    "ARGLIST": [
+                                        "printf",
+                                        "-s",
+                                        {
+                                            "VARVAL": "format"
+                                        },
+                                        {
+                                            "VARVAL": "i"
+                                        },
+                                        {
+                                            "BACKQUOTE": [
+                                                {
+                                                    "ARGLIST": [
+                                                        "cat",
+                                                        {
+                                                            "^": [
+                                                                {
+                                                                    "VARVAL": "i"
+                                                                },
+                                                                "/status"
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "BACKQUOTE": [
+                                                {
+                                                    "ARGLIST": [
+                                                        "cat",
+                                                        {
+                                                            "^": [
+                                                                {
+                                                                    "VARVAL": "i"
+                                                                },
+                                                                "/cmdline"
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        ]
+    }
+]

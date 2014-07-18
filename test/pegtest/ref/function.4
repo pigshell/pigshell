@@ -1,0 +1,152 @@
+[
+    {
+        "FUNCTION": [
+            "able",
+            [
+                {
+                    "ARGLIST": [
+                        "ls",
+                        "-l"
+                    ]
+                },
+                {
+                    "FOR": [
+                        "i",
+                        {
+                            "ARGLIST": [
+                                {
+                                    "VARVAL": "*"
+                                }
+                            ]
+                        },
+                        [
+                            {
+                                "ARGLIST": [
+                                    "echo",
+                                    {
+                                        "VARVAL": "i"
+                                    }
+                                ]
+                            }
+                        ]
+                    ]
+                }
+            ]
+        ]
+    },
+    "",
+    {
+        "ARGLIST": [
+            "ls",
+            "-l"
+        ]
+    },
+    {
+        "ARGLIST": [
+            "and",
+            "some",
+            "more",
+            "statements"
+        ]
+    },
+    {
+        "IF": [
+            [
+                [
+                    "IFNOT",
+                    {
+                        "ARGLIST": [
+                            "T",
+                            {
+                                "VARVAL": "foo"
+                            },
+                            "=",
+                            "1"
+                        ]
+                    },
+                    [
+                        {
+                            "ARGLIST": [
+                                "echo",
+                                {
+                                    "BACKQUOTE": [
+                                        {
+                                            "ARGLIST": [
+                                                "ls",
+                                                "-l"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                ]
+            ],
+            []
+        ]
+    },
+    "",
+    {
+        "FUNCTION": [
+            "bake",
+            [
+                {
+                    "ARGLIST": [
+                        "echo",
+                        "Hello,",
+                        "how",
+                        "do",
+                        "you",
+                        "do"
+                    ]
+                }
+            ]
+        ]
+    },
+    "",
+    {
+        "ASSIGN": {
+            "a": "1"
+        }
+    },
+    {
+        "ARGLIST": [
+            "bake"
+        ]
+    },
+    {
+        "ARGLIST": [
+            "able",
+            "1",
+            "2",
+            "3"
+        ]
+    },
+    "",
+    {
+        "FUNCTION": [
+            "charlie",
+            [
+                {
+                    "ARGLIST": [
+                        "echo",
+                        "How",
+                        "many",
+                        {
+                            "VARVAL": "woodchucks"
+                        }
+                    ]
+                }
+            ]
+        ]
+    },
+    "",
+    {
+        "ARGLIST": [
+            "charlie"
+        ]
+    },
+    "",
+    ""
+]

@@ -1,0 +1,35 @@
+[
+    {
+        "ARGLIST": [
+            "/bin/ls",
+            "-l"
+        ]
+    },
+    {
+        "ARGLIST": [
+            "foo/bar",
+            "-l"
+        ]
+    },
+    {
+        "ARGLIST": [
+            "./foo/bar",
+            "-l"
+        ]
+    },
+    {
+        "ARGLIST": [
+            {
+                "^": [
+                    {
+                        "VARVAL": "a"
+                    },
+                    {
+                        "VARVAL": "b"
+                    }
+                ]
+            },
+            "-l"
+        ]
+    }
+]

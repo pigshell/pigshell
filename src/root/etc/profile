@@ -1,0 +1,32 @@
+# Common environment variables, utility functions
+function read {
+    jf -g 'sys.putenv(self, "'^$1^'", x)'
+    return true
+}
+
+# cat document files from gdrive as pdf
+function gcat {
+    cat -o gdrive.fmt=pdf $*
+}
+
+# Use YQL as a CORS-jumping proxy to fetch HTML from arbitrary pages. Does
+# not return byte-accurate information, strips <head> etc., so best used when
+# you want to extract part of the page, like a table.
+function ycat {
+    cat 'http://query.yahooapis.com/v1/public/yql?q=select * from html where url="'^$1^'"'
+}
+
+function yql {
+    cat 'http://query.yahooapis.com/v1/public/yql?q='$1
+}
+
+# html '<h1>hello world</h1>' will render html on the output terminal
+function html {
+    jf '{html: x}' $*
+}
+
+# sjoin , able baker charlie will output able,baker,charlie
+# used to join contents of a variable, like sjoin , $G20
+function sjoin {
+    jf -g 'x.slice(1).join(x[0])' $*
+}

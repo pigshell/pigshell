@@ -1,0 +1,1 @@
+sh /bin/ps | grep $1

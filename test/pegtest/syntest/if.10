@@ -1,0 +1,1 @@
+if cond; then foo; bar; baz; elif cond2; then foo2 bar2; baz2; elif ! cond3; then foo3 bar3; baz3; else foo4 bar4; baz4; fi

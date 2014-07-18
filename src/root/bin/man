@@ -1,0 +1,36 @@
+usage='man         -- display manual pages\
+\
+Usage:\
+    man <section> <name>\
+    man <name>\
+    man -h | --help\
+\
+Options:\
+    -h --help   Show this message.\
+    <section>   Section number of the man page\
+    <name>      Name of the man page\
+'
+
+if ! docopt $usage $*; then
+    exit false
+fi
+
+searchpath=/usr/share/man
+if [ -n $"MANPATH ]; then searchpath=$MANPATH; fi
+
+if [ -n $"section ]; then
+    fname=$name.$section
+else
+    fname=$name
+fi
+
+for i in $searchpath; do
+    pages=$(ls -d $i/$fname*html 2>/dev/null)
+    if [ $#pages -gt 0 ]; then
+        cat $pages(0)
+        exit true
+    fi
+done
+
+echo No manual entry for $name
+exit false

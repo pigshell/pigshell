@@ -1,0 +1,77 @@
+rm(1) -- remove files
+=====================
+
+## SYNOPSIS
+
+`rm` [-rvn] [-o <opts>] [<file>...]
+
+## DESCRIPTION
+
+**rm** attempts to remove all specified <file>s, **including** directories.  No
+attempt is made to ask for confirmation. **EXTREME CAUTION** must be exercised
+while using **rm**, as it can easily wipe out every single file connected to
+_pigshell_ in one command. This includes all Google docs, GDrive files, Dropbox
+files and other data sources mounted on _pigshell_. Since most cloud stores
+don't expose a one-click nuclear button, users may not anticipate the risk.
+
+If no <file> is specified in the arguments, **rm** reads standard input,
+looking for File(2) objects produced by ls(1) and attempts to remove them.
+
+There are a few safety mechanisms built-in to **rm**. Heuristics are used to
+detect `rm -r /` either as a direct invocation, or indirectly via `rm -r
+/../..///..` or `rm -r $NONEXISTENT/*`. On detection, a message is printed to
+standard error and the operation is aborted.
+
+Recursive removal is disabled, unless the environment variable `DEATHSTAR` is
+set.
+
+The following options are supported:
+
+  * `-r`:
+    Recursively remove the file hierarchy located at <file>. Like with the `-R`
+    option of ls(1), files which implement readdir(2) but mark themselves
+    "nodescend" will not be traversed as directories.
+
+  * `-v`:
+    Verbose reporting of removal activity. One line is printed per file to
+    standard error.
+
+  * `-n`:
+    Go through the motions, but don't actually remove the files. In combination
+    with `-v`, this option is used to estimate the impact of **rm** before
+    carrying it out.
+
+  * `-o ` <opts>:
+    Options in the options(7) format which are passed down. **rm** does not
+    inspect any of the options.
+
+## ENVIRONMENT
+
+The `DEATHSTAR` environment variable affects the execution of **rm** as
+described above.
+
+## DIAGNOSTICS
+
+The **rm** command exits with `true` on success and non-`true` if an error
+occurs.
+
+## EXAMPLES
+
+Simple rm:
+
+    $ rm /etc/motd
+
+Recursive rm:
+
+    $ DEATHSTAR=1
+    $ cp -r /etc /tmp/
+    $ rm -r /tmp/etc
+
+Remove all spreadsheets from Google Drive:
+
+    $ ls /gdrive/username@gmail.com | grep -f mime spreadsheet | rm
+
+## BUGS
+
+_Pigshell_ filesystems don't (yet) honour readonly mount options or file level
+read-write permissions. Permissions are enforced by the backend data stores.

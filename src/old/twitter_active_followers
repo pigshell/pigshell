@@ -1,0 +1,25 @@
+# This script lists down the twitter followers who tweeted in the last 7 days
+
+if ! T -d /twitter/me; then echo Connect Twitter first; exit 1; fi
+
+end=$(date -v -7d -f u) # the "u" option gives you a time in number of seconds since the epoch
+
+echo "The followers who tweeted during the last seven days are:"
+echo $(printf -s '%20s %s' "Follower name" "Last tweet time")
+active_follower=()
+for i in $(sort -e 'moment(x.raw.status.created_at).valueOf()' /twitter/followers/*); do
+    created_at=$(printf "%(raw.status.created_at)s" $i)
+    if T -n $created_at && T $(date -t $created_at -fu) -gt $end; then
+        printf "%(name)20s, %(raw.status.created_at)s" $i
+        active_follower=($active_follower $i)
+        GOT=true
+    fi
+done
+if T !$GOT; then
+    echo "None of the followers tweeted during the last seven days"
+fi
+if T $GOT; then
+    chart -H 250 -t "Followers active during last seven days" -e 'moment(x.raw.status.created_at).format("ddd")' $active_follower
+fi
+
+exit true

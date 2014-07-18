@@ -1,0 +1,15 @@
+usage="start        -- resume stopped pipeline\
+\
+Usage:\
+    start <pid>...\
+    start -h | --help\
+Options:\
+    -h --help   Show this message.\
+    <pid>       Pipeline id, obtained from ps\
+"
+
+if ! docopt $usage $*; then
+    exit false
+fi
+
+for i in $pid; do echo 'start' >/proc/$i/ctl; done

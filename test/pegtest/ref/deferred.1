@@ -1,0 +1,132 @@
+[
+    {
+        "ASSIGN": {
+            "a": {
+                "DEFERRED": [
+                    {
+                        "ARGLIST": [
+                            "echo",
+                            "foo"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "",
+    {
+        "ASSIGN": {
+            "b": {
+                "DEFERRED": [
+                    {
+                        "ARGLIST": [
+                            "echo",
+                            {
+                                "DEFERRED": [
+                                    {
+                                        "ARGLIST": [
+                                            "echo",
+                                            "foo"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "ARGLIST": [
+            "echo",
+            {
+                "DEFERRED": [
+                    {
+                        "ARGLIST": [
+                            "echo",
+                            {
+                                "DEFERRED": [
+                                    {
+                                        "ARGLIST": [
+                                            "echo",
+                                            "foo"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "ASSIGN": {
+            "c": {
+                "BACKQUOTE": [
+                    {
+                        "ARGLIST": [
+                            "echo",
+                            {
+                                "DEFERRED": [
+                                    {
+                                        "ARGLIST": [
+                                            "echo",
+                                            "foo"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "ASSIGN": {
+            "d": {
+                "DEFERRED": [
+                    {
+                        "ARGLIST": [
+                            "echo",
+                            {
+                                "BACKQUOTE": [
+                                    {
+                                        "ARGLIST": [
+                                            "echo",
+                                            "foo"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "",
+    {
+        "FUNCTION": [
+            "e",
+            [
+                {
+                    "ASSIGN": {
+                        "a": {
+                            "DEFERRED": [
+                                {
+                                    "ARGLIST": [
+                                        "echo",
+                                        "foo"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        ]
+    }
+]

@@ -1,0 +1,10 @@
+<script src="js/lib/galleria/galleria-1.2.8.min.js" />
+<div id=div{{{pid}} style="height:600px;">
+{{#each files}}
+<a href="{{this.raw.content.src}}"><img src="{{this.thumbnail.url}}" data-description="{{this.title}}"></a>
+{{/each}}
+</div>
+<script>
+    Galleria.loadTheme('js/lib/galleria/themes/classic/galleria.classic.min.js');
+    Galleria.run('#div{{{pid}}}');
+</script>

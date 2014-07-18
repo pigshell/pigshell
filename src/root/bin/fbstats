@@ -1,0 +1,14 @@
+# script to generate Facebook statistics for logged in user
+if ! T -d /facebook/me; then echo Connect Facebook first; exit 1; fi
+html "<h1>Facebook Friend Stats</h1>"
+
+t1='<img src="{{{canvas file}}}"></img>'
+t2='<img src="{{{canvas chart1}}}"></img><img src="{{{canvas chart4}}}"></img><img src="{{{canvas chart3}}}"></img>'
+
+chart1=$(chart -t pie -o title="Boys vs Girls",field=gender,height=150 /facebook/friends/*)
+chart4=$(ls /facebook/friends/ | grep -f gender female | chart -t pie -o title="Relationship Status - Girls",field=relationship_status,height=150)
+chart3=$(ls /facebook/friends/ | grep -f gender male | chart -t pie -o title="Relationship Status - Boys",field=relationship_status,height=150)
+template -c chart1,chart4,chart3 -s $t2 </dev/null
+html "<div class='clear'></div>"
+ls /facebook/friends | map -c "height: 200px; width:333px; float: left;margin:20px"
+ls /facebook/friends/ | jf 'x.birthday && x.birthday.year() != 2222 ? {data: x.birthday.format("YYYY")} : {}' | chart -t histogram -o title="Birth Year",xmin=min,height=240 | template -s $t1

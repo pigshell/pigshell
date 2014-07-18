@@ -1,0 +1,47 @@
+Release Engineering
+===================
+
+## Requirements ##
+
+1.  Individual versions must be accessible via versioned URL:
+    http://pigshell.com/v/0.5.0
+    This URL must contain everything necessary to run that particular version.
+2.  The main URL must be http://pigshell.com (and must not 301 redirect to a
+    particular version). Experience with main URL must be identical to the
+    versioned URL
+3.  Embedded cases - pages which source pigshell.js from a versioned URL must
+    work with all scripts etc. coming from that version.
+4.  Some resources must be accessed with absolute URLs, e.g. OAuth2 redirect
+    URLs cannot be version-based.
+5.  Caching should work properly. Resources should be cached. Main site
+    resources should be invalidated as soon as the main site changes.
+    Versioned URL resources can last for as long as needed, since they are by
+    definition immutable.
+6.  Minimal manual changes to code and configuration for a release. Very
+    simple way to roll back to older version.
+7.  Drop-dead simple way to a. test the staging version and b. verify that the
+    live version is identical to the one which was tested.
+
+## Current design ##
+
+1.  Common resources - OAuth2 redirect pages, javascript, sample directory
+    - these are meant to be accessed via absolute, version-independent URLs.
+    Keep them in a separate directory. Serve them out separately in apache.
+2.  pigshell.com issues a 302 to redirect to the latest version. This does
+    incur the penalty of a redirect, but the benefits in terms of meeting
+    requirements 5, 6, 7 are very high and cannot be adequately met by other
+    methods.
+
+## Release process ##
+
+0.  Checkout into a new directory.
+1.  make release. This dumps all resources which belong in a version inside the
+    build/$VERSION directory
+2.  Copy build/$VERSION to the release directory.
+3.  rsync to do-pigshell release directory
+4.  Test using versioned URL
+5.  Verify whether any common resources need to be updated. This is a manual
+    process to be done carefully as it will affect older versions, when
+    accessed through their versioned URLs.
+6.  Make the 302 change in apache, apache2ctl -t, apachectl graceful.
+    Test with main URL - it should redirect to new version

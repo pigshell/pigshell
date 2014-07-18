@@ -1,0 +1,16 @@
+usage="stop         -- stop pipeline\
+\
+Usage:\
+    stop <pid>...\
+    stop -h | --help\
+\
+Options:\
+    -h --help   Show this message.\
+    <pid>       Pipeline id, obtained from ps\
+"
+
+if ! docopt $usage $*; then
+    exit false
+fi
+
+for i in $pid; do echo 'stop' >/proc/$i/ctl; done

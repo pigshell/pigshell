@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+import os, sys
+import json
+
+PREFIX = '''
+goog.provide('%s');
+var %s = '''
+
+SUFFIX = ';\n'
+
+def process_dir(dirname):
+    files = os.listdir(dirname)
+    files = [f for f in files if not f.startswith('.')]
+    d = {}
+    for f in files:
+        fname = os.path.join(dirname, f)
+        if os.path.isdir(fname):
+            d[f] = process_dir(fname)
+        else:
+            with open(fname, "r") as fh:
+                cmd = fh.read()
+                d[f] = cmd
+    return d
+
+def main(dirname):
+    d = process_dir(dirname)
+    dirstr = json.dumps(d)
+    with open(outfile, "w") as b:
+        b.write(PREFIX % (dirname, dirname))
+        b.write(dirstr)
+        b.write(SUFFIX)
+
+if __name__ == '__main__':
+    try:
+        dirname = sys.argv[1]
+        outfile = sys.argv[2]
+    except:
+        dirname = 'bin'
+        outfile = 'bin.js'
+    main(dirname)

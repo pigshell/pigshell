@@ -1,0 +1,286 @@
+[
+    {
+        "IF": [
+            [
+                [
+                    "IFNOT",
+                    {
+                        "ARGLIST": [
+                            "T",
+                            "-d",
+                            "/facebook/me"
+                        ]
+                    },
+                    [
+                        {
+                            "ARGLIST": [
+                                "echo",
+                                "Connect",
+                                "Facebook",
+                                "first"
+                            ]
+                        },
+                        {
+                            "ARGLIST": [
+                                "exit",
+                                "1"
+                            ]
+                        }
+                    ]
+                ]
+            ],
+            []
+        ]
+    },
+    {
+        "ARGLIST": [
+            "printf",
+            "-Hs",
+            "<h1>Facebook report</h1>"
+        ]
+    },
+    "",
+    {
+        "PIPE": [
+            {
+                "ARGLIST": [
+                    "ls",
+                    "-s",
+                    "0",
+                    "-m",
+                    "1000",
+                    "/facebook/me/posts"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "sort",
+                    "-rf",
+                    "comments"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "sort",
+                    "-rf",
+                    "likes"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "head",
+                    "-n",
+                    "1"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "template",
+                    "/templates/fr1"
+                ]
+            }
+        ]
+    },
+    "",
+    {
+        "PIPE": [
+            {
+                "ARGLIST": [
+                    "ls",
+                    "-s",
+                    "0",
+                    "-m",
+                    "1000",
+                    "/facebook/me/posts"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "sort",
+                    "-rf",
+                    "likes"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "sort",
+                    "-rf",
+                    "comments"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "head",
+                    "-n",
+                    "1"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "template",
+                    "/templates/fr2"
+                ]
+            }
+        ]
+    },
+    "",
+    {
+        "PIPE": [
+            {
+                "ARGLIST": [
+                    "chart",
+                    "-f",
+                    "type",
+                    "-H",
+                    "300",
+                    "-t",
+                    "Post Type",
+                    "/facebook/me/posts/*"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "template",
+                    "/templates/fr3"
+                ]
+            }
+        ]
+    },
+    "",
+    {
+        "PIPE": [
+            {
+                "ARGLIST": [
+                    "chart",
+                    "-f",
+                    "gender",
+                    "-H",
+                    "300",
+                    "/facebook/friends/*"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "template",
+                    "/templates/fr4"
+                ]
+            }
+        ]
+    },
+    "",
+    {
+        "PIPE": [
+            {
+                "ARGLIST": [
+                    "chart",
+                    "-f",
+                    "relationship_status",
+                    "-H",
+                    "300",
+                    "/facebook/friends/*"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "template",
+                    "/templates/fr5"
+                ]
+            }
+        ]
+    },
+    "",
+    {
+        "PIPE": [
+            {
+                "ARGLIST": [
+                    "ls",
+                    "/facebook/friends/"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "grep",
+                    "-f",
+                    "gender",
+                    "female"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "chart",
+                    "-t",
+                    "Female Relationship Status",
+                    "-f",
+                    "relationship_status",
+                    "-H",
+                    "300"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "template",
+                    "/templates/fr6"
+                ]
+            }
+        ]
+    },
+    "",
+    {
+        "PIPE": [
+            {
+                "ARGLIST": [
+                    "ls",
+                    "/facebook/friends/"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "grep",
+                    "-f",
+                    "gender",
+                    "male"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "chart",
+                    "-t",
+                    "Male Relationship Status",
+                    "-f",
+                    "relationship_status",
+                    "-H",
+                    "300"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "template",
+                    "/templates/fr7"
+                ]
+            }
+        ]
+    },
+    "",
+    {
+        "PIPE": [
+            {
+                "ARGLIST": [
+                    "chart",
+                    "-H",
+                    "300",
+                    "-t",
+                    "Year of Birth",
+                    "-e",
+                    "x.birthday && x.birthday.year() != 0 ? x.birthday.format('YYYY') : 'Not Available'",
+                    "/facebook/friends/*"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "template",
+                    "/templates/fr8"
+                ]
+            }
+        ]
+    }
+]

@@ -1,0 +1,55 @@
+mv(1) -- move files
+===================
+
+## SYNOPSIS
+
+`mv` [-o <opts>] <source> <target><br>
+`mv` [-o <opts>] <source>... <target><br>
+`mv` [-o <opts>] <target>
+
+## DESCRIPTION
+
+In its first form, **mv** renames the file specified by <source> to the path
+specified by <target>. If both <source> and <target> are regular files,
+<target> is replaced by <source>. If <target> is a directory, then <source> is
+moved into <target>, replacing any file by the same name which might exist
+in <target>.
+
+In its second form, it moves all <source> files to the <target> directory,
+which must exist.
+
+In its third form, **mv** reads File(2) objects produced by ls(1) from standard
+input and moves them to <target>.
+
+In all cases, <source> and <target> must belong to the same filesystem, and
+the filesystem must support rename(2).
+
+The following options are supported:
+
+  * `-o ` <opts>:
+    Options in the options(7) format which are passed down. **mv** does not
+    inspect any of the options.
+
+## DIAGNOSTICS
+
+The **mv** command exits with `true` on success and non-`true` if an error
+occurs.
+
+## EXAMPLES
+
+Simple mv:
+
+    $ mv foo bar
+
+Move multiple files:
+
+    $ mv file*.png photos
+
+Move all GDrive spreadsheets to the xlsx folder:
+
+    $ cd /gdrive/username@gmail.com; mkdir xlsx
+    $ ls | grep -f mime spreadsheet | mv xlsx
+
+## SEE ALSO
+
+cp(1)

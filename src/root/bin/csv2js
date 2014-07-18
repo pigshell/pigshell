@@ -1,0 +1,3 @@
+load extra/dsv.min.js
+#to -g text | jf '(function(){var lines = x.split("\\n"), header = lines[0].trim().split(","); return lines.slice(1).map(function(l) { var comps = l.trim().split(","); return (comps.length === header.length) ? zip_object(header, l.split(",")) : null; }).filter(function(l) { return !!l })})()'
+to -g text | jf 'dsv.csv.parse(x)'

@@ -1,0 +1,20 @@
+[
+    {
+        "PIPE": [
+            {
+                "ARGLIST": [
+                    "sh",
+                    "/bin/ps"
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "grep",
+                    {
+                        "VARVAL": "1"
+                    }
+                ]
+            }
+        ]
+    }
+]

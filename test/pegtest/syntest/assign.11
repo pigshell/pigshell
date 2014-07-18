@@ -1,0 +1,10 @@
+# Here we test single and double quoted strings with backslash escapes
+d1="abc\"\'\ \\fala\nbala" # only the double quote and backslash are escaped
+d2="abc\"\'\
+\\fala\nbala" # we snuck in a linefeed
+d3="\0\b\t\n\v\f\r\x33\u1234"
+
+s1='abc\"\'\ \\fala\nbala' # only the single quote and backslash are escaped
+s2='abc\"\'\
+\\fala\nbala' # we snuck in a linefeed
+s3="\0\b\t\n\v\f\r\x33\u1234"

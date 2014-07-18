@@ -1,0 +1,62 @@
+options(7) -- option strings
+============================
+
+## SYNOPSIS
+
+http://foo.bar#<name1>=<val1>,<name2.subname1>=<val2>...<br>
+-o '<name1>=<val1>,<name2.subname1>=<val2>...'<br>
+-o '{ "<name1>": <val1>, "<name2>": { "<subname1>": <val2> }'
+
+## DESCRIPTION
+
+Many _pigshell_ entities, including URLs, CLI commands and APIs, take an
+**options** argument. These **options** are converted into a plain Javascript
+object and passed down the stack.
+
+**Options** may be generic (e.g. "debug=6") or made specific to a layer (e.g.
+"cp.debug=6") by namespacing. It is the responsibility of each layer to
+extract options it exclusively owns and namespaces it claims before passing
+the options object further down.
+
+In the first form, **options** are a string embedded as the hash fragment of
+the URL. In the second form, they may be specified as a string of
+comma-separated <name>=<value> pairs.  In the third form, they may be specified
+as a JSON string.
+
+The options mechanism is fundamental to making quirks and configuration
+settings of lower level layers accessible to the user without complicating
+individual utilities or intermediate layers.
+
+## EXAMPLES
+
+Convert a Google Doc file to PDF and display it on the console:
+
+    $ cat -o gdrive.fmt=pdf /gdrive/username@gmail.com/Resume
+    $ cat -o '{"gdrive": {"fmt": "pdf"}}' /gdrive/username@gmail.com/Resume
+
+Copy a PDF rendition of a Google Doc file:
+
+    $ cp -o gdrive.fmt=pdf /gdrive/username@gmail.com/Resume /home
+
+Note that in all cases, `cp` and `cat` are blissfully unaware of the meaning
+of the option, while deep down the stack, the GDrive filesystem looks at the
+option and twiddles the appropriate format conversion setting in the API
+request.
+
+Attempt to fetch a URL directly (bypassing the proxy), assuming the site
+supports CORS:
+
+    $ cat 'http://foo.bar.com/baz.html#tx=direct'
+    $ cat -o tx=direct 'http://foo.bar.com/baz.html'
+
+Both these forms deliver the same option to the HTTP transport layer.  The
+first form sticks the option to the URL, while the second relies on the command
+to deliver it down the stack.
+
+## BUGS
+
+There are inconsistencies regarding the implementation of options at different
+levels in the stack. The option namespace needs to be mapped and documented.
+
+The option string is assumed to be URL-encoded, which may cause surprises when
+attempting to pass strings containing '%' and other escape characters.

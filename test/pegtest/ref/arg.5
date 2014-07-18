@@ -1,0 +1,47 @@
+[
+    {
+        "ARGLIST": [
+            "echo",
+            {
+                "VARVAL": [
+                    "a",
+                    [
+                        "0",
+                        {
+                            "BACKQUOTE": [
+                                {
+                                    "ARGLIST": [
+                                        "E",
+                                        {
+                                            "BACKQUOTE": [
+                                                {
+                                                    "PIPE": [
+                                                        {
+                                                            "ARGLIST": [
+                                                                "ls"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "ARGLIST": [
+                                                                "sum"
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "-",
+                                        "1"
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "VARVAL": "b"
+                        }
+                    ]
+                ]
+            }
+        ]
+    }
+]

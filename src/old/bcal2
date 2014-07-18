@@ -1,0 +1,31 @@
+function maketr {
+    _line=()
+    for _i in $*; do
+        _line=($_line $(printf -s "<td>%s</td>" $_i))
+    done
+    echo "<tr>" $_line "</tr>"
+}
+
+days=(Su Mo Tu We Th Fr Sa)
+yyyy=2012
+m=1
+d=0
+i=0
+cal=$(maketr $days)
+line=()
+start=$(date -t $yyyy-$m-01 -f u)
+#echo $"days
+while T $i -le 42; do
+    day=$(date -t $start -v $d^d -f d)
+    m2=$(date -t $start -v $d^d -f M)
+    if T $i -lt $day || T $m2 -gt $m; then
+        line=($line '  ')
+    else
+        d=$(E $d + 1)
+        line=($line $(printf -s "%2s" $d))
+    fi
+    i=$(E $i + 1)
+    #if T $#line -eq 7; then echo $"line; line=(); fi
+    if T $#line -eq 7; then cal=($cal $(maketr $line)); line=(); fi
+done
+printf -sH "<table>%s</table>" $"cal

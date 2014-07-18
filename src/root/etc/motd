@@ -1,0 +1,5 @@
+
+Resources on the web are represented as files in a hierarchical file system. These include public web pages as well as your data on Facebook, Google drive and Picasa albums. Construct pipelines of simple unix-style commands to filter, transform and display your files.
+
+Type "help" for a list of commands. "cat /usr/share/doc/README.html" for an introduction. "man <cmd>" to view the man page.
+

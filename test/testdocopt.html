@@ -1,0 +1,45 @@
+<!-- -*- mode:javascript -*--->
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8" />
+<script src="../js/docopt.js"></script>
+<script>
+// Load the SDK Asynchronously
+function parseOpt(result) {
+    if(result[0] === null)
+        return JSON.stringify(result[1]);
+    else
+        return result[0];
+};
+
+function run(){
+  var doc = "Usage:\nquick_example.coffee tcp <host> <port> [--timeout=<seconds>] [filename]\nquick_example.coffee serial <port> [--baud=9600] [--timeout=<seconds>]\nquick_example.coffee -h | --help | --version\n\n"; 
+  try {
+    var result = docopt(doc,{'argv':['tcp', 'foo', '234', '--timeout=100']});
+    console.log(parseOpt(result));
+    var result = docopt(doc,{'argv':['--help']});
+    console.log(parseOpt(result));
+    var result = docopt(doc,{'argv':['--version'], version: '0.1.1rc'});
+    console.log(parseOpt(result));
+    var result = docopt(doc,{'argv':['--hello']});
+    console.log(parseOpt(result));
+    var result = docopt(doc,{'argv':['--baud=10', '--baud=100']});
+    console.log(parseOpt(result));
+    var result = docopt(doc,{'argv':['--hi=10', '--ho=100']});
+    console.log(parseOpt(result));
+    var result = docopt(doc,{'argv':['tcp', 'amol', '80', '10']});
+    console.log(parseOpt(result));
+    var result = docopt("Usage:\nls [-l] [filename]\n\n",{'argv':['-l', 'amol']});
+    console.log(parseOpt(result));
+  } catch(err) {
+   console.log("err obj " + err.toString());
+  }
+};
+</script>
+</head>
+<body onload="run()">
+<div id="tilda"></div>
+</body>
+</html>
+

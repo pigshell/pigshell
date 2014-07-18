@@ -1,0 +1,62 @@
+[
+    {
+        "RETURN": "1"
+    },
+    {
+        "RETURN": {
+            "SQUOTED_STRING": "false"
+        }
+    },
+    {
+        "RETURN": "false"
+    },
+    "",
+    {
+        "FUNCTION": [
+            "foo",
+            [
+                {
+                    "ARGLIST": [
+                        "echo",
+                        "foo",
+                        "bar",
+                        {
+                            "VARVAL": "blah"
+                        }
+                    ]
+                },
+                {
+                    "IF": [
+                        [
+                            [
+                                "IF",
+                                {
+                                    "ARGLIST": [
+                                        "T",
+                                        {
+                                            "VARVAL": "x"
+                                        },
+                                        "=",
+                                        {
+                                            "VARVAL": "y"
+                                        }
+                                    ]
+                                },
+                                [
+                                    {
+                                        "RETURN": "true"
+                                    }
+                                ]
+                            ]
+                        ],
+                        [
+                            {
+                                "RETURN": "false"
+                            }
+                        ]
+                    ]
+                }
+            ]
+        ]
+    }
+]

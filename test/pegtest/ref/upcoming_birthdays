@@ -1,0 +1,597 @@
+[
+    {
+        "IF": [
+            [
+                [
+                    "IFNOT",
+                    {
+                        "ARGLIST": [
+                            "T",
+                            "-d",
+                            "/facebook/me"
+                        ]
+                    },
+                    [
+                        {
+                            "ARGLIST": [
+                                "echo",
+                                "Connect",
+                                "Facebook",
+                                "first"
+                            ]
+                        },
+                        {
+                            "ARGLIST": [
+                                "exit",
+                                "1"
+                            ]
+                        }
+                    ]
+                ]
+            ],
+            []
+        ]
+    },
+    "",
+    {
+        "IF": [
+            [
+                [
+                    "IF",
+                    {
+                        "ARGLIST": [
+                            "T",
+                            {
+                                "VARVAL": "#"
+                            },
+                            "!=",
+                            "0"
+                        ]
+                    },
+                    [
+                        {
+                            "ASSIGN": {
+                                "start": {
+                                    "BACKQUOTE": [
+                                        {
+                                            "ARGLIST": [
+                                                "date",
+                                                "-f",
+                                                "u",
+                                                "-t",
+                                                {
+                                                    "VARVAL": "1"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    ]
+                ]
+            ],
+            [
+                {
+                    "ASSIGN": {
+                        "start": {
+                            "BACKQUOTE": [
+                                {
+                                    "ARGLIST": [
+                                        "date",
+                                        "-f",
+                                        "u"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        ]
+    },
+    {
+        "ASSIGN": {
+            "start_year": {
+                "BACKQUOTE": [
+                    {
+                        "ARGLIST": [
+                            "date",
+                            "-t",
+                            {
+                                "VARVAL": "start"
+                            },
+                            "-f",
+                            "YYYY"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "",
+    {
+        "ASSIGN": {
+            "end": {
+                "BACKQUOTE": [
+                    {
+                        "ARGLIST": [
+                            "date",
+                            "-t",
+                            {
+                                "VARVAL": "start"
+                            },
+                            "-v",
+                            "7d",
+                            "-f",
+                            "u"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "ASSIGN": {
+            "end_year": {
+                "BACKQUOTE": [
+                    {
+                        "ARGLIST": [
+                            "date",
+                            "-t",
+                            {
+                                "VARVAL": "end"
+                            },
+                            "-f",
+                            "YYYY"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "",
+    {
+        "ASSIGN": {
+            "xyear": "1"
+        }
+    },
+    {
+        "IF": [
+            [
+                [
+                    "IF",
+                    {
+                        "ARGLIST": [
+                            "T",
+                            {
+                                "VARVAL": "end_year"
+                            },
+                            "!=",
+                            {
+                                "VARVAL": "start_year"
+                            }
+                        ]
+                    },
+                    [
+                        {
+                            "ASSIGN": {
+                                "xyear": "1"
+                            }
+                        }
+                    ]
+                ]
+            ],
+            []
+        ]
+    },
+    "",
+    {
+        "ASSIGN": {
+            "friends": {
+                "LIST": ""
+            }
+        }
+    },
+    {
+        "FOR": [
+            "i",
+            {
+                "ARGLIST": [
+                    "/facebook/friends/*"
+                ]
+            },
+            [
+                {
+                    "ASSIGN": {
+                        "day": {
+                            "BACKQUOTE": [
+                                {
+                                    "ARGLIST": [
+                                        "printf",
+                                        "%(birthday)s",
+                                        {
+                                            "VARVAL": "i"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "IF": [
+                        [
+                            [
+                                "IFNOT",
+                                {
+                                    "ARGLIST": [
+                                        "T",
+                                        {
+                                            "VARVAL": "day"
+                                        },
+                                        "=",
+                                        "null"
+                                    ]
+                                },
+                                [
+                                    {
+                                        "ASSIGN": {
+                                            "mmdd": {
+                                                "BACKQUOTE": [
+                                                    {
+                                                        "ARGLIST": [
+                                                            "date",
+                                                            "-t",
+                                                            {
+                                                                "VARVAL": "day"
+                                                            },
+                                                            "-f",
+                                                            "MM-DD"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "ASSIGN": {
+                                            "month": {
+                                                "BACKQUOTE": [
+                                                    {
+                                                        "ARGLIST": [
+                                                            "date",
+                                                            "-t",
+                                                            {
+                                                                "VARVAL": "day"
+                                                            },
+                                                            "-f",
+                                                            "M"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "IF": [
+                                            [
+                                                [
+                                                    "IF",
+                                                    {
+                                                        "AND": [
+                                                            {
+                                                                "ARGLIST": [
+                                                                    "T",
+                                                                    {
+                                                                        "VARVAL": "xyear"
+                                                                    },
+                                                                    "-eq",
+                                                                    "1"
+                                                                ]
+                                                            },
+                                                            {
+                                                                "ARGLIST": [
+                                                                    "T",
+                                                                    {
+                                                                        "VARVAL": "month"
+                                                                    },
+                                                                    "-eq",
+                                                                    "1"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    [
+                                                        {
+                                                            "ASSIGN": {
+                                                                "bday": {
+                                                                    "BACKQUOTE": [
+                                                                        {
+                                                                            "ARGLIST": [
+                                                                                "date",
+                                                                                "-t",
+                                                                                {
+                                                                                    "^": [
+                                                                                        {
+                                                                                            "^": [
+                                                                                                {
+                                                                                                    "VARVAL": "end_year"
+                                                                                                },
+                                                                                                "-"
+                                                                                            ]
+                                                                                        },
+                                                                                        {
+                                                                                            "VARVAL": "mmdd"
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                "-f",
+                                                                                "u"
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                ]
+                                            ],
+                                            [
+                                                {
+                                                    "ASSIGN": {
+                                                        "bday": {
+                                                            "BACKQUOTE": [
+                                                                {
+                                                                    "ARGLIST": [
+                                                                        "date",
+                                                                        "-t",
+                                                                        {
+                                                                            "^": [
+                                                                                {
+                                                                                    "^": [
+                                                                                        {
+                                                                                            "VARVAL": "start_year"
+                                                                                        },
+                                                                                        "-"
+                                                                                    ]
+                                                                                },
+                                                                                {
+                                                                                    "VARVAL": "mmdd"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        "-f",
+                                                                        "u"
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "IF": [
+                                            [
+                                                [
+                                                    "IF",
+                                                    {
+                                                        "AND": [
+                                                            {
+                                                                "ARGLIST": [
+                                                                    "T",
+                                                                    {
+                                                                        "VARVAL": "bday"
+                                                                    },
+                                                                    "-ge",
+                                                                    {
+                                                                        "VARVAL": "start"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "ARGLIST": [
+                                                                    "T",
+                                                                    {
+                                                                        "VARVAL": "bday"
+                                                                    },
+                                                                    "-le",
+                                                                    {
+                                                                        "VARVAL": "end"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    [
+                                                        {
+                                                            "ASSIGN": {
+                                                                "friends": {
+                                                                    "LIST": [
+                                                                        {
+                                                                            "VARVAL": "friends"
+                                                                        },
+                                                                        {
+                                                                            "VARVAL": "i"
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            }
+                                                        }
+                                                    ]
+                                                ]
+                                            ],
+                                            []
+                                        ]
+                                    }
+                                ]
+                            ]
+                        ],
+                        []
+                    ]
+                }
+            ]
+        ]
+    },
+    "",
+    {
+        "IF": [
+            [
+                [
+                    "IF",
+                    {
+                        "ARGLIST": [
+                            "T",
+                            {
+                                "VARLEN": "friends"
+                            },
+                            "-gt",
+                            "0"
+                        ]
+                    },
+                    [
+                        {
+                            "ARGLIST": [
+                                "echo",
+                                "Friends with birthdays within a week from",
+                                {
+                                    "BACKQUOTE": [
+                                        {
+                                            "ARGLIST": [
+                                                "date",
+                                                "-t",
+                                                {
+                                                    "VARVAL": "start"
+                                                },
+                                                "-f",
+                                                "MMMM D"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "ASSIGN": {
+                                "friendobjs": {
+                                    "BACKQUOTE": [
+                                        {
+                                            "ARGLIST": [
+                                                "sort",
+                                                "-e",
+                                                "x.birthday.format('MMDD')",
+                                                {
+                                                    "VARVAL": "friends"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        {
+                            "FOR": [
+                                "i",
+                                {
+                                    "ARGLIST": [
+                                        {
+                                            "VARVAL": "friendobjs"
+                                        }
+                                    ]
+                                },
+                                [
+                                    {
+                                        "ARGLIST": [
+                                            "echo",
+                                            {
+                                                "BACKQUOTE": [
+                                                    {
+                                                        "PIPE": [
+                                                            {
+                                                                "ARGLIST": [
+                                                                    "echo",
+                                                                    {
+                                                                        "VARVAL": "i"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "ARGLIST": [
+                                                                    "printf",
+                                                                    "%(name)-20s"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "BACKQUOTE": [
+                                                    {
+                                                        "ARGLIST": [
+                                                            "date",
+                                                            "-t",
+                                                            {
+                                                                "BACKQUOTE": [
+                                                                    {
+                                                                        "PIPE": [
+                                                                            {
+                                                                                "ARGLIST": [
+                                                                                    "echo",
+                                                                                    {
+                                                                                        "VARVAL": "i"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "ARGLIST": [
+                                                                                    "printf",
+                                                                                    "%(birthday)s"
+                                                                                ]
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ]
+                                                            },
+                                                            "-f",
+                                                            "MMMM D"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    ]
+                ]
+            ],
+            [
+                {
+                    "ARGLIST": [
+                        "echo",
+                        "No friends with birthdays a week from",
+                        {
+                            "BACKQUOTE": [
+                                {
+                                    "ARGLIST": [
+                                        "date",
+                                        "-t",
+                                        {
+                                            "VARVAL": "start"
+                                        },
+                                        "-f",
+                                        "MMMM D"
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        ]
+    }
+]

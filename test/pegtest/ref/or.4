@@ -1,0 +1,42 @@
+[
+    {
+        "OR": [
+            {
+                "OR": [
+                    {
+                        "OR": [
+                            {
+                                "ARGLIST": [
+                                    "cmd1",
+                                    "arg1",
+                                    "arg2",
+                                    {
+                                        "DQUOTED_STRING": "arg 3"
+                                    }
+                                ]
+                            },
+                            {
+                                "ARGLIST": [
+                                    "cmd2",
+                                    "-f",
+                                    "something"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "ARGLIST": [
+                            "cmd3"
+                        ]
+                    }
+                ]
+            },
+            {
+                "ARGLIST": [
+                    "cmd4",
+                    "-l"
+                ]
+            }
+        ]
+    }
+]

@@ -1,0 +1,16 @@
+usage='fgrep      -- file grep\
+\
+Usage:\
+    fgrep <regex> <file>...\
+    fgrep -h | --help\
+\
+Options:\
+    -h --help   Show this message.\
+    <regex>     Javascript regex.\
+'
+
+if ! docopt $usage $*; then exit false; fi
+
+for i in $file; do
+    cat $i | grep $regex | jf '"'$i': " + x'
+done

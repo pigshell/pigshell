@@ -1,0 +1,31 @@
+[
+    {
+        "ASSIGN": {
+            "varname1": {
+                "BACKQUOTE": [
+                    {
+                        "PIPE": [
+                            {
+                                "ARGLIST": [
+                                    "ls",
+                                    "-l"
+                                ]
+                            },
+                            {
+                                "ARGLIST": [
+                                    "grep",
+                                    "foo"
+                                ]
+                            }
+                        ],
+                        "TAIL": [
+                            {
+                                "REDIROUT": "/dev/null"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+]

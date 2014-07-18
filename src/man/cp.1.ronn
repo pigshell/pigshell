@@ -1,0 +1,124 @@
+cp(1) -- copy files
+===================
+
+## SYNOPSIS
+
+`cp` [-arcv] [-o <opts>] [-X <regex>] <source_file> <target_file><br>
+`cp` [-arcv] [-o <opts>] [-X <regex>] <source_file> <target_dir><br>
+`cp` [-arcv] [-o <opts>] [-X <regex>] <source_file>... <target_dir><br>
+`cp` [-arcv] [-o <opts>] [-X <regex>] <target_dir>
+
+## DESCRIPTION
+
+**cp** is a data mover, used for everything from simple copies to incremental
+backups. In the first form, **cp** copies the content of <source_file> to the
+<target_file>, overwriting the target if it exists. In the second form,
+<source_file> is copied to the <target_directory>, retaining the same name as
+in the source. In the third form, multiple source files may be copied to a
+target directory. In the last form, **cp** reads standard input, and File(2)
+object it encounters has its contents copied to the <target_dir>. This makes it
+possible to use **cp** as the last component of a file selection and filtering
+pipeline.
+
+The following options are available:
+
+  * `-r`:
+    Copy the entire subtree connected at <source_file>. In case <source_file>
+    terminates with a `/`, then the contents of <source_file> will be copied to
+    <target_dir>.  Otherwise, an entry for <source_file> itself will be created
+    in <target_dir> and its contents recursively copied inside that directory.
+    Like with the `-R` option of ls(1), files which implement readdir(2) but
+    mark themselves "nodescend" will not be traversed as directories.
+
+    read(2) is used to retrieve the contents of a file.
+
+  * `-c`:
+    Resume the copy. If the <target_file> is the same size or larger than
+    <source_file>, nothing is done. If <target_file> is smaller, then **cp**
+    tries to continue the read using <target_file>'s size as the starting
+    offset.
+
+    In some cases, files deliberately don't have a size exported by the
+    native API (e.g. Google Docs). Such files are compared by modification
+    time; if the source is older than the target, it is skipped.
+
+  * `-v`:
+    Verbose reporting. Writes a line for every file processed to standard
+    error, indicating whether the file was copied or skipped, how much was
+    copied and the reason for skipping. It is strongly recommended to use this
+    option while testing large recursive copies.
+
+  * `-X` <regex>:
+    Regular expression of paths to exclude during a recursive copy. <regex>
+    is a Javascript regular expression as defined in regexp(3).
+
+  * `-o` <opts>:
+    Option string in the options(7) format. See [OPTIONS][] for details.
+
+  * `-a`:
+    EXPERIMENTAL, do not use. "Archive" mode. Calls the bundle(2) operation on
+    the file, which, if implemented, returns an object containing the file and
+    all its accessories. This bundle object is then unbundled onto the target
+    filesystem in the bdl(5) format, if supported.
+
+    The purpose of archiving is to enable "rich" files to be migrated from
+    their parent containers onto plain old filesystems. For example, `cp -a`
+    of a URL will copy not only the HTML page itself, but also the embedded
+    CSS, Javascript and images, so that a subsequent read of the bundle from
+    the target filesystem will result in a fairly accurate representation of the
+    original. Similarly, a Picasa photo bundle will contain metadata and
+    thumbnails.
+
+    **cp** is unaware of the details of bundle(2); that is the responsibility
+    of the filesystem and mime type handler.
+
+## OPTIONS
+
+**cp** claims the `cp` namespace in options(7) strings passed through the `-o`
+option.
+
+  * `cp.chunksize`=<bytes>:
+    **cp** tries to read(2) files in chunks of <bytes>. Chunk size defaults to
+    4 MB. Some filesystems do not support chunked operation; in these cases
+    the option is ignored.
+
+  * `range.off`=<bytes>, `range.len`=<bytes>:
+    **cp** passes these down to read(2) for reading a part of the file. Poor
+    man's `dd`.
+
+## DIAGNOSTICS
+
+The **cp** command exits with `true` on success and non-`true` if an error
+occurs.
+
+The `-v` option results in one line per file processed printed to standard
+error, indicating whether the file was copied or skipped, how much was
+copied and the reason for skipping.
+
+## EXAMPLES
+
+Simple copy:
+
+    $ cp http://pigshell.com/sample/oslogos.png /tmp
+    $ cp /tmp/oslogos.png /mnt/anothername.png
+
+Backup GDrive to /home:
+
+    $ cp -rv -X '/Trash|/Shared With Me' /gdrive/username@gmail.com /home/
+    cp -crv -X /Trash /gdrive/username@gmail.com /home/drivebackup 2>/home/drivebackup/cplog.$(date -f "YYYY-MM-DD-HHmmss")
+
+Incremental backup of GDrive to /home:
+
+    $ cp -rvc -X '/Trash|/Shared With Me' /gdrive/username@gmail.com /home/ 2>/home/cplog.$(date -f "YYYY-MM-DD-HHmmss")
+
+Copy all spreadsheets from GDrive to Dropbox:
+
+    $ ls /gdrive/username@gmail.com | grep -f mime spreadsheet | cp -v /dropbox/username@gmail.com
+
+Extract third sector of a disk image:
+
+    $ cp -vo range.off=1024,range.len=512 /home/somefile.raw /tmp/sector-3
+
+## SEE ALSO
+
+mv(1)

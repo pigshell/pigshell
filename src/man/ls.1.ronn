@@ -1,0 +1,53 @@
+ls(1) -- list directory contents
+================================
+
+## SYNOPSIS
+
+`ls` [-aldRqrtcTGFDX] [-f <field>] [-s <date>] [-m <num>] [-n <depth>] [<file>...]
+
+## DESCRIPTION
+
+**ls** converts pathnames into File(2) objects. For each path of a type other
+than a directory, ls produces the files contained within that directory. If no
+operands are given, the contents of the current directory are produced.
+
+By default, **ls** output on a terminal displays an HTML representation of the
+file. If files are displayed from multiple directories, "header" lines are
+printed to indicate the directory. These lines are produced only when the
+output is a terminal; otherwise a stream of pure objects is produced. Some
+options like `-l` and `-G` cause strings to be generated instead of objects. 
+
+**ls** adds a <_path> property to the File(2) object emitted, which contains the
+relative path as seen by **ls**. This can be used by downstream commands to do
+their own lookup(2). 
+
+The following options are available:
+
+  * `-d`:
+    Directories are listed as plain files
+
+  * `-l`:
+    Long listing. Similar to UNIX ls.
+
+  * `-R`:
+    Recursively descend directories. By default, **ls** does not cross
+    filesystem boundaries. Strictly speaking, it stops when the URI authority
+    of the parent does not match that of the child. It also avoids files
+    which it has already seen. Some files (e.g. html files) export
+    readdir(2), but indicate that they should not be traversed by recursive
+    descent. Such files are also ignored.
+
+    Due to all these mechanisms, `ls -R` usually terminates without making
+    a Wowbaggerian pilgrimage of every URL on the Internet in alphabetical
+    order.
+
+  * Other options are experimental and subject to change.
+
+## DIAGNOSTICS
+
+The **ls** command exits with `true` on success and non-`true` if an error
+occurs.
+
+## BUGS
+
+Lots. Use `-R` and friends with caution.

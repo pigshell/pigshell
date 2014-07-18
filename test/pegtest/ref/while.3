@@ -1,0 +1,46 @@
+[
+    {
+        "WHILE": [
+            {
+                "ARGLIST": [
+                    "T",
+                    {
+                        "VARVAL": "i"
+                    },
+                    {
+                        "SQUOTED_STRING": "<"
+                    },
+                    "10"
+                ]
+            },
+            [
+                {
+                    "ARGLIST": [
+                        "printf",
+                        {
+                            "DQUOTED_STRING": "%(something)s"
+                        },
+                        {
+                            "VARVAL": "i"
+                        }
+                    ]
+                },
+                {
+                    "PIPE": [
+                        {
+                            "ARGLIST": [
+                                "echo",
+                                "blah"
+                            ]
+                        },
+                        {
+                            "ARGLIST": [
+                                "bar"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        ]
+    }
+]

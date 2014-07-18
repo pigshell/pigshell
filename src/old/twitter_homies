@@ -1,0 +1,11 @@
+#This script lists followers from your location
+
+if ! T -d /twitter/me; then echo Connect Twitter first; exit 1; fi
+
+my_location=$(printf "%(raw.location)s" /twitter/me)
+x=$(E '"'$my_location'"'".split(/,/)[0]")
+if T -z $my_location; then
+    echo "Your location is not mentioned in your twitter profile"
+else
+    printf "%(name)20s %(raw.location)s" /twitter/followers/* | grep -i $x
+fi

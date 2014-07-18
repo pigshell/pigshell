@@ -1,0 +1,79 @@
+[
+    {
+        "ASSIGN": {
+            "usage": {
+                "DQUOTED_STRING": "stop         -- stop pipeline\n\nUsage:\n    stop <pid>...\n    stop -h | --help\n\nOptions:\n    -h --help   Show this message.\n    <pid>       Pipeline id, obtained from ps\n"
+            }
+        }
+    },
+    "",
+    {
+        "IF": [
+            [
+                [
+                    "IFNOT",
+                    {
+                        "ARGLIST": [
+                            "docopt",
+                            {
+                                "VARVAL": "usage"
+                            },
+                            {
+                                "VARVAL": "*"
+                            }
+                        ]
+                    },
+                    [
+                        {
+                            "ARGLIST": [
+                                "exit",
+                                "false"
+                            ]
+                        }
+                    ]
+                ]
+            ],
+            []
+        ]
+    },
+    "",
+    {
+        "FOR": [
+            "i",
+            {
+                "ARGLIST": [
+                    {
+                        "VARVAL": "pid"
+                    }
+                ]
+            },
+            [
+                {
+                    "ARGLIST": [
+                        "echo",
+                        {
+                            "SQUOTED_STRING": "stop"
+                        }
+                    ],
+                    "TAIL": [
+                        {
+                            "REDIROUT": {
+                                "^": [
+                                    {
+                                        "^": [
+                                            "/proc/",
+                                            {
+                                                "VARVAL": "i"
+                                            }
+                                        ]
+                                    },
+                                    "/ctl"
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        ]
+    }
+]

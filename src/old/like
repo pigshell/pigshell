@@ -1,0 +1,15 @@
+usage="like         -- like a Facebook entity\
+\
+Usage:\
+    like <file>\
+    like -h | --help\
+Options:\
+    -h --help   Show this message.\
+    <file>      Facebook file.\
+"
+
+if ! docopt $usage $*; then
+    exit false
+fi
+
+ls $file | grep -e "x.constructor === FacebookFile && typeof x.like === 'function' && x.like(x.handler)"

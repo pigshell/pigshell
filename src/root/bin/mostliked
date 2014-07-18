@@ -1,0 +1,39 @@
+usage="mostliked    -- most liked photos and posts on facebook\
+\
+Usage:\
+    mostliked [-n <num>] (photo|post|wall) [<frienddir>]\
+    mostliked -h | --help\
+\
+Options:\
+    -h --help       Show this message\
+    <frienddir>     Directory corresponding to friend. Defaults to /facebook/me\
+    -n <num>        Number of items [default: 5]\
+"
+
+if ! docopt $usage $*; then
+    exit false
+fi
+
+if ! T -d /facebook/me; then echo Connect Facebook first; exit 1; fi
+
+if T $#frienddir -eq 0; then frienddir=/facebook/me; fi
+
+photo_tmpl="<div>\
+{{#each files}}\
+<div style='display: inline-block;'>\
+<p style='text-align: center'>{{this.likes}}</p>\
+<a href='{{this.homeUrl}}' target='_blank'><img src='{{this.thumbnail.url}}'></img></a>\
+</div>\
+{{/each}}\
+</div>"
+
+if T $photo = "true"; then
+    if ! T -d $frienddir/albums; then echo "Album directory does not exist"; exit 1; fi
+    ls -R $frienddir/albums | grep -vf mime "directory" | sort -rf likes | head -n $n | template -g -s $photo_tmpl
+elif T $post = "true"; then
+    if ! T -d $frienddir/posts; then echo "Posts directory supported only for me; try mostliked wall <dir>"; exit 1; fi
+    ls -s 0 -m 1000 $frienddir/posts | sort -rf likes | head -n $n
+elif T $wall = "true"; then
+    if ! T -d $frienddir/wall; then echo "Wall directory does not exist"; exit 1; fi
+    ls -s 0 -m 1000 $frienddir/wall | sort -rf likes | head -n $n
+fi
