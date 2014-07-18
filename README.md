@@ -23,7 +23,7 @@ up by the modern web environment.
 * "Mount" multiple Google Drive and Dropbox accounts, copy files from anywhere
   to anywhere.
 * Plot your friends' locations on a map: `map /facebook/friends/*`
-* `scrape_web_page |  extract_table | draw_chart`
+* scrape_web_page |  extract_table | draw_chart
 
 ## Installation ##
 
