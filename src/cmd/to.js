@@ -18,7 +18,7 @@ To.prototype.usage = 'to           -- convert to type\n\n' +
     '    to [-g] [-m <mime>] <type> [<obj>...]\n' +
     '    to [-h | --help]\n\n' +
     'Options:\n' +
-    '    <type>        Destination type: text, blob, canvas, arraybuffer\n' +
+    '    <type>        Destination type: text, lines, blob, canvas, arraybuffer\n' +
     '    -g            Gather all input and convert in one shot\n' +
     '    -m <mime>     Set blob\'s mime type\n' + 
     '    -h --help     Show this message.\n';
@@ -26,7 +26,7 @@ To.prototype.usage = 'to           -- convert to type\n\n' +
 To.prototype.next = check_next(do_docopt(objargs(function() {
     var self = this,
         dtype = self.docopts['<type>'] || 'text',
-        valid = ["text", "blob", "canvas", "arraybuffer"],
+        valid = ["text", "lines", "blob", "canvas", "arraybuffer"],
         opts = self.docopts['-m'] ? {mime: self.docopts['-m']} : {};
 
     if (self.inited === undefined) {

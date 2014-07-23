@@ -137,11 +137,12 @@ Template.prototype.next = check_next(loadscripts(do_docopt(fileargs(function() {
 
 
 Template.prototype.exit = function() {
-    
+    var self = this;
+
     if (self._event_handler) {
         window.removeEventListener('message', self._event_handler);
     }
     return Template.base.prototype.exit.apply(this, arguments);
-}
+};
 
 Command.register("template", Template);

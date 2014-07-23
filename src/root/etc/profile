@@ -30,3 +30,8 @@ function html {
 function sjoin {
     jf -g 'x.slice(1).join(x[0])' $*
 }
+
+# parse JSON text
+function json2js {
+    to -g text | jf 'JSON.parse(x)'
+}

@@ -28,12 +28,14 @@ var Converters = {
                         'blob': text2blob,
                         'arraybuffer': _compose(text2blob, blob2ab),
                         'text': passthrough,
+                        'lines': text2lines,
                         'base64': text2base64,
                         'canvas': text2canvas
                     },
     'blob':         {
                         'canvas': blob2canvas,
                         'text': blob2text,
+                        'lines': _compose(blob2text, text2lines),
                         'arraybuffer': blob2ab,
                         'blob': passthrough,
                         'test': blob2test,
@@ -92,6 +94,21 @@ function blob2text(item, opts, cb) {
     });
     fr.readAsText(item);
     proc.current(null);
+}
+
+function text2lines(item, opts, cb) {
+    if (!isstring(item)) {
+        return cb("Not a string");
+    }
+    var linesep = opts.linesep || '\n',
+        lines = item.split(linesep),
+        last = lines.pop();
+
+    lines = lines.map(function(m) { return m + '\n'; });
+    if (last) {
+        lines.push(last);
+    }
+    return cb(null, lines);
 }
 
 function blob2canvas(item, opts, cb) {
