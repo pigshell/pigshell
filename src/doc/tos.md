@@ -1,7 +1,7 @@
 Terms of Use
 ============
 
-By using the [pigshell)(https://pigshell.com) website, you are agreeing to be
+By using the [pigshell](https://pigshell.com) website, you are agreeing to be
 bound by the following terms and conditions:
 
 1.  You are solely responsible for any text, images and other data which you 
