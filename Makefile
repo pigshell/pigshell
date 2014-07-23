@@ -7,7 +7,7 @@ RELDIR = build
 USRDOCDIR = usr/share/doc
 DOCDIR = doc
 USRMANDIR = usr/share/man
-PROD_FILES = $(ROOT) $(CSS) $(PIGSHELL) $(LIBS) $(DOCDIR) extra usr css/fonts images index.html
+PROD_FILES = $(ROOT) $(CSS) $(PIGSHELL) $(LIBS) $(DOCDIR) psty.py extra usr css/fonts images index.html
 #PEGJS = pegjs
 # Clone from https://github.com/ganeshv/pegjs
 PEGJS = ~/tmp/pegjs/bin/pegjs

@@ -140,7 +140,7 @@ Pie chart of relationship status of all female friends
 
 ## $HOME sweet $HOME ##
 
-Get a `/home`. <a href="psty.py" download="psty.py">Download _Psty_</a>, run it on your desktop:
+Get a `/home`. <a href="../psty.py" download="psty.py">Download _Psty_</a>, run it on your desktop:
 
     python psty.py -a -d /some/dir # Run in DESKTOP SHELL (bash), not pigshell
 

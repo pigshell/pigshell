@@ -36,7 +36,7 @@ Linux and Mac OS. A Windows port is in the works.
 Installation
 ------------
 
-Get it [here](../psty.py) and run it from a shell as follows:
+<a href="../psty.py" download="psty.py">Download _psty_</a> and run it from a shell as follows:
 
         bash$ python psty.py -a -d /some/scratch/directory
 
