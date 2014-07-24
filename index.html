@@ -85,9 +85,9 @@
     <script src="https://maps.google.com/maps/api/js?sensor=false"></script>
     <script type="text/javascript">
         var examples = [
-            ['Life expectancy map', 'cat http://pigshell.com/sample/life-expectancy.html | table2js -e "tr" foo country data | template -ig /templates/d3-worldmap1'],
+            ['Life expectancy map', 'cat http://pigshell.com/sample/life-expectancy.html | table2js -e "tr" foo country data | template -ig /usr/share/template/d3-worldmap1'],
             ['Life expectancy top 10', 'cat http://pigshell.com/sample/life-expectancy.html | table2js -e "table.wikitable tr" foo country data | sort -rnf data | head | printf "%(country)s %(data)s\\n"'],
-            ['GDP (PPP) map', 'cat http://pigshell.com/sample/gdp-ppp.html | to text | jf \'$$.html($$(x).find("table").first())\' | table2js -e "tr" foo country data | jf \'x.data = Math.round(+x.data.replace(/,/g,"")) / 1000, x\' | template -o title="GDP PPP (thousand USD)",proj=orthographic -ig /templates/d3-worldmap1'],
+            ['GDP (PPP) map', 'cat http://pigshell.com/sample/gdp-ppp.html | to text | jf \'$$.html($$(x).find("table").first())\' | table2js -e "tr" foo country data | jf \'x.data = Math.round(+x.data.replace(/,/g,"")) / 1000, x\' | template -o title="GDP PPP (thousand USD)",proj=orthographic -ig /usr/share/template/d3-worldmap1'],
             ['Friend stats', '/bin/fbstats'],
             ['Most liked photos', '/bin/mostliked photo'],
             ['Upcoming birthdays', '/bin/bday -n 4'],

@@ -16,7 +16,7 @@ RONN = ronn
 VERSION_MAJOR = 0
 VERSION_MINOR = 6
 VERSION_PATCH = 0
-VERSION_TAG = -pre1
+VERSION_TAG = -pre2
 VERSION_STR = $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)$(VERSION_TAG)
 VERSION_GIT = $(shell git rev-list --max-count=1 HEAD)
 
@@ -99,7 +99,7 @@ src/version.js: FORCE
 	fi; \
 	printf '!function(){ var pigshell = {version: { str: "%s", major: %d, minor: %d, patch: %d, git: "%s" }};\n' $(VERSION_STR) $(VERSION_MAJOR) $(VERSION_MINOR) $(VERSION_PATCH) $(VERSION_GIT) >$@
 	
-$(ROOT): src/root/bin src/root/usr src/root/etc src/root/templates src/root
+$(ROOT): src/root/bin src/root/usr src/root/etc src/root
 	tar --posix -c -C src/root --exclude .gitignore -f $@ .
 
 $(DOCS): $(DOCDIR)/%.html: src/doc/%.md header.html footer.html
