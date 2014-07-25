@@ -1735,6 +1735,7 @@ function popen(cmd, context, shell, opts) {
     var si = context ? context.stdin : null,
         so = context ? context.stdout : null,
         se = context ? context.stderr : null,
+        shopts = (opts && opts.shopts) ? opts.shopts : "-c",
         ctext = {};
 
     if (si) {
@@ -1769,7 +1770,7 @@ function popen(cmd, context, shell, opts) {
         }
         ctext.stderr = se;
     }
-    var subsh = new Shell({argv: ['sh', '-c', cmd], shell: shell});
+    var subsh = new Shell({argv: ['sh', shopts, cmd], shell: shell});
     var pipe = makepipe(subsh, ctext);
     return pipe;
 
@@ -1789,3 +1790,4 @@ function popen(cmd, context, shell, opts) {
 pigshell.publish = publish;
 pigshell.subscribe = subscribe;
 pigshell.popen = popen;
+pigshell.err_stringify = err_stringify;

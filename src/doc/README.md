@@ -8,7 +8,7 @@ public web pages as well as private data in Google Drive, Dropbox, Facebook and
 even your desktop. It provides a command line interface to construct pipelines
 of simple commands to transform, display and copy data.
 
-**_Pigshell_ is open source software**, released under the GNU GPLv3.
+**_Pigshell_ is free software**, released under the GNU GPLv3.
 
 _Pigshell_ is inspired by Unix philosophy: Everything is a file. Programs
 should do one thing well. Create tools by stringing together a combination of
