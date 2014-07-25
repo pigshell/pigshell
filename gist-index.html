@@ -20,7 +20,7 @@
         $(document).ready(function() {
             var ps = pigshell;
             ps.HttpFS.defaults.tx = 'direct';
-            var script = ps.mls(function() {/*
+            var script = ps.multiline(function() {/*
 mount http://pigshell.com/v/$(uname -r)/usr/ /usr
 sh -s /etc/profile
 

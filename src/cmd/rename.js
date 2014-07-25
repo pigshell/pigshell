@@ -11,7 +11,7 @@ function Rename(opts) {
 
 inherit(Rename, Command);
 
-Rename.prototype.usage = 'rename     -- rename fields of object\n\n' +
+Rename.prototype.usage = 'rename       -- rename fields of object\n\n' +
     'Usage:\n' +
     '    rename -f <from> -t <to> [<obj>...]\n' +
     '    rename -h | --help\n\n' +

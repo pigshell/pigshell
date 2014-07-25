@@ -13,7 +13,7 @@ function Jfilter(opts) {
 
 inherit(Jfilter, Command);
 
-Jfilter.prototype.usage = 'jf            -- Javascript filter\n\n' +
+Jfilter.prototype.usage = 'jf           -- Javascript filter\n\n' +
     'Usage:\n' +
     '    jf [-g] <expr> [<obj>...]\n' +
     '    jf -h | --help\n\n' +

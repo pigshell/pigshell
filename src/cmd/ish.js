@@ -16,7 +16,7 @@ function IShell(opts) {
 
 inherit(IShell, Command);
 
-IShell.prototype.usage = 'ish           -- interactive shell\n\n' +
+IShell.prototype.usage = 'ish          -- interactive shell\n\n' +
     'Usage:\n' +
     '    ish [-N <name>] [-h | --help]\n\n' +
     'Options:\n' +

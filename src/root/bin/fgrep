@@ -1,4 +1,4 @@
-usage='fgrep      -- file grep\
+usage='fgrep        -- file grep\
 \
 Usage:\
     fgrep <regex> <file>...\

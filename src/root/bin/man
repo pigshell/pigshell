@@ -1,4 +1,4 @@
-usage='man         -- display manual pages\
+usage='man          -- display manual pages\
 \
 Usage:\
     man <section> <name>\

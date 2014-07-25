@@ -1749,14 +1749,14 @@ function subscribe(channel, cb) {
 
 /*
  * Hack to write multi-line string in code without backslashes.
- * mls(function() {/*
+ * multiline(function() {/*
  * some string
  * another string
  * }* /
  * The previous line self-comments the limitations of this approach - string
  * cannot contain an end-comment sequence.
  */
-function mls(f) {
+function multiline(f) {
     return f.toString().split('\n').slice(1, -1).join('\n');
 }
 
@@ -1821,5 +1821,5 @@ pigshell.publish = publish;
 pigshell.subscribe = subscribe;
 pigshell.popen = popen;
 pigshell.err_stringify = err_stringify;
-pigshell.mls = mls;
+pigshell.multiline = multiline;
 pigshell.hef = hef;

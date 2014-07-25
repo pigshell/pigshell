@@ -11,7 +11,7 @@ function Next(opts) {
 
 inherit(Next, Command);
 
-Next.prototype.usage = 'next        -- get next item from pipeline\n\n' +
+Next.prototype.usage = 'next         -- get next item from pipeline\n\n' +
     'Usage:\n' +
     '    next -h | --help\n' +
     '    next [-o <opts>] <obj>\n\n' +

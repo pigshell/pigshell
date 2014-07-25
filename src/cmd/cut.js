@@ -11,7 +11,7 @@ function Cut(opts) {
 
 inherit(Cut, Command);
 
-Cut.prototype.usage = 'cut         -- retain specified fields of object\n\n' +
+Cut.prototype.usage = 'cut          -- retain specified fields of object\n\n' +
     'Usage:\n' +
     '    cut -f <fields> [<obj>...]\n' +
     '    cut -h | --help\n\n' +
