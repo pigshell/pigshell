@@ -31,12 +31,15 @@ IShell.prototype.next = check_next(do_docopt(function(opts, cb) {
     }
     self.term = opts.term;
     if (self.docopts['-N']) {
-        subscribe(self.docopts['-N'], function(e, line) {
-            if (!isstring(line)) {
-                console.log("Unknown input to ish: ", line);
+        subscribe(self.docopts['-N'], function(e, str) {
+            if (!isstring(str)) {
+                console.log("Unknown input to ish: ", str);
             }
             if (self.cli) {
-                self.cli.cli_input(line);
+                var lines = str.split('\n');
+                lines.forEach(function(l) {
+                    self.cli.cli_input(l);
+                });
             }
         });
     }

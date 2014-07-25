@@ -132,12 +132,12 @@ echo '[{"country": 356, "data": 100}, {"country": "Antarctica", "data": 0}]'| jf
         </div>
     </div>
 <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
-<script src="extra/d3.v3.min.js"></script>
-<script src="extra/d3.geo.projection.v0.min.js"></script>
-<script src="extra/topojson.v1.min.js"></script>
-<script src="extra/colorbrewer.v1.min.js"></script>
-<script src="extra/queue.v1.min.js"></script>
-<script src="extra/d3.geo.zoom.js"></script>
+<script src="http://pigshell.com/common/d3.v3/d3.v3.min.js"></script>
+<script src="http://pigshell.com/common/d3.v3/d3.geo.projection.v0.min.js"></script>
+<script src="http://pigshell.com/common/d3.v3/topojson.v1.min.js"></script>
+<script src="http://pigshell.com/common/d3.v3/colorbrewer.v1.min.js"></script>
+<script src="http://pigshell.com/common/d3.v3/queue.v1.min.js"></script>
+<script src="http://pigshell.com/common/d3.v3/d3.geo.zoom.js"></script>
 <script>
 
 var width = 960,
@@ -280,8 +280,8 @@ function main(o, data) {
 
         
     queue()
-        .defer(d3.json, "extra/world-110m.json")
-        .defer(d3.json, "extra/countries.json")
+        .defer(d3.json, "http://pigshell.com/common/d3.v3/world-110m.json")
+        .defer(d3.json, "http://pigshell.com/common/d3.v3/countries.json")
         .await(loaded);
 
     function loaded(err, world, countrydb) {
