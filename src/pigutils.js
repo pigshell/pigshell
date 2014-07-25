@@ -1280,6 +1280,23 @@ function cef(cmd, f) {
 }
 
 /*
+ * Error filter used in index.html et al to display errors in a div
+ */
+function hef(divspec, f) {
+    return function() {
+        if (arguments[0]) {
+            if (divspec) {
+                $(divspec).prepend("<p class='warning'>" + err_stringify(arguments[0]) + "</p>");
+            } else {
+                console.log(err_stringify(arguments[0]));
+            }
+        } else {
+            return f.apply(this, [].slice.call(arguments, 1));
+        }
+    };
+}
+
+/*
  * Lookup a list of pathnames, supply cb with the list of entry objects
  * An entry object looks like {path: pathname, file: fileobject} 
  */
@@ -1730,6 +1747,19 @@ function subscribe(channel, cb) {
     return $.subscribe(channel, cb);
 }
 
+/*
+ * Hack to write multi-line string in code without backslashes.
+ * mls(function() {/*
+ * some string
+ * another string
+ * }* /
+ * The previous line self-comments the limitations of this approach - string
+ * cannot contain an end-comment sequence.
+ */
+function mls(f) {
+    return f.toString().split('\n').slice(1, -1).join('\n');
+}
+
 function popen(cmd, context, shell, opts) {
     shell = shell || initshell;
     var si = context ? context.stdin : null,
@@ -1791,3 +1821,5 @@ pigshell.publish = publish;
 pigshell.subscribe = subscribe;
 pigshell.popen = popen;
 pigshell.err_stringify = err_stringify;
+pigshell.mls = mls;
+pigshell.hef = hef;
