@@ -10,11 +10,7 @@ function pigshell_compatible() {
 }
 
 function init(opts, cb) {
-    var sorry = "Pigshell is known to  work on recent (~2013-14) versions of Firefox and Chrome on Mac OS and Linux. It is unlikely to work on other browsers like IE and platforms like the iPad.",
-        maindiv = opts.maindiv || '#pmain';
-    if (!pigshell_compatible()) {
-        return cb(sorry);
-    }
+    var maindiv = opts.maindiv || '#pmain';
 
     /*
      * Firefox on Linux gives up saying 'too much recursion'. We need to
@@ -426,3 +422,4 @@ window.onerror = function (message, file, line, col) {
 pigshell.init = init;
 pigshell.mountcloud = mountcloud;
 pigshell.run_initshell = run_initshell;
+pigshell.compatible = pigshell_compatible;

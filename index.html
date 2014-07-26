@@ -30,7 +30,7 @@
         <div class="pigshell">
         <div class="pmain" id="pmain">
         <!--[if lte IE 11]>
-        <p class="warning">Pigshell is known to  work on recent (~2013-14) versions of Firefox and Chrome on Mac OS and Linux. It is unlikely to work on other browsers like IE and platforms like the iPad.</p>
+        <p class="warning">Pigshell is known to  work on recent (~2013-14) versions of Firefox and Chrome. It is unlikely to work on other browsers like IE and platforms like the iPad.</p>
         </p>
         <![endif]-->
         <p id="loading" class="info">Loading kernel...</p>
@@ -95,7 +95,12 @@
             ['Display PDF from URL', 'cat http://pigshell.com/sample/clickingofcuthbert.pdf']
         ];
         $(document).ready(function() {
-            var ps = pigshell;
+            var ps = pigshell,
+                sorry = "Pigshell is known to  work on recent (~2013-14) versions of Firefox and Chrome. It is unlikely to work on other browsers like IE and platforms like the iPad.",
+
+            if (!ps.compatible()) {
+                $("#pmain").prepend("<p class='warning'>" + sorry + "</p>");
+            }
             ps.init({}, function(err) {
                 if (err) {
                     $("#pmain").prepend("<p class='warning'>" + err.toString() +

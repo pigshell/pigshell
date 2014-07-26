@@ -7,7 +7,7 @@
         <div class="pigshell">
         <div class="pmain2" id="pmain2">
         <!--[if lte IE 11]>
-        <p class="warning">Pigshell is known to  work on recent (~2013-14) versions of Firefox and Chrome on Mac OS and Linux. It is unlikely to work on other browsers like IE and platforms like the iPad.</p>
+        <p class="warning">Pigshell is known to  work on recent (~2013-14) versions of Firefox and Chrome. It is unlikely to work on other browsers like IE and platforms like the iPad.</p>
         </p>
         <![endif]-->
         <p id="loading" class="info">Loading kernel...</p>
@@ -18,7 +18,12 @@
     <script src="http://pigshell.com/v/0.6.0-pre2/pigshell.js"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            var ps = pigshell;
+            var ps = pigshell,
+                sorry = "Pigshell is known to  work on recent (~2013-14) versions of Firefox and Chrome. It is unlikely to work on other browsers like IE and platforms like the iPad.";
+
+            if (!ps.compatible()) {
+                $("#pmain2").prepend("<p class='warning'>" + sorry + "</p>");
+            }
             ps.HttpFS.defaults.tx = 'direct';
             var script = ps.multiline(function() {/*
 mount http://pigshell.com/v/$(uname -r)/usr/ /usr
@@ -27,11 +32,11 @@ sh -s /etc/profile
 cat http://pigshell.com/sample/photos/bchips.jpg
             */});
             ps.init({rooturi: 'http://pigshell.com/v/0.6.0-pre2/root.tar',
-                embedded: true}, function() {
+                embedded: true}, ps.hef('#pmain2', function() {
                 var p = ps.popen("ish -N ish1", {stdout: "#pmain2"});
-                p.read({}, ps.hef(function(){}));
+                p.read({}, ps.hef('#pmain2', function(){}));
                 ps.publish('ish1', script);
-            });
+            }));
         });
     </script>
     <![endif]>
