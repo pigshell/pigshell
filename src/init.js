@@ -4,6 +4,7 @@
  */
 
 var initshell, termfs, uploadfs;
+var pigshell_baseurl = '';
 
 function pigshell_compatible() {
     return ($.browser.webkit || $.browser.mozilla) && !navigator.userAgent.match(/ipad|ipod|iphone/i);
@@ -24,6 +25,15 @@ function init(opts, cb) {
     sprintf['default'] = '';
 
     var ns;
+
+    $('script').each(function() {
+        if (this.src) {
+            var src = this.src.toString();
+            if (src.match(/pigshell.js/)) {
+                pigshell_baseurl = URI.parse(src).resolve("./");
+            }
+        }
+    });
 
     function mountroot(opts, cb) {
         var u = URI.parse(window.location.href),

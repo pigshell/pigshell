@@ -4991,6 +4991,11 @@ var DocumentOutlineView = function documentOutlineView(outline) {
 };
 
 
+window.addEventListener('message', function(e) {
+    var data = e.data;
+    return webViewerLoad(null, data);
+});
+
 function webViewerLoad(evt, filedata) {
   PDFView.initialize();
 

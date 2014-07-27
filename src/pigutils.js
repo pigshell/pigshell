@@ -1358,14 +1358,10 @@ function loadjs(url, opts, cb) {
         baseurl = '';
     $('script').each(function() {
         if (this.src) {
-            var src = this.src.toString();
-            if (src.match(/pigshell[^\/]*js/)) {
-                baseurl = src;
-            }
             scriptlist.push(this.src.toString());
         }
     });
-    var baseuri = URI.parse(baseurl);
+    var baseuri = URI.parse(pigshell_baseurl);
     if (!baseuri.isAbsolute()) {
         baseuri = URI.parse(window.location.href);
     }

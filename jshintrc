@@ -180,6 +180,7 @@
     "mkblob": false,
     "objargs": false,
     "getcsl": false,
-    "_lookup_fs": false
+    "_lookup_fs": false,
+    "pigshell_baseurl": true
     }
 }

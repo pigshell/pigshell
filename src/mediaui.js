@@ -19,7 +19,7 @@ var TextHtmlUI = {
             }
             var iframe = document.createElement('iframe'),
                 maxwidth = pterm.div.width(),
-                height = $(window).height() * 4 / 5,
+                height = $(window).height() * 0.8,
                 div = $('<div class="thui-browser"/>');
             iframe.setAttribute('style', sprintf("width:%dpx; height:%dpx",
                 maxwidth, height));
@@ -65,16 +65,16 @@ var PdfUI = {
         var self = this,
             template = '<div class="pdfui-browser"><div class="pt2">' + 
     '<button class="pdfui-close pt2">Close</button></div>' +
-    '<iframe src="extra/generic/web/viewer.html"></div>';
+    '<iframe src="' + pigshell_baseurl + 'extra/generic/web/viewer.html"></div>';
         to('arraybuffer', item, {}, ef(cb, function(res) {
             var widget = $(template),
                 iframe = widget.find("iframe"),
                 maxwidth = pterm.div.width(),
-                height = $(window).height() * 2/3;
+                height = $(window).height() * 0.8;
 
             iframe.width(maxwidth).height(height);
             iframe[0].onload = function() {
-                iframe[0].contentWindow.webViewerLoad(null, res);
+                iframe[0].contentWindow.postMessage(res, '*');
             };
             pterm.div.append(widget);
             return cb(null, null);
