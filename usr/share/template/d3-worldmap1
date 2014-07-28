@@ -362,7 +362,8 @@ function main(o, data) {
                 svg.selectAll("path").attr("d", path);
             });
         }
-        window.parent.postMessage(document.documentElement.scrollHeight || document.body.scrollHeight, '*');
+        var myheight = document.documentElement.scrollHeight || document.body.scrollHeight;
+        window.parent.postMessage({height: myheight}, '*');
     }
 }
 

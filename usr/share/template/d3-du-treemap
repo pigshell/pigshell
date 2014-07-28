@@ -176,7 +176,8 @@ var main = function(opts, data) {
   layout(root);
   display(root);
 
-  window.parent.postMessage(document.documentElement.scrollHeight || document.body.scrollHeight, '*');
+  var myheight = document.documentElement.scrollHeight || document.body.scrollHeight;
+  window.parent.postMessage({height: myheight}, '*');
 
   function initialize(root) {
     root.x = root.y = 0;

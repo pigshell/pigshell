@@ -139,7 +139,8 @@ function main(o, tsdata) {
       .select("title")
         .text(function(d) { return d + ": " + data[d]; });
 
-    window.parent.postMessage(document.documentElement.scrollHeight || document.body.scrollHeight, '*');
+    var myheight = document.documentElement.scrollHeight || document.body.scrollHeight;
+    window.parent.postMessage({height: myheight}, '*');
 }
 
 function monthPath(t0) {
