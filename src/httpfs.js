@@ -28,7 +28,7 @@ var HttpFS = function(opts, uri) {
     self.tx = null;
     if (opts.tx) {
         self.tx = HttpTX.lookup(opts.tx);
-    } else if (host === 'localhost' || host === '127.0.0.1' || host === 'pigshell.com' || host === 'query.yahooapis.com') {
+    } else if (HttpFS.direct_hosts.indexOf(host) !== -1) {
         self.tx = self.tx || HttpTX.lookup('direct');
     } else {
         self.tx = self.tx || HttpTX.lookup(HttpFS.defaults.tx);
@@ -40,6 +40,10 @@ inherit(HttpFS, Filesystem);
 HttpFS.fsname = 'HttpFS';
 HttpFS.filesystems = [];
 HttpFS.defaults = { 'tx': 'proxy' };
+
+/* XXX Hack to default some hosts to direct. */
+HttpFS.direct_hosts = [ 'localhost', '127.0.0.1', 'pigshell.com',
+    'query.yahooapis.com', 'www.quandl.com', 'rawgit.com', 'cdn.rawgit.com' ];
 
 HttpFS.lookup_uri = function(uri, opts, cb) {
     var self = this,

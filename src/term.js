@@ -301,7 +301,9 @@ function Readline(opts, div) {
         self.cm.setOption('gutter', true);
         self.cm.setMarker(0, self.options.prompt, 'prompt');
     }
-    self.cm.focus();
+    if (pigshell._rescroll_enabled) {
+        self.cm.focus();
+    }
     self.cm_mode = 'line';
 }
 
