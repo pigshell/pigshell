@@ -40,7 +40,7 @@ utilities. _Psty_ works only on Unix currently.
 
 Click on the first example in the sidebar, or type the following at the prompt:
 
-    cat http://pigshell.com/sample/life-expectancy.html | table2js -e "table.wikitable tr" foo country data | template -ig /usr/share/template/d3-worldmap1
+    cat http://pigshell.com/sample/life-expectancy.html | table2js -e "table.wikitable tr" foo country data | iframe -g /usr/share/template/d3-worldmap1
 
 ![Life expectancy](/images/screenshots/helloworld.jpg)
 
@@ -259,7 +259,7 @@ and display the result in _pigshell_.
 
 To visualize disk usage in a zoomable treemap,
 
-    wsh du /Users/foo | to -g text | template -ig /usr/share/template/d3-du-treemap
+    wsh du /Users/foo | to -g text | iframe -g /usr/share/template/d3-du-treemap
 
 ![du-treemap](/images/screenshots/du-treemap.png)
 

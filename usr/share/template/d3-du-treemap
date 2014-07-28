@@ -10,7 +10,7 @@ Click on any of the cells to zoom in, click the orange bar to zoom out one
 level.
 
 Example:
-wsh du /Users/foo | to -g text | template -ig /templates/d3-du-treemap
+wsh du /Users/foo | to -g text | iframe -g /usr/share/template/d3-du-treemap
 
 You could use a du.out from a previous du or a du from another system. It
 can handle a surprisingly large dump (my home dir weighs in at 120k lines)
@@ -129,8 +129,8 @@ grandparent.append("text")
     .attr("dy", ".75em");
 
 window.addEventListener('message', function(e) {
-    var opts = e.data[0],
-        data = e.data[1];
+    var opts = e.data.opts,
+        data = e.data.data;
 
     return main(opts, data);
 });

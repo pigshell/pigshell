@@ -41,13 +41,6 @@
                 <a href="https://pigshell.com"><img src="images/pigshell-logo-320x240.png" width=96></img></a>
                 <br /><br />
                 <a href="https://twitter.com/intent/user?screen_name=pigshell" target="_blank">Follow @pigshell</a>
-<!--
-            <div class="share">
-            <a href="http://www.facebook.com/sharer/sharer.php?u=http://pigshell.com" target="_blank">Facebook</a>
-            <a href="https://plusone.google.com/_/+1/confirm?hl=en&url=http://pigshell.com" target="_blank">Google+</a>
-            <a href="https://twitter.com/intent/tweet?text=Pigshell:%20a%20Unix-style%20CLI%20for%20the%20cloud%20http://pigshell.com" target="_blank">Tweet</a>
-            </div>
--->
                 <h3 class="tagbar">Data Sources</h3>
                 <div class="dsbuttons">
                 <button id="btnFB" data-toggle="popover" data-placement="left"><i class="fa fa-facebook fa-3x"></i></button>
@@ -85,12 +78,12 @@
     <script src="https://maps.google.com/maps/api/js?sensor=false"></script>
     <script type="text/javascript">
         var examples = [
-            ['Life expectancy map', 'cat http://pigshell.com/sample/life-expectancy.html | table2js -e "tr" foo country data | template -ig /usr/share/template/d3-worldmap1'],
+            ['Life expectancy map', 'cat http://pigshell.com/sample/life-expectancy.html | table2js -e "tr" foo country data | iframe -g /usr/share/template/d3-worldmap1'],
             ['Life expectancy top 10', 'cat http://pigshell.com/sample/life-expectancy.html | table2js -e "table.wikitable tr" foo country data | sort -rnf data | head | printf "%(country)s %(data)s\\n"'],
-            ['GDP (PPP) map', 'cat http://pigshell.com/sample/gdp-ppp.html | to text | jf \'$$.html($$(x).find("table").first())\' | table2js -e "tr" foo country data | jf \'x.data = Math.round(+x.data.replace(/,/g,"")) / 1000, x\' | template -o title="GDP PPP (thousand USD)",proj=orthographic -ig /usr/share/template/d3-worldmap1'],
+            ['GDP (PPP) map', 'cat http://pigshell.com/sample/gdp-ppp.html | to text | jf \'$$.html($$(x).find("table").first())\' | table2js -e "tr" foo country data | jf \'x.data = Math.round(+x.data.replace(/,/g,"")) / 1000, x\' | iframe -o title="GDP PPP (thousand USD)",proj=orthographic -g /usr/share/template/d3-worldmap1'],
             ['Friend stats', '/bin/fbstats'],
             ['Most liked photos', '/bin/mostliked photo'],
-            ['Upcoming birthdays', '/bin/bday -n 4'],
+            ['Upcoming birthdays', '/usr/bin/bday -n 4'],
             ['Display image from URL', 'cat http://pigshell.com/sample/photos/bchips.jpg'],
             ['Display PDF from URL', 'cat http://pigshell.com/sample/clickingofcuthbert.pdf']
         ];

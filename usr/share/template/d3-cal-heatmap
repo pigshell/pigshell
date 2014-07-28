@@ -14,7 +14,7 @@ Range of values to distribute among the 6 colors can be supplied as template
 options: minval and maxval, defaulting to 0 and 10.
 
 Example:
-wsh sh -c "git log | grep ^Date" | to -g text | jf '(function(){var lines = x.split("\\n"); return lines.map(function(d) { var m = d.match(/Date:\\s+(\w+.*)/); return m ? {timestamp: m[1]} : null; }).filter(function(d) { return !!d; })})()' | template -o minval=0,maxval=10 -ig /templates/d3-cal-heatmap
+wsh sh -c "git log | grep ^Date" | to -g text | jf '(function(){var lines = x.split("\\n"); return lines.map(function(d) { var m = d.match(/Date:\\s+(\w+.*)/); return m ? {timestamp: m[1]} : null; }).filter(function(d) { return !!d; })})()' | iframe -o minval=0,maxval=10 -g /usr/share/template/d3-cal-heatmap
 
 will print a calendar heatmap of git commits.
 -->
@@ -66,8 +66,8 @@ var defaults = {
 };
 
 window.addEventListener('message', function(e) {
-    var opts = e.data[0],
-        data = e.data[1];
+    var opts = e.data.opts,
+        data = e.data.data;
 
     return main(opts, data);
 });
