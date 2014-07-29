@@ -96,13 +96,13 @@ Iframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
         iframe.setAttribute("sandbox", self.sboxopts);
         iframe.onload = function() {
             proc.current(self);
-            self.iframe = iframe;
             return next();
         };
         iframe.onerror = function() {
             proc.current(self);
             return self.exit("IFrame load error");
         };
+        self.iframe = iframe;
         self._event_handler = set_height;
         window.addEventListener('message', self._event_handler);
 
