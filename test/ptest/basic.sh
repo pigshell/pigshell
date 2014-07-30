@@ -84,6 +84,7 @@ wsh file results/wsh.1 >$RESDIR/wsh.2
 dcheck $? true wsh.2
 
 X=$X/$TMPDIR
+mkdir $X 2>/dev/null
 mkdir $X/mkdirtest
 expect $? true mkdir.1
 cp /doc/README.md $X/mkdirtest

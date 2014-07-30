@@ -15,11 +15,13 @@ function init(opts, cb) {
 
     /*
      * Firefox on Linux gives up saying 'too much recursion'. We need to
-     * tune our soguard hack way down for Firefox.
+     * tune our soguard hack way, way down for Firefox.
+     *
+     * ES6 tail call optimization can't happen too fast.
      */
 
-    if ($.browser.mozilla) {
-       _nstack_max = 20; 
+    if ($.browser.mozilla && !navigator.userAgent.match(/Mac OS/)) {
+       _nstack_max = 1; 
     }
 
     sprintf['default'] = '';

@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.6.1
+-----
+
+  * Firefox Linux stack overflows reported by @ngkabra, fixed by tuning
+    _nstack_max way down to rock bottom.
+
 0.6.0
 -----
 
