@@ -1,0 +1,446 @@
+/*
+ * Our CSS reset is more a defence against resets and normalizations which
+ * came before us in the page when pigshell components are embedded in other
+ * content
+ */
+
+.pigshell pre {
+    font-family: monospace;
+    font-size: 14px;
+    -webkit-hyphens: none;
+    -moz-hyphens:    none;
+    -ms-hyphens:     none;
+    hyphens:         none;
+    line-height: 16px;
+    border: none;
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing:    content-box;
+    box-sizing:         content-box;
+    margin-bottom: 24px;
+    max-width: none;
+    overflow: visible;
+    padding: 12px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* End reset  */
+
+/*
+ * Our styles have a .pigshell in front so they don't leak out into the
+ * surroundings
+ */
+
+.pigshell .pterm-output, .pigshell .pterm-cli {
+    color: black;
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 16px;
+}
+
+.pigshell .pterm-cli {
+    clear: both;
+}
+
+.pigshell .ptext {
+    padding: .2em;
+}
+
+.pigshell .ptextwrap {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.pigshell .pterm-editor {
+    border: 1px solid #ccc;
+}
+
+.pigshell .pterm-editor-navbar {
+    overflow: hidden;
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #eee;
+}
+
+.pigshell .pe-button {
+    float: left;
+}
+
+.pigshell .pe-status {
+    float: right;
+    padding: .2em 1em .2em .2em;
+}
+
+.pigshell .CodeMirror .red {
+    color: firebrick;
+}
+
+.pigshell .CodeMirror .green {
+    color: limegreen;
+}
+
+.pigshell .CodeMirror .prompt {
+    color: black;
+}
+
+.pigshell .CodeMirror .amber {
+    color: darkorange;
+}
+
+#pmain {
+    margin-right: 216px; /* This is 16 more than sidebar to account for canvas width rounding up */
+    margin-left: 16px;
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
+
+.pigshell .clear {clear: both;}
+
+.pigshell .sidebar {
+    width: 200px;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    right: 0;
+    height: 100%;
+    background-color: #f0f0f0;
+    /*overflow-y: auto;*/
+}
+
+.pigshell .sidebar * {
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+}
+
+.pigshell .rightbox {
+    border-left: 1px solid #999;
+/*
+    border-top: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    border-right: 1px solid #fff;
+*/
+}
+
+.pigshell .topright {
+    text-align:center;
+    margin-bottom: -24px;
+    min-height: 100%;
+    height: auto !important;
+    height: 100%;
+    font-family: monospace;
+}
+
+.pigshell h3.tagline {
+    /* Uncollapse tagline margins */
+    margin: 0;
+    padding: 1em;
+    font-family: monospace;
+}
+
+.pigshell h3.tagbar {
+    background-color: #d0d0d0;
+/*
+    border-top: 1px solid #999;
+    border-bottom: 1px solid #999;
+*/
+}
+
+.pigshell .bottom {
+    text-align:center;
+    font-size: 12px;
+    height: 24px;
+}
+
+.pigshell .twitter-share-button {
+    vertical-align: text-bottom; !important
+}
+
+#drop_zone {
+    font-family: monospace;
+    font-weight: bold;
+    position: absolute;
+    right: 0.5em;
+    bottom: 0.5em;
+    background-color: #ddd;
+    border-radius: 5px;
+    padding: 0.5em 0.5em 0.5em 0.5em;
+    height: 10em;
+    text-align: center;
+    line-height: 5em;
+}
+
+.pigshell .dsbuttons button {
+    width: 4em;
+    height: 4em;
+    font-size: 12px;
+}
+.pigshell .dsbuttons button::-moz-focus-inner { border: 0; padding: 0; margin:0; }
+
+.pigshell .fbenabled {
+    color: #3b5998;
+}
+
+.pigshell .btnTW {
+    color: #0084b4;
+}
+
+.pigshell .googenabled {
+    color: #dd4b39;
+}
+
+.pigshell .dropboxenabled {
+    color: #007ee5;
+}
+.pigshell .dspopover {
+    font-size: 14px;
+    font-family: monospace;
+    text-overflow: ellipsis;
+}
+
+.pigshell .googleMap {
+    height: 450px;
+    width: 600px;
+}
+
+.pigshell .fbFolder {
+    color: #254376;
+    font-weight: bold;
+    display: inline-block;
+    margin-left: 1em;
+    width: 16em;
+}
+.pigshell .fbPost {
+    border-top: 1px solid #AAAAAA;
+    width: 60em;
+}
+.pigshell .fbPost a {
+    color: #606370;
+    text-decoration: none;
+}
+.pigshell .fbPost a:hover {
+    text-decoration: underline;
+}
+.pigshell .fbPost .from {
+    color: #254376;
+    font-weight: bold;
+}
+.pigshell .fbPost .text {
+}
+.pigshell div[class^="fb"] .likes {
+    display: inline-block;
+}
+.pigshell div[class^="fb"] .shares {
+    display: inline-block;
+}
+.pigshell div[class^="fb"] .comments {
+    display: inline-block;
+}
+.pigshell div[class^="fb"] .comment {
+    background-color: #E5E8EE;
+    padding-left: 2em;
+    border-top: 1px solid #FFFFFF;
+}
+.pigshell div[class^="fb"] .comment .from {
+    color: #254376;
+    font-weight: bold;
+    display: inline-block;
+}
+.pigshell div[class^="fb"] .time {
+    color: #606370;
+    display: inline-block;
+}
+.pigshell .fbPost .photo {
+}
+.pigshell .fbPost .video {
+}
+.pigshell .fbPost .caption {
+    color: #606370;
+}
+.pigshell div:[class^="fb"] .message {
+}
+.pigshell .fbAlbum {
+    color: #254376;
+    font-weight: bold;
+    margin-left: 1em;
+    width: 16em;
+}
+.pigshell .fbPhoto {
+    margin-left: 1em;
+    width: 16em;
+}
+.pigshell .fbPhoto .image {
+    padding: 4px;
+    border: 1px solid #CCCCCC;
+}
+.pigshell .fbPhoto .name {
+    color: #254376;
+}
+.pigshell .fbFriend {
+    margin-left: 1em;
+    margin-bottom: 1em;
+    width: 16em;
+}
+.pigshell .fbFriend .image {
+    padding: 4px;
+    border: 1px solid #CCCCCC;
+}
+.pigshell .fbFriend .name {
+    margin: 0;
+    color: #254376;
+}
+.pigshell .picasaPhoto {
+    margin-left: 1em;
+    width: 16em;
+    margin-bottom: 1em;
+}
+.pigshell .picasaPhoto .image {
+    padding: 4px;
+    border: 1px solid #CCCCCC;
+}
+.pigshell .picasaPhoto .name {
+    margin: 0;
+    color: #A8402B;
+}
+.pigshell div[class^="gd"] {
+    color: #A8402B;
+    margin-left: 1em;
+    margin-top: 0.5em;
+    width: 16em;
+}
+.pigshell div[class^="gd"] a {
+    color: #A8402B;
+    text-decoration: none;
+}
+.pigshell div[class^="gd"] a:hover {
+    text-decoration: underline;
+}
+.pigshell div[class^="gd"] img {
+    vertical-align: middle;
+    margin-right: 0.5em;
+}
+.pigshell .gdFolder {
+    font-weight: bold;
+}
+.pigshell .picasaFolder {
+    color: #5688D2;
+    font-weight: bold;
+    margin-left: 1em;
+    width: 16em;
+}
+.pigshell div[class^="native"] {
+    color: #51B1C8;
+    display: inline-block;
+    margin-left: 1em;
+    width: 16em;
+}
+.pigshell .nativeFolder {
+    font-weight: bold;
+}
+.pigshell .plFolder {
+    color: #FF0000;
+    font-weight: bold;
+    margin-left: 1em;
+    width: 16em;
+}
+.pigshell .plFile {
+    color: #FF0000;
+    margin-left: 1em;
+    width: 16em;
+}
+.pigshell .twFolder {
+    color: #3E79AB;
+    font-weight: bold;
+    margin-left: 1em;
+    width: 16em;
+}
+.pigshell .twFile {
+    position: relative;
+    padding: 0.5em;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.pigshell .twUser {
+    width: 16em;
+}
+.pigshell .twFile .avatar {
+    display: inline-block;
+    height: 100%;
+}
+.pigshell .twFile .avatar .image {
+    border-radius: 3px;
+}
+.pigshell .twFile .text {
+    display: inline-block;
+    height: 100%;
+    padding-left: 1em;
+}
+.pigshell .twFile .text .from {
+    display: inline-block;
+    font-weight: bold;
+    margin-right: 0.5em;
+}
+.pigshell .twFile .text .screen_name {
+    display: inline-block;
+    color: #999999;
+}
+.pigshell .twFile .text .time {
+    float: right;
+    display: inline-block;
+    color: #999999;
+}
+.pigshell .twFile .text .tweet {
+    width: 60em;
+}
+.pigshell .twFile a {
+    color: #3A96D5;
+    text-decoration: none;
+}
+.pigshell .twFile a:hover {
+    text-decoration: underline;
+}
+.pigshell .slice text {
+    font-size: 16pt;
+    font-family: sans-serif;
+}
+.pigshell .chart {
+    height: 450px;
+    width: 600px;
+}
+.pigshell .tabdialog {
+    overflow: hidden;
+}
+.pigshell .tabdialog-entry {
+    min-width: 20em;
+    float: left;
+    color: #888;
+    padding: .2em .1em .2em .2em; /* should be same as CodeMirror-gutter-text */
+}
+.pigshell .ls-item {
+    display: inline-block;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+.pigshell .stat {
+}
+.pigshell .stat .field {
+    color: #AA0000;
+    font-weight: bold;
+    margin-right: 1em;
+}
+.pigshell .title {
+    text-align: center;
+    font-size: 15px;
+}
+
+.pigshell .warning {
+    font-size: 16px;
+    background-color: #f2dede;
+    font-family: monospace;
+    padding: 1em;
+    border: 1px solid #d9534f;
+}
+
+.pigshell .info {
+    font-size: 14px;
+    font-family: monospace;
+}
