@@ -50,11 +50,10 @@ Several external libraries are used. In no particular order,
 17. [jQuery resize event](http://benalman.com/projects/jquery-resize-plugin/)
 18. [Popovers](http://getbootstrap.com/javascript/#popovers) and
     [tooltips](http://getbootstrap.com/javascript/#tooltip) from Bootstrap.
-19. [jQuery Tiny Pub/Sub](http://benalman.com/)
-20. [zlib.js](https://github.com/imaya/zlib.js)
-21. [canvg.js](http://code.google.com/p/canvg/) for those browsers which
+19. [zlib.js](https://github.com/imaya/zlib.js)
+20. [canvg.js](http://code.google.com/p/canvg/) for those browsers which
     can't render SVG onto a canvas.
-22. [CryptoJS](http://code.google.com/p/crypto-js) for Javascript
+21. [CryptoJS](http://code.google.com/p/crypto-js) for Javascript
     implementations of MD5 and SHA1.
 22. Mozilla's [PDF.js](http://mozilla.github.io/pdf.js/) to render PDFs in the terminal.
 22. [D3](http://d3js.org) powers visualization commands like `chart` and
