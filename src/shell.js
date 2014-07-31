@@ -903,7 +903,7 @@ Shell.prototype.glob_process = check_live(function(path, globcomps, cb) {
         return self.glob_process(pathjoin(path, comp), globcomps.slice(1), cb);
     }
     sys.search(self, pathjoin(path, comp), {}, function (err, res) {
-        if (!res || res.length === 0) {
+        if (err || !res || res.length === 0) {
             return cb(null, []);
         }
         var nextlevel = res.map(function(entry) {
