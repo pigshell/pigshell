@@ -42,9 +42,9 @@ OAuth2.sendmsg = function() {
         return;
     }
     var msg = {
-        name: window.name,
-        search: window.location.search,
-        hash: window.location.hash
+        name: window.name || '',
+        search: window.location.search || '',
+        hash: window.location.hash || ''
     };
     opener.postMessage(msg, "http://pigshell.com");
 };
@@ -52,16 +52,16 @@ OAuth2.sendmsg = function() {
 OAuth2.recvmsg = function(event) {
     if (event.origin !== "http://pigshell.com" && event.origin !==
         "https://pigshell.com") {
-        console.log("Event from unknown source: " + event.origin);
         return;
     }
-    var msg = event.data,
-        hp = parseqs(msg.hash.slice(1)),
-        sp = parseqs(msg.search.slice(1));
-    if (!msg.name) {
+    var msg = event.data;
+    if (!msg || (msg.hash === undefined || msg.search === undefined ||
+        !msg.name)) {
         console.log("Unknown message: ", msg);
         return;
     }
+    var hp = parseqs(msg.hash.slice(1)),
+        sp = parseqs(msg.search.slice(1));
 
     if (window.__activeOA2 && window.__activeOA2[msg.name]) {
         var oa2 = window.__activeOA2[msg.name];
