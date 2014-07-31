@@ -1734,13 +1734,26 @@ function _lookup_fs(uri, mountopts, fslist) {
     }
     return null;
 }
-        
+
+var ps_topics = {};
 function publish(channel, data) {
-    return $.publish(channel, data);
+    if (ps_topics[channel] === undefined) {
+        ps_topics[channel] = $.Callbacks('memory');
+    }
+    return ps_topics[channel].fire(data);
 }
 
 function subscribe(channel, cb) {
-    return $.subscribe(channel, cb);
+    if (ps_topics[channel] === undefined) {
+        ps_topics[channel] = $.Callbacks('memory');
+    }
+    return ps_topics[channel].add(cb);
+}
+
+function unsubscribe(channel, cb) {
+    if (ps_topics[channel]) {
+        ps_topics[channel].remove(cb);
+    }
 }
 
 /*
@@ -1754,6 +1767,25 @@ function subscribe(channel, cb) {
  */
 function multiline(f) {
     return f.toString().split('\n').slice(1, -1).join('\n');
+}
+
+/*
+ * Convert string to base10 float after stripping leading and trailing
+ * whitespace. `remove` is a 'cleaner' regex which is replaced with ''.
+ * Defaults to '/,/g', thus removing numerical comma separators.
+ * Pass null as the second argument to disable comma removal.
+ */
+
+function strtonum(str, remove) {
+    if (remove === undefined) {
+        remove = /,/g;
+    }
+    var cleaned = str.trim();
+    if (remove) {
+        cleaned = cleaned.replace(remove, '');
+    }
+    var num = parseFloat(cleaned);
+    return isNaN(num) ? undefined : num;
 }
 
 function popen(cmd, context, shell, opts) {
@@ -1815,6 +1847,7 @@ function popen(cmd, context, shell, opts) {
 
 pigshell.publish = publish;
 pigshell.subscribe = subscribe;
+pigshell.unsubscribe = unsubscribe;
 pigshell.popen = popen;
 pigshell.err_stringify = err_stringify;
 pigshell.multiline = multiline;

@@ -15,8 +15,8 @@ RONN = ronn
 
 VERSION_MAJOR = 0
 VERSION_MINOR = 6
-VERSION_PATCH = 1
-VERSION_TAG =
+VERSION_PATCH = 2
+VERSION_TAG = -pre1
 VERSION_STR = $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)$(VERSION_TAG)
 VERSION_GIT = $(shell git rev-list --max-count=1 HEAD)
 
@@ -64,7 +64,6 @@ LIB_SOURCES = src/lib/jquery-1.7.2.js\
     src/lib/codemirror.js\
     src/lib/marked.js\
     src/lib/unzip.min.js\
-    src/lib/pubsub.js\
     src/lib/cheerio.js
 
 CSS_FILES = css/pigshell.css\

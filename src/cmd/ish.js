@@ -30,8 +30,13 @@ IShell.prototype.next = check_next(do_docopt(function(opts, cb) {
         return self.exit("ish must be run with a term");
     }
     self.term = opts.term;
+    self.addcli();
+    self.history = new History(opts, self);
+    self.icmd_fg = null;
+    self.icmd_bg = [];
+    self.run_next();
     if (self.docopts['-N']) {
-        subscribe(self.docopts['-N'], function(e, str) {
+        subscribe(self.docopts['-N'], function(str) {
             if (!isstring(str)) {
                 console.log("Unknown input to ish: ", str);
             }
@@ -43,11 +48,6 @@ IShell.prototype.next = check_next(do_docopt(function(opts, cb) {
             }
         });
     }
-    self.addcli();
-    self.history = new History(opts, self);
-    self.icmd_fg = null;
-    self.icmd_bg = [];
-    self.run_next();
 }));
 
 IShell.prototype.addcli = function() {
