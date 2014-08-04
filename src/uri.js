@@ -252,6 +252,7 @@ HttpURI.prototype.clone = function() {
 
 URI.register_uri_parser('http', HttpURI);
 URI.register_uri_parser('https', HttpURI);
+URI.register_uri_parser('file', HttpURI);
 
 /* Testing
 function inherit(sub, base) {
