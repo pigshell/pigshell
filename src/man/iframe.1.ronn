@@ -1,0 +1,80 @@
+iframe(1) -- display content in iframe
+======================================
+
+## SYNOPSIS
+
+`iframe` [-o <opts>] [-a <sopts>] [-g] <template> [<obj>...]<br>
+`iframe` [-o <opts>] [-a <sopts>] [-g] -s <tstr> [<obj>...]
+
+## DESCRIPTION
+
+**iframe** displays HTML content in a sandboxed iframe and passes it objects
+from its arguments or from standard input. In the first form, if <template> is
+a path, **iframe** sets the `srcdoc` property of the iframe to the contents of
+<template>. If <template> is a URL, then the URL is directly set as the `src`
+of the iframe. In the second form, the supplied string is used as the `srcdoc`
+of the iframe.
+
+Communication between the **iframe** utility and the child iframe follows the
+following convention:
+
+  * After the `onload` event of the child iframe fires, **iframe** calls
+    `window.postMessage()` on the iframe as many times as there are input
+    objects.
+  * Each message consists of a single Javascript object containing two
+    properties: `opts` and `data`. `opts` contains a Javascript object
+    obtained by parsing <opts>, specified in the options(7) format.
+    `data` contains the input object.
+  * The child iframe may issue a `postMessage` consisting of a single
+    Javascript object to the parent. The only supported property in the
+    "returned" object is `height`, which is used to communicate its height to
+    the parent. On receipt of this message, **iframe** adjusts the height
+    of the iframe element appropriately to avoid scrollbars.
+
+The following options are available:
+
+  * `-o ` <opts>:
+    Options in the options(7) format which are passed to the child iframe.
+  
+  * `-a ` <sopts>:
+    Comma separated list of sandbox options. These can be one or more of
+    "same-origin", "scripts", "forms", "popups", "pointer-lock",
+    "top-navigation". They correspond to the "allow-x" attribute values of the
+    "sandbox" property of the iframe. By default, <sopts> is assumed to be
+    "scripts". Note that options specified are not additive to the defaults;
+    `-a same-origin,scripts` must be specified in case both "allow-same-origin"
+    and "allow-scripts" attributes are desired.
+
+  * `-g`:
+    All input objects are gathered into an array which is passed in to the
+    child iframe. Only one message is sent in this case.
+
+## DIAGNOSTICS
+
+The **iframe** command exits with `true` on success and non-`true` if an error
+occurs.
+
+## EXAMPLES
+
+Plot countrywise life expectancy statistics to a world map template.
+
+    $ cat http://pigshell.com/sample/life-expectancy.html | table2js -e "table.wikitable tr" foo country data | iframe -g /usr/share/template/d3-worldmap1
+
+Display a D3 example (no input data).
+
+    $ iframe -a 'same-origin,scripts' http://bl.ocks.org/mbostock/raw/3883245/ </dev/null
+
+Subvert D3 example above to display our own data.
+
+    $ echo "date,close\n1-May-08,10\n1-May-10,40\n1-Jun-12,100\n1-May-13,70" | csv2js | iframe -gs $(cat http://bl.ocks.org/mbostock/raw/3883245/ | to text | jf 'x.replace(/d3.tsv.*{/, "window.addEventListener(\'message\', function(e) { var data = e.data.data;")')
+
+## SECURITY
+
+IFrames are placed in a sandbox to minimize security issues with running unknown
+code. Opening up privileges, especially `top-navigation`, must be done with 
+care as it can result in the iframed-content breaking out of the sandbox and
+accessing all content mounted within _pigshell_.
+
+## SEE ALSO
+
+template(1)
