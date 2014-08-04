@@ -34,6 +34,9 @@ IShell.prototype.next = check_next(do_docopt(function(opts, cb) {
     self.history = new History(opts, self);
     self.icmd_fg = null;
     self.icmd_bg = [];
+    $(self.term.div).resize(function() {
+        rescroll(self.term.div);
+    });
     self.run_next();
     if (self.docopts['-N']) {
         subscribe(self.docopts['-N'], function(str) {
@@ -56,7 +59,6 @@ IShell.prototype.addcli = function() {
     var clidiv = $('<div/>');
     self.term.div.append(clidiv);
     self.cli = new Readline({prompt: '>', keydown: self.keydown.bind(self), input: self.cli_input.bind(self)}, clidiv);
-    rescroll(self.term.div);
 };
 
 IShell.prototype.cli_input = function(cmd) {

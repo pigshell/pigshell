@@ -144,9 +144,6 @@ function run_initshell(opts, cb) {
     $(window).resize(function() {
         rescroll(termdiv);
     });
-    $(maindiv).resize(function() {
-        rescroll(termdiv);
-    });
     $(document).click();
 
     stdout.fds.stdin = initshell;
