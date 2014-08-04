@@ -16,23 +16,46 @@ inherit(Jfilter, Command);
 Jfilter.prototype.usage = 'jf           -- Javascript filter\n\n' +
     'Usage:\n' +
     '    jf [-g] <expr> [<obj>...]\n' +
+    '    jf [-g] [-r <file>] [<obj>...]\n' +
     '    jf -h | --help\n\n' +
     'Options:\n' +
     '    <expr>       Javascript expression, e.g. "$.parseJSON(x)"\n' +
+    '    -r <file>    Read file containing Javascript expression\n' +
     '    -g           Gather all input and call <expr> with a list\n' +
     '    <obj>        Object to process\n';
 
 Jfilter.prototype.next = check_next(do_docopt(objargs(function() {
     var self = this,
-        exp = self.docopts['<expr>'],
         gather = self.docopts['-g'];
 
     if (self.inited === undefined) {
+        var exp = self.docopts['<expr>'],
+            filename = self.docopts['-r'];
+
         self.inited = true;
+        if (filename) {
+            fread.call(self, filename, function(err, res) {
+                if (err) {
+                    return self.exit(err, filename);
+                }
+                to('text', res, {}, function(err, str) {
+                    if (err) {
+                        return self.exit(err, filename);
+                    }
+                    return get_filter(str);
+                });
+            });
+            return;
+        } else {
+            return get_filter(exp);
+        }
+    }
+    function get_filter(exp) {
         self.filter = eval_getexp(exp);
         if (isstring(self.filter)) {
             return self.exit(self.filter);
         }
+        return next();
     }
     next();
     function next() {

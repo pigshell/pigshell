@@ -3,7 +3,8 @@ jf(1) -- Javascript filter
 
 ## SYNOPSIS
 
-`jf` [-g] <expr> [<obj>...]
+`jf` [-g] <expr> [<obj>...]<br>
+`jf` [-g] [-r <file>] [<obj>...]
 
 ## DESCRIPTION
 
@@ -11,6 +12,10 @@ jf(1) -- Javascript filter
 and outputs the result. **jf** is _pigshell_'s replacement for `sed`, `awk` et
 al. It can be used to quickly shift into Javascript and cleanup, extract, add
 data to objects without learning yet another awkward DSL.
+
+In the first form, the expression is directly specified on the command line.
+Newlines etc. must be escaped as `\\n` in this form. In the second
+form, the expression is read from a file.
 
 If <obj> is not specified on the command line, then jf read standard input
 and applies <expr> to each object, until it encounters an EOF.
