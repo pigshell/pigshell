@@ -22,8 +22,7 @@ Exit.prototype.usage = 'exit         -- exit shell\n\n' +
 Exit.prototype.next = check_next(do_docopt(function() {
     var self = this;
 
-    self.shell.builtin_exit(self.docopts['<exitval>']);
-    return self.exit();
+    return self.shell.builtin_exit(self.docopts['<exitval>']);
 }));
 
 Command.register("exit", Exit);
