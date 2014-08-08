@@ -116,6 +116,9 @@ Test.prototype.next = check_next(function() {
         stringops = ['-z', '-n'];
 
     if (fileops.indexOf(op) != -1) {
+        if (argv[2] === '') {
+            return exit(false);
+        }
         sys.lookup(self, argv[2], {}, function(err, res) {
             if (err) {
                 return exit(err);

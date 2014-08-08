@@ -65,7 +65,7 @@ function gdrivefs_test {
     GDRIVESRC=/gdrive/$GDRIVEUSER1/pigshell-test
     GDRIVEDST=/gdrive/$GDRIVEUSER2/pigshell-test
 
-    if ! [ -d $GDRIVESRC ]; then echo "GDRIVEUSER1 not available; skipping"; return; fi
+    if ! [ -d $"GDRIVESRC ]; then echo "GDRIVEUSER1 not available; skipping"; return; fi
     TMP1="/home/tmp/cptest/cptest-gdrive"
     mkdir $TMP1 2>/dev/null
     rm -r $TMP1/* 2>/dev/null
@@ -85,7 +85,7 @@ function gdrivefs_test {
     dcheck $? true cp.gdrive.4
 
     # Copy files straight from one user to another
-    if ! [ -d $GDRIVEDST ]; then echo "GDRIVEUSER2 not available; skipping"; return; fi
+    if ! [ -d $"GDRIVEDST ]; then echo "GDRIVEUSER2 not available; skipping"; return; fi
     rm -r $GDRIVEDST/sample 2>/dev/null
     cp -vr $GDRIVESRC/sample $GDRIVEDST 2>$RESDIR/cp.gdrive.5
     dcheck $? true cp.gdrive.5
@@ -100,7 +100,7 @@ function gdrivefs_doc_test {
     TMP1="/home/tmp/cptest/cptest-gdrive"
     TMP2="/home/tmp/cptest/cptest-gdrive/pdf"
 
-    if ! [ -d $DSTDIR ]; then echo "GDRIVEUSER1 not available; skipping"; return; fi
+    if ! [ -d $"DSTDIR ]; then echo "GDRIVEUSER1 not available; skipping"; return; fi
 
     mkdir $TMP1 $TMP2 2>/dev/null
 
@@ -126,7 +126,7 @@ function gdrivefs_doc_test {
     # Verify manually
 
     # Copy docs straight from one user to another
-    if ! [ -d $DSTDIR2 ]; then echo "GDRIVEUSER2 not available; skipping"; return; fi
+    if ! [ -d $"DSTDIR2 ]; then echo "GDRIVEUSER2 not available; skipping"; return; fi
     rm $DSTDIR2/sampledocs/* 2>/dev/null
     cp -vr -o gdrive.convert $DSTDIR/sampledocs $DSTDIR2 2>$RESDIR/cp.gdoc.5
     dcheck $? true cp.gdoc.5
