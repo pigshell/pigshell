@@ -1106,11 +1106,14 @@ function check_next(f) {
         }
         self._nextcb = callback;
         if (shell && shell.status === 'done') {
-            return self.eof();
+            return self._output(null);
         }
         if (!shell || shell.status === 'start') {
+            if (self._obuffer.length) {
+                return self._output(self._obuffer.shift());
+            }
             if (self.done !== undefined) {
-                return self.eof();
+                return self._output(null);
             }
             proc.current(self);
             return f.apply(self, args);
@@ -1118,8 +1121,11 @@ function check_next(f) {
         var cb = function() {
             if (shell.status === 'start') {
                 shell._status_change.remove(cb);
+                if (self._obuffer.length) {
+                    return self._output(self._obuffer.shift());
+                }
                 if (self.done !== undefined) {
-                    return self.eof();
+                    return self._output(null);
                 }
                 proc.current(self);
                 return f.apply(self, args);

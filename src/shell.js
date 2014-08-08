@@ -45,6 +45,7 @@ function Command(opts) {
         'stderr': null
     };
     this._buffer = [];
+    this._obuffer = [];
     this.done = undefined;
     this._status = {};
     this._log = [];
@@ -82,15 +83,7 @@ Command.prototype.unext = check_soguard(function(opts, cb) {
         if (self.fds.stdin) {
             proc.current(null);
             return self.fds.stdin.next(opts, check_live(function(err, res) {
-                if (err) {
-                    return cb.apply(self, arguments);
-                }
-                if (res instanceof Array) {
-                    self._buffer = self._buffer.concat(res);
-                } else if (res !== undefined) {
-                    self._buffer.push(res);
-                }
-                return cb.call(self, null, self._buffer.shift());
+                return cb.apply(self, arguments);
             }).bind(self));
         } else {
             return cb.call(self, null, null);
@@ -103,16 +96,48 @@ Command.prototype.next = function(opts, cb) {
     return cb(null, null);
 };
 
-/* Emit output to stdout */
+/* Emit output, buffering if necessary. check_next() drains buffer.  */
 Command.prototype.output = function(res) {
     var nextcb = this._nextcb;
     if (!nextcb) {
         pdebug(this, "no nextcb on output!");
         this.kill("no nextcb on output!");
+        return;
+    }
+    if (this._obuffer.length) {
+        pdebug(this, "output() called when obuffer is non-empty!");
+        this.kill("output() called when obuffer is non-empty!");
     } else {
-        this._nextcb = undefined;
+        if (res instanceof Array) {
+            this._obuffer = this._buffer.concat(res);
+        } else {
+            this._obuffer.push(res);
+        }
+        var o = this._obuffer.shift();
+        if (o === undefined) {
+            pdebug(this, "output() undefined!");
+            this.kill("output() undefined!");
+        } else {
+            this._nextcb = undefined;
+            proc.current(null);
+            return nextcb(null, o);
+        }
+   }
+};
+
+Command.prototype._output = function(res) {
+    var nextcb = this._nextcb;
+
+    this._nextcb = undefined;
+    if (res === undefined) {
+        pdebug(this, "output() undefined!");
+        return;
+    }
+    if (nextcb) {
         proc.current(null);
         return nextcb(null, res);
+    } else {
+        pdebug(this, "no nextcb on _output!");
     }
 };
 
@@ -181,6 +206,7 @@ Command.prototype.kill = function(reason) {
         });
         this._abortable = [];
         reason = reason || 'killed';
+        this._obuffer = [];
         return this.exit(reason);
     } else {
         pdebug(this, "you only die once");
@@ -361,7 +387,7 @@ Shell.prototype.arg_eval = check_live(function(arg, context, cb) {
             subsh = new Shell({argv: ['sh', '-a', arg['BACKQUOTE']], shell: self}),
             p = makepipe(subsh, c);
             
-        return p.next({}, ef(cb, function(res) {
+        return p.read({}, ef(cb, function(res) {
             self.vars['?'] = subsh.done;
             return cb(null, res);
         }));
@@ -1274,6 +1300,7 @@ Stdsink.prototype.next = check_next(function() {
     function loop() {
         self.unext({}, cef(self, function(res) {
             if (res === null) {
+                self.done = true;
                 return self.output(self.sink);
             } else if (isstring(res)) {
                 res = res.trim();
