@@ -27,7 +27,7 @@ Errtest.prototype.usage = 'errtest      -- error tester\n\n' +
  * (should go boom, exception reported on shell, command failed with "red" status, console should show exception)
  *
  * errtest -i 2
- * (type 1 <enter>, 2 <enter>, 3.. by should go boom at 6)
+ * (type 1 <enter>, 2 <enter>, 3.. by should go boom at 4)
  *
  * (on freshly loaded system)
  * ls | errtest -i 2

@@ -34,8 +34,7 @@ Next.prototype.next = check_next(do_docopt(function() {
             return self.exit();
         }
         self.done = true;
-        var ret = res instanceof Array ? res[0] : res;
-        return self.output(ret);
+        return self.output(res);
     }));
 }));
 

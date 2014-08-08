@@ -109,7 +109,7 @@ Command.prototype.output = function(res) {
         this.kill("output() called when obuffer is non-empty!");
     } else {
         if (res instanceof Array) {
-            this._obuffer = this._buffer.concat(res);
+            this._obuffer = this._obuffer.concat(res);
         } else {
             this._obuffer.push(res);
         }
@@ -200,17 +200,16 @@ Command.prototype.exit = function(e) {
 };
 
 Command.prototype.kill = function(reason) {
-    if (this.done === undefined) {
-        this._abortable.forEach(function(xhr) {
-            xhr.abort();
-        });
-        this._abortable = [];
-        reason = reason || 'killed';
-        this._obuffer = [];
-        return this.exit(reason);
-    } else {
-        pdebug(this, "you only die once");
+    if (this.done !== undefined) {
+        pdebug(this, "Dead already?");
     }
+    this._abortable.forEach(function(xhr) {
+        xhr.abort();
+    });
+    this._abortable = [];
+    reason = reason || 'killed';
+    this._obuffer = [];
+    return this.exit(reason);
 };
 
 /* Get my terminal. Equivalent to asking for /dev/tty. */
