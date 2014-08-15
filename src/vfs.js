@@ -392,28 +392,32 @@ Namespace.prototype.pwd = function(wdcomps) {
 };
 
 Namespace.prototype.mount = function(mntpt, root, opts, cb) {
-    var self = this;
+    var self = this,
+        path = pathnorm(mntpt);
 
-    if (mntpt[0] != '/') {
+    if (path[0] != '/') {
         return cb({code: 'EINVAL', msg: 'mntpoint must be absolute path'});
     }
-    self.lookup(mntpt, opts, function (err, curdir) {
+    if (path[path.length - 1] === '/') {
+        path = path.slice(0, -1);
+    }
+    self.lookup(path, opts, function (err, curdir) {
         if (err) {
             return cb(err);
         }
         if (curdir === undefined) {
             return cb(E('ENOENT'));
         }
-        if (mntpt in self.mounts) {
+        if (path in self.mounts) {
             return cb({code: 'EINVAL', msg: 'mntpt already used'});
         }
         // XXX  Ugh. Tell ls and others that this is a mountpoint. Bad bad bad.
-        root._mounted = mntpt;
+        root._mounted = path;
         // XXX Not sure why this div stuff is lying here
         if (root.html === undefined && root.htmlClass) {
-            root.html = '<div class="' + root.htmlClass + '">' + mntpt.slice(1) + '</div>';
+            root.html = '<div class="' + root.htmlClass + '">' + path.slice(1) + '</div>';
         }
-        self.mounts[mntpt] = {dir: fstack_base(root), opts: opts};
+        self.mounts[path] = {dir: fstack_base(root), opts: opts};
         return cb(null, null);
     });
 };
