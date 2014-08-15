@@ -23,7 +23,7 @@ up by the modern web environment.
 * "Mount" multiple Google Drive and Dropbox accounts, copy files from anywhere
   to anywhere.
 * Plot your friends' locations on a map: `map /facebook/friends/*`
-* scrape_web_page |  extract_table | draw_chart
+* [scrape_web_page |  extract_table | draw_chart](http://bl.ocks.org/ganeshv/raw/b971989c337e958c0531/)
 
 ## Installation ##
 
@@ -85,6 +85,16 @@ The `ps` command displays a list of running pipelines.  To kill a long-running
 pipeline, use `ps` to find its PID and `kill`. You can also `stop` and `start`
 pipelines.
 
+Many commands support a `-f` option to use a given object field, and
+`-e` to specify a Javascript expression. For instance:
+
+    ls /gdrive/username@gmail.com | grep -f mime spreadsheet | grep -e 'x.mtime > Date.parse("Dec 31, 2013")' | cp .
+
+The above command finds all files in the given user's GDrive containing the
+string "spreadsheet" in their `mime` property, selects those files which
+those files modified since Dec 31, 2013 and copies them to the current
+directory.
+
 ## Attaching Data Sources ##
 
 To attach Google Drive, Picasa, Dropbox, Facebook, click on the corresponding
@@ -96,7 +106,6 @@ mounts associated filesystems under `/gdrive`, `/picasa`, `/dropbox` and
 happens directly between your browser and data sources like Google and
 Facebook. No access tokens or user data are ever visible to or stored by the
 pigshell.com server.*
-
 
 Running the `mount` command without arguments displays the list of currently
 mounted filesystems.
