@@ -84,13 +84,10 @@ Test.prototype.next = check_next(function() {
             if (!isnumber(s1) || !isnumber(s2)) {
                 return self.exit('Arguments to arithmetic operator not numeric');
             }
-            s1 = parseFloat(s1);
-            s2 = parseFloat(s2);
-            fstr = '"use strict"; s1' + op + 's2;';
         } else {
             op = stringmap[op];
-            fstr = '"use strict"; "' + s1 + '"' + op + '"' + s2 + '"';
         }
+        fstr = '"use strict"; s1' + op + 's2;';
         try {
             e = eval(fstr);
         } catch(err) {
