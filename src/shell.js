@@ -281,6 +281,7 @@ function Shell(opts) {
     self.functions = {};
     if (opts.argv[0] === 'init') { /* First shell */
         self.cwd = {cwd: self.ns.root, comps: [{name: '/', dir: self.ns.root}]};
+        self.vars['?'] = ['true'];
         self.shell = self;
     } else {
         self.shell = opts.shell;
