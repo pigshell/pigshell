@@ -318,7 +318,7 @@ Readline.prototype.cli_input = function(str) {
     self.line(str);
 
     var line = self.cm.getLine(0);
-    self.cm.setOption('readOnly', 'nocursor');
+    self.cm.setOption('readOnly', true);
     self.options.input(line);
 };
 
@@ -340,7 +340,7 @@ Readline.prototype.cm_keydown = function(cm, e) {
                 pigshell._rescroll_enabled = true;
                 /* firefox gives both keydown and keypress events for enter */
                 var line = cm.getLine(0);
-                cm.setOption('readOnly', 'nocursor');
+                cm.setOption('readOnly', true);
                 self.options.input(line);
             }
             e.stop();
@@ -354,7 +354,7 @@ Readline.prototype.cm_keydown = function(cm, e) {
             }
         }
     } else if (e.ctrlKey && e.which === 81) { /* ctrl-q */
-        cm.setOption('readOnly', 'nocursor');
+        cm.setOption('readOnly', true);
         var str = cm.getValue();
         self.options.input(str);
         e.stop();
@@ -405,8 +405,8 @@ Readline.prototype.insert = function(str) {
 Readline.prototype.deactivate = function() {
     var self = this,
         cm = self.cm;
-    cm.setOption('readOnly', 'nocursor');
     self.div.data('codemirror', undefined);
+    self.div.find('.CodeMirror-cursor').remove();
 };
 
 Readline.prototype.remove = function() {
