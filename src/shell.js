@@ -115,13 +115,11 @@ Command.prototype.output = function(res) {
         }
         var o = this._obuffer.shift();
         if (o === undefined) {
-            pdebug(this, "output() undefined!");
-            this.kill("output() undefined!");
-        } else {
-            this._nextcb = undefined;
-            proc.current(null);
-            return nextcb(null, o);
+            o = null;
         }
+        this._nextcb = undefined;
+        proc.current(null);
+        return nextcb(null, o);
    }
 };
 
@@ -388,7 +386,7 @@ Shell.prototype.arg_eval = check_live(function(arg, context, cb) {
             p = makepipe(subsh, c);
             
         return p.read({}, ef(cb, function(res) {
-            self.vars['?'] = subsh.done;
+            self.vars['?'] = [subsh.done.toString()];
             return cb(null, res);
         }));
     } else if (arg['DEFERRED'] !== undefined) {

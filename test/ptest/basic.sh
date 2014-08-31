@@ -122,3 +122,7 @@ ls $Y | rm
 res=$?
 ls -G $Y >$RESDIR/rm.4
 dcheck $res true rm.4
+
+bq1=$(echo -n)
+expect $? true backquote.1
+expect $#bq1 0 backquote.2
