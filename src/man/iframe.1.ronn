@@ -3,8 +3,8 @@ iframe(1) -- display content in iframe
 
 ## SYNOPSIS
 
-`iframe` [-o <opts>] [-a <sopts>] [-g] <template> [<obj>...]<br>
-`iframe` [-o <opts>] [-a <sopts>] [-g] -s <tstr> [<obj>...]
+`iframe` [-o <opts>] [-W <width>] [-H <height>] [-a <sopts>] [-g] <template> [<obj>...]<br>
+`iframe` [-o <opts>] [-W <width>] [-H <height>] [-a <sopts>] [-g] -s <tstr> [<obj>...]
 
 ## DESCRIPTION
 
@@ -36,6 +36,13 @@ The following options are available:
   * `-o ` <opts>:
     Options in the options(7) format which are passed to the child iframe.
   
+  * `-W ` <width>:
+    Width of the iframe, in pixels or as a percentage.
+
+  * `-H ` <height>:
+    Height of the iframe, in pixels or as a percentage. If specified, the
+    height is not readjusted on receipt of a message from the child iframe.
+
   * `-a ` <sopts>:
     Comma separated list of sandbox options. These can be one or more of
     "same-origin", "scripts", "forms", "popups", "pointer-lock",

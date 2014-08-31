@@ -17,11 +17,13 @@ inherit(Iframe, Command);
 Iframe.prototype.usage = 'iframe       -- display content in iframe\n\n' +
     'Usage:\n' +
     '    iframe -h | --help\n' +
-    '    iframe [-o <opts>] [-a <sopts>] [-g] <template> [<obj>...]\n' +
-    '    iframe [-o <opts>] [-a <sopts>] [-g] -s <tstr> [<obj>...]\n\n' +
+    '    iframe [-o <opts>] [-W <width>] [-H <height>] [-a <sopts>] [-g] <template> [<obj>...]\n' +
+    '    iframe [-o <opts>] [-W <width>] [-H <height>] [-a <sopts>] [-g] -s <tstr> [<obj>...]\n\n' +
     'Options:\n' +
     '    <template>   IFrame file path\n' +
     '    <obj>        Object to display through iframe template\n' +
+    '    -W <width>   Width of iframe in pixels or percentage\n' + 
+    '    -H <height>  Height of iframe in pixels or percentage\n' + 
     '    -s <tstr>    IFrame template string\n' +
     '    -o <opts>    Options to be passed to iframe template\n' +
     '    -a <sopts>   Comma separated list of sandbox options to enabled\n' +
@@ -87,12 +89,23 @@ Iframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
 
     function make_iframe() {
         var iframe = document.createElement('iframe'),
-            maxwidth = self.pterm().div.width(),
-            height = $(window).height() * 2/3,
+            dwidth = self.pterm().div.width(),
+            dheight = $(window).height(),
+            uwidth = self.docopts['-W'],
+            uheight = self.docopts['-H'],
+            width = dwidth,
+            height = dheight * 2 / 3,
             term = opts.term,
             tdiv = term.div;
 
-        iframe.setAttribute('style', sprintf("width:%dpx; height:%dpx; border:none;", maxwidth, height));
+        if (uwidth) {
+            width = (uwidth[uwidth.length - 1] === '%') ? +uwidth.slice(0, -1) / 100 * dwidth : +uwidth;
+        }
+        if (uheight) {
+            height = (uheight[uheight.length - 1] === '%') ? +uheight.slice(0, -1) / 100 * dheight : +uheight;
+        }
+
+        iframe.setAttribute('style', sprintf("width:%dpx; height:%dpx; border:none;", width, height));
         iframe.setAttribute("sandbox", self.sboxopts);
         iframe.onload = function() {
             proc.current(self);
@@ -117,7 +130,7 @@ Iframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
     function set_height(e) {
         if (e.source === self.iframe.contentWindow) {
             var h = e.data;
-            if (h && h.height !== undefined) {
+            if (h && h.height !== undefined && !self.docopts['-H']) {
                 $(self.iframe).height(h.height + 10);
             }
             if (self._event_handler) {
