@@ -140,7 +140,6 @@ function vertbar(data, term, opts, cb) {
         key: 'key',
         field: 'data',
         xtformat: ',.0f',
-        sort: 'descending',
         margin: {top: 50, right: 20, bottom: 20, left: 20},
         barheight: 20,
         title: '',
@@ -167,13 +166,6 @@ function vertbar(data, term, opts, cb) {
         return (key === null || val === null) ? null : {key: key, value: val};
     });
     data = data.filter(function(d) { return d !== null; });
-    data = data.sort(function(a, b) {
-        var ret = a.value < b.value ? 1 : a.value > b.value ? -1 : 0;
-        if (opts.sort !== "descending") {
-            ret = -ret;
-        }
-        return ret;
-    });
     var values = data.map(function(d) { return d.value; });
     var margin = opts.margin,
         bheight = opts.barheight,
