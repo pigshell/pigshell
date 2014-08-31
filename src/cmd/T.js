@@ -84,8 +84,12 @@ Test.prototype.next = check_next(function() {
             if (!isnumber(s1) || !isnumber(s2)) {
                 return self.exit('Arguments to arithmetic operator not numeric');
             }
+            s1 = +s1;
+            s2 = +s2;
         } else {
             op = stringmap[op];
+            s1 = s1.toString();
+            s2 = s2.toString();
         }
         fstr = '"use strict"; s1' + op + 's2;';
         try {
