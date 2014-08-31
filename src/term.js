@@ -279,6 +279,7 @@ function Readline(opts, div) {
 
     self.options = opts;
 
+    self.active = true;
     self.div = div;
     self._line = '';
     self._position = 0;
@@ -326,6 +327,9 @@ Readline.prototype.cm_keydown = function(cm, e) {
     var self = this;
 
     //console.log('type: ' + e.type + ' which: ' + e.which);
+    if (!self.active) {
+        return false;
+    }
     if (e.type === 'keyup') {
         return false;
     }
@@ -405,8 +409,10 @@ Readline.prototype.insert = function(str) {
 Readline.prototype.deactivate = function() {
     var self = this,
         cm = self.cm;
+    cm.setOption('readOnly', true);
     self.div.data('codemirror', undefined);
     self.div.find('.CodeMirror-cursor').remove();
+    self.active = false;
 };
 
 Readline.prototype.remove = function() {
