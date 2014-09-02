@@ -136,7 +136,7 @@ IShell.prototype.run_next = function() {
                 } else if (shell.status === 'stop') {
                     cli.prompt(null, 'amber');
                 } else if (shell.status === 'done') {
-                    if (shell.vars['?'][0] === 'true') {
+                    if (shell.vars['?'] && shell.vars['?'][0] === 'true') {
                         cli.prompt(null, 'prompt');
                     } else {
                         cli.prompt(null, 'red');

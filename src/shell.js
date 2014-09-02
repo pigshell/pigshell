@@ -47,6 +47,7 @@ function Command(opts) {
     this._buffer = [];
     this._obuffer = [];
     this.done = undefined;
+    this.docopts = undefined;
     this._status = {};
     this._log = [];
     this._abortable = [];
