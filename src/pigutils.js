@@ -106,6 +106,16 @@ function mergeattr(a, b, attrlist) {
             a[attr] = b[attr];
         }
     });
+    return a;
+}
+
+function mergeattr_x(a, b, attrlist) {
+    for (var x in b) {
+        if (b.hasOwnProperty(x) && attrlist.indexOf(x) === -1) {
+            a[x] = b[x];
+        }
+    }
+    return a;
 }
 
 function fstack_top(f) {
@@ -383,7 +393,8 @@ var Errno = {
     'ENOURL' : 'No URL for file',
     'EPROTONOSUPPORT' : 'Protocol not supported',
     'EXDEV': 'Cross-device link',
-    'EPIPE': 'Broken pipe'
+    'EPIPE': 'Broken pipe',
+    'ESTACKMOD': 'File stack modified'
 };
 
 function cloneContent(content) {
@@ -1778,6 +1789,27 @@ function subscribe(channel, cb) {
 function unsubscribe(channel, cb) {
     if (ps_topics[channel]) {
         ps_topics[channel].remove(cb);
+    }
+}
+
+function assert() {
+    var args = [].slice.call(arguments),
+        name = 'ASSERT',
+        cond, rest;
+
+    if (isstring(args[0])) {
+        name = name + ': ' + args[0];
+        cond = args[1];
+        rest = args.slice(2);
+    } else {
+        cond = args[0];
+        rest = args.slice(1);
+    }
+    if (!cond) {
+        var e = new Error(name);
+        console.log(name, rest);
+        console.log(e.stack);
+        throw e;
     }
 }
 

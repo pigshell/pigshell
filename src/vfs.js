@@ -54,17 +54,29 @@ var VFS = {
 
     lookup_uri_handler: function(uri) {
         var self = this;
-        return lookup_handler(self.uri_handler_list, uri);
+        return _lookup_handler(self.uri_handler_list, uri);
+    },
+
+    lookup_handler: function(name) {
+        var self = this,
+            list = self.uri_handler_list;
+
+        for (var i = 0, max = list.length; i < max; i++) {
+            if (list[i].handler.fsname === name) {
+                return list[i];
+            }
+        }
+        return null;
     },
 
     lookup_media_handler: function(media_type) {
         var self = this;
-        return lookup_handler(self.media_handler_list, media_type);
+        return _lookup_handler(self.media_handler_list, media_type);
     },
 
     lookup_media_ui: function(media_type) {
         var self = this;
-        return lookup_handler(self.media_ui_list, media_type);
+        return _lookup_handler(self.media_ui_list, media_type);
     },
 
     /*
@@ -72,7 +84,7 @@ var VFS = {
      * fragment, or explicitly supplied as in the case of mount.
      * We merge both options, because URI-options may specify URI handler as
      * well (e.g. a bookmark of an apachedir URL may be
-     * https://kernel.org/pub/linux/#handler=apachedir)
+     * https://kernel.org/pub/linux/#fs=apachedir)
      */
 
     lookup_uri: function(uri, opts, cb) {
@@ -80,23 +92,18 @@ var VFS = {
             u = URI.parse(uri),
             frag = u.fragment(),
             fragopts = frag ? optstr_parse(frag) : {},
-            copts = $.extend({}, fragopts, opts),
-            opts2 = $.extend({mountopts: fragopts}, opts),
-            handler;
-
-        if (copts && copts.handler) {
-            //handler = window[opts.handler]; XXX Figure this out
-            handler = null;
-        } else {
-            var entry = self.lookup_uri_handler(uri),
-            handler = entry ? entry.handler : null;
-        }
+            url = u.setFragment('').toString(),
+            mountopts = $.extend(true, {}, opts.mountopts, fragopts),
+            entry = mountopts.fs ? self.lookup_handler(mountopts.fs) : self.lookup_uri_handler(url),
+            handler = entry ? entry.handler : null,
+            opts2 = $.extend({}, opts, {mountopts: mountopts});
 
         if (!handler) {
             return cb(E('EPROTONOSUPPORT'));
         }
-
-        return handler.lookup_uri(uri, opts2, cb);
+        delete mountopts['fs'];
+        
+        return handler.lookup_uri(url, opts2, cb);
     }
 };
 
@@ -123,7 +130,7 @@ function unregister_handler(plist, pattern, handler) {
     return qlist;
 }
 
-function lookup_handler(list, pattern) {
+function _lookup_handler(list, pattern) {
     for (var i = 0, max = list.length; i < max; i++) {
         if (pattern.indexOf(list[i].pattern) === 0) {
             return list[i];
@@ -132,8 +139,9 @@ function lookup_handler(list, pattern) {
     return null;
 }
 
-var Filesystem = function() {
+var Filesystem = function(mountopts) {
     this.root = undefined; 
+    this.mountopts = mountopts || {};
 }; 
 
 var File = function() {
@@ -141,6 +149,7 @@ var File = function() {
     this.name = undefined; // Name, unique within directory
     this.ident = undefined; // File ID, index in FS file cache
     this.ctime = Date.now(); // Time of creation
+    this.atime = Date.now(); // Time of access
     this.mtime = Date.now(); // Time of modification
     this.owner = 'me'; // Some representation of owner
     this.readable = undefined; // Read permission. 1 = readable, 0 = not
@@ -150,8 +159,7 @@ var File = function() {
     this.data = undefined; // Pointer to data, or the data itself
     this.__id = global_id++;
 */
-    this.ctime = this.mtime = 0;
-    if (typeof arguments[0] == 'object') {
+    if (typeof arguments[0] === 'object') {
         $.extend(this, arguments[0]);
     }
     if (this.mime === 'directory' && this.readdir === undefined) {
@@ -160,7 +168,7 @@ var File = function() {
 };
 
 File.prototype.toString = function() {
-    return this.title ? this.title : this.name;
+    return this.name;
 };
 
 File.prototype.generic_readdir = function(opts, cb) {
@@ -669,9 +677,16 @@ var sys = {
     },
 
     read: function(cmd, file, opts, cb) {
-        var opts2 = $.extend({}, opts, {context: cmd});
+        var opts2 = $.extend({}, opts, {context: cmd}),
+            base = fstack_base(file);
 
-        return file.read(opts2, check_live(cb).bind(cmd));
+        return file.read(opts2, check_live(function(err, res) {
+            if (err && err.code === 'ESTACKMOD') {
+                return fstack_top(base).read(opts2, check_live(cb).bind(cmd));
+            } else {
+                return cb(err, res);
+            }
+        }).bind(cmd));
     },
 
     bundle: function(cmd, file, opts, cb) {
@@ -711,9 +726,16 @@ var sys = {
     },
 
     readdir: function(cmd, dir, opts, cb) {
-        var opts2 = $.extend({}, opts, {context: cmd});
+        var opts2 = $.extend({}, opts, {context: cmd}),
+            base = fstack_base(dir);
 
-        return dir.readdir(opts2, check_live(cb).bind(cmd));
+        return dir.readdir(opts2, check_live(function(err, res) {
+            if (err && err.code === 'ESTACKMOD') {
+                return fstack_top(base).readdir(opts2, check_live(cb).bind(cmd));
+            } else {
+                return cb(err, res);
+            }
+        }).bind(cmd));
     },
 
     rm: function(cmd, dir, name, opts, cb) {

@@ -4,105 +4,77 @@
  */
 
 /*
- * HttpFS is the base handler for http:// URLs. Others may subclass
+ * HttpFS2 is the base handler for http:// URLs. Others may subclass
  * it, e.g. ApacheDir and so forth.
  *
  * This FS also provides media handler classes for text/html, image/*.
  *
- * HttpFS is distinct from HttpTX, which provides actual GET/PUT/POST/DELETE
+ * HttpFS2 is distinct from HttpTX, which provides actual GET/PUT/POST/DELETE
  * support via direct or proxy channels.
  *
  * 
- * TODO TextHtml reload
+ * TODO TextHtml2 reload
  */
 
-var HttpFS = function(opts, uri) {
+var HttpFS2 = function(opts, uri) {
     var self = this,
         Uri = URI.parse(uri),
         host = Uri.host();
 
-    HttpFS.base.apply(this, []);
-    self.opts = opts;
+    HttpFS2.base.apply(this, [opts]);
     self.uri = uri;
     self.Uri = Uri;
-    self.tx = null;
-    if (opts.tx) {
-        self.tx = HttpTX.lookup(opts.tx);
-    } else if (HttpFS.direct_hosts.indexOf(host) !== -1) {
-        self.tx = self.tx || HttpTX.lookup('direct');
-    } else {
-        self.tx = self.tx || HttpTX.lookup(HttpFS.defaults.tx);
-    }
+    self.opts = $.extend(true, {}, HttpFS2.defaults, self.defaults,
+        HttpFS2.hosts[host], opts);
+    self.tx = HttpTX.lookup(self.opts.tx);
 };
 
-inherit(HttpFS, Filesystem);
+inherit(HttpFS2, Filesystem);
 
-HttpFS.fsname = 'HttpFS';
-HttpFS.filesystems = [];
-HttpFS.defaults = { 'tx': 'proxy' };
+HttpFS2.fsname = 'HttpFS2';
+HttpFS2.defaults = { 'tx': 'proxy' };
 
-/* XXX Hack to default some hosts to direct. */
-HttpFS.direct_hosts = [ 'localhost', '127.0.0.1', 'pigshell.com',
-    'query.yahooapis.com', 'www.quandl.com', 'rawgit.com', 'cdn.rawgit.com' ];
+HttpFS2.hosts = {
+    'localhost': {'tx': 'direct'},
+    '127.0.0.1': {'tx': 'direct'},
+    'pigshell.com': {'tx': 'direct'},
+    'pig.sh': {'tx': 'direct'},
+    'query.yahooapis.com': {'tx': 'direct'},
+    'www.quandl.com': {'tx': 'direct'},
+    'rawgit.com': {'tx': 'direct'},
+    'cdn.rawgit.com': {'tx': 'direct'},
+};
 
-HttpFS.lookup_uri = function(uri, opts, cb) {
+HttpFS2.lookup_uri = function(uri, opts, cb) {
     var self = this,
         u = URI.parse(uri),
-        url = u.setFragment('').toString(),
-        meta = (opts && opts.meta) ? opts.meta : null;
+        mountopts = opts.mountopts || {},
+        file = new self.fileclass({name: basenamedir(uri), ident: uri,
+            fs: opts.fs || new self(mountopts, uri)}),
+        opts2 = $.extend({}, opts);
 
-    if (!url) {
-        return cb(E('EINVAL'));
-    }
-
-    self.lookup_fs(uri, opts, ef(cb, function(fs) {
-        var name = (meta && meta.name) ? meta.name : basenamedir(uri),
-            file = new self.fileclass({name: name, ident: uri, fs: fs});
-
-        /*
-         * Existence of meta option means the caller want a lazy update
-         * i.e. one which happens with available (possibly inaccurate)
-         * "readdir" data rather than making an authoritative query of the
-         * source. This is often preferred when there are hundreds of
-         * links but only a few may be visited.
-         */
-
-        if (meta) {
-            file.update(meta, opts, cb);
-        } else {
-            file.stat(opts, cb);
-        }
-    }));
+    delete opts2['mountopts'];
+    delete opts2['fs'];
+    return file.stat(opts2, cb);
 };
 
-HttpFS.lookup_fs = function(uri, opts, cb) {
-    var self = this,
-        mountopts = opts.mountopts || {};
+var HttpFile2 = function(meta) {
+    this.mtime = -1;
+    this.size = 0;
+    this.readable = true;
 
-    function create_fs(opts, uri) {
-        var fs = new self(opts, uri);
-        self.filesystems.push(fs);
-        return fs;
-    }
-
-    if (opts.mount) {
-        return cb(null, create_fs(mountopts, uri));
-    }
-
-    var fs = _lookup_fs(uri, mountopts, self.filesystems);
-    return fs ? cb(null, fs) : cb(null, create_fs(mountopts, uri));
-};
-
-var HttpFile = function() {
-    HttpFile.base.apply(this, arguments);
+    HttpFile2.base.call(this, mergeattr({}, meta, ["name", "ident", "fs"]));
 
     this.mime = 'application/vnd.pigshell.httpfile';
-    this.html = sprintf('<div class="pfile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
+    this.html = sprintf('<div class="nativeFile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
+
+    assert("HttpFile2.1", this.ident !== undefined && this.name !== undefined &&
+        this.fs !== undefined, this, meta);
 };
 
-inherit(HttpFile, File);
+inherit(HttpFile2, File);
 
-HttpFS.fileclass = HttpFile;
+HttpFS2.fileclass = HttpFile2;
 
 /*
  * Get metadata for a file, using HEAD, or in the case of a special protocol, a
@@ -116,7 +88,7 @@ HttpFS.fileclass = HttpFile;
  * This function MUST NOT update the file attributes. That is update's job.
  */
 
-HttpFile.prototype.getmeta = function(opts, cb) {
+HttpFile2.prototype.getmeta = function(opts, cb) {
     var self = this;
 
     self.fs.tx.HEAD(self.ident, opts, ef(cb, function(res) {
@@ -144,27 +116,32 @@ HttpFile.prototype.getmeta = function(opts, cb) {
  * reset and recreate the file if the mime type has changed.
  */
 
-HttpFile.prototype.update = function(meta, opts, cb) {
+HttpFile2.prototype.update = function(meta, opts, cb) {
     var self = this,
         ufile = self._ufile,
         curmime = ufile ? ufile.mime : null,
         mime;
 
-    meta = meta || {};
+    assert("HttpFile2.update.1", meta && meta.mime);
+    mergeattr_x(self, meta, ["name", "ident", "fs", "mime"]);
     mime = meta.mime;
-
-    if (ufile && curmime !== mime) {
-        fstack_rmtop(self);
-    }
-    if (mime && (!self._mime_valid || curmime !== mime)) {
-        mergeattr(self, meta, ["_mime_valid", "mtime", "size", "readable"]);
+    if (curmime !== mime) {
+        if (ufile) {
+            fstack_rmtop(self);
+        }
         var mh = VFS.lookup_media_handler(mime) ||
-            VFS.lookup_media_handler('application/octet-stream');
-        var mf = new mh.handler(self, meta);
+            VFS.lookup_media_handler('application/octet-stream'),
+            mf;
+        if (mime === 'text/html') {
+            mf = new TextHtml2({name: self.name, ident: self.ident,
+                fs: self.fs, mime: meta.mime});
+        } else {
+            mf = new mh.handler({name: self.name, ident: self.ident,
+                fs: self.fs, mime: meta.mime});
+        }
         fstack_addtop(self, mf);
         return mf.update(meta, opts, cb);
     }
-    mergeattr(self, meta, ["mtime", "size", "readable"]);
     return File.prototype.update.call(self, meta, opts, cb);
 };
 
@@ -172,7 +149,7 @@ HttpFile.prototype.update = function(meta, opts, cb) {
  * Retrieve file metadata and update file
  */
 
-HttpFile.prototype.stat = function(opts, cb) {
+HttpFile2.prototype.stat = function(opts, cb) {
     var self = this;
     self.getmeta(opts, ef(cb, function(meta) {
         self.update(meta, opts, cb);
@@ -197,7 +174,7 @@ HttpFile.prototype.stat = function(opts, cb) {
  * Retrieve data as text or blob. Defaults to blob.
  */
 
-HttpFile.prototype.getdata = function(opts, cb) {
+HttpFile2.prototype.getdata = function(opts, cb) {
     var self = this,
         gopts = $.extend({}, opts),
         range = gopts.range,
@@ -241,26 +218,10 @@ HttpFile.prototype.getdata = function(opts, cb) {
  * before doing so by forcing a stat() if necessary.
  */
 
-HttpFile.prototype.read = function(opts, cb) {
-    var self = this;
-
-    if (!self._mime_valid) {
-        /*
-         * Mime types generated during a readdir may be speculative, based on
-         * file extensions and so on. When we actually want to read a file,
-         * force a stat so we're sure we've got the right mime type and
-         * media handler, and switch if necessary.
-         */
-        self.stat(opts, ef(cb, function(res) {
-            return res.getdata(opts, cb);
-        }));
-    } else {
-        return self.getdata(opts, cb);
-    }
-};
+HttpFile2.prototype.read = HttpFile2.prototype.getdata;
 
 /* Only generic, well-known attributes are returned. */
-HttpFile.prototype._process_headers = function(xhr_headers) {
+HttpFile2.prototype._process_headers = function(xhr_headers) {
     var headers = xhr_headers || {},
         data = {},
         mime = xhr_getmime(headers),
@@ -285,7 +246,7 @@ HttpFile.prototype._process_headers = function(xhr_headers) {
     return data;
 };
 
-HttpFile.prototype._reset = function() {
+HttpFile2.prototype._reset = function() {
     var self = this,
         file = new self.constructor({'ident': this.ident, 'name': this.name, 'fs': this.fs, 'mtime': this.mtime});
     for (var key in this) {
@@ -294,24 +255,25 @@ HttpFile.prototype._reset = function() {
     mixin(this, file);
 };
 
-var MediaHandler = function(file, meta) {
-    MediaHandler.base.call(this, {});
+var MediaHandler2 = function(meta) {
+    this.mtime = -1;
+    this.size = 0;
+    this.readable = true;
 
-    this.ident = file.ident;
-    this.name = file.name;
-    this.fs = file.fs;
-    this.mime = meta ? meta.mime : undefined;
-    this.html = sprintf('<div class="pfile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
+    MediaHandler2.base.call(this, mergeattr({}, meta, ["name", "ident", "fs", "mime"]));
+
+    this.html = sprintf('<div class="nativeFile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
+    assert("MediaHandler2.1", this.ident !== undefined && this.name !== undefined && this.fs !== undefined && this.mime, this, meta);
 };
 
-inherit(MediaHandler, File);
+inherit(MediaHandler2, File);
 
-MediaHandler.prototype.append = fstack_passthrough("append");
+MediaHandler2.prototype.append = fstack_passthrough("append");
 
-MediaHandler.prototype.update = function(meta, opts, cb) {
+MediaHandler2.prototype.update = function(meta, opts, cb) {
     var self = this;
 
-    mergeattr(self, meta, ["mtime", "ctime", "owner", "readable", "writable", "size"]);
+    mergeattr_x(self, meta, ["name", "ident", "fs", "mime"]);
     return File.prototype.update.call(self, meta, opts, cb);
 };
 
@@ -320,13 +282,11 @@ MediaHandler.prototype.update = function(meta, opts, cb) {
  * * html_nodir: will treat text/html as plain file
  */
 
-var TextHtml = function(file, meta) {
-    TextHtml.base.apply(this, arguments);
+var TextHtml2 = function(meta) {
+    TextHtml2.base.call(this, meta);
     this.mime = "text/html";
-    this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
-    if (this.fs === undefined) {
-        console.log('undefined fs');
-    }
+    this.html = sprintf('<div class="nativeFolder"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
+    // YYY revisit options
     if (!this.fs.opts.html_nodir) {
         this.files = {};
         this.populated = false;
@@ -337,9 +297,9 @@ var TextHtml = function(file, meta) {
     }
 };
 
-inherit(TextHtml, MediaHandler);
+inherit(TextHtml2, MediaHandler2);
 
-TextHtml.prototype._readdir = function(opts, cb) {
+TextHtml2.prototype._readdir = function(opts, cb) {
     var self = this;
 
     if (self.populated) {
@@ -362,40 +322,37 @@ TextHtml.prototype._readdir = function(opts, cb) {
                 title = el.attr("title"),
                 alt = el.attr("alt"),
                 u = href ? URI.parse(href) : null,
+                ident = href,
                 img = el.is("img");
+
+            img = false;
 
             if (!u) {
                 return;
             }
             if (!u.isAbsolute()) {
-                href = base.resolve(u);
+                ident = base.resolve(u);
             }
-            if (seen[href.toString()]) {
+            if (seen[ident.toString()]) {
                 return;
             }
-            seen[href.toString()] = true;
+            seen[ident.toString()] = true;
             name = img ? basenamedir(href) : title || name || basenamedir(href);
             var file = {
                 title: name,
-                ident: href
+                ident: ident,
+                href: href,
+                fs: self.fs
             };
-            if (img) {
-                file.mime = 'image/unknown';
-            } else if (href[href.length - 1] === '/') {
-                file.mime = 'text/vnd.pigshell.html+dir';
-            } else {
-                file.mime = getMimeFromExtension(href) || 'text/html';
-            }
-
             flist.push(file);
         });
         flist = unique_names(flist);
         async.forEachSeries(flist, function(el, lcb) {
-            VFS.lookup_uri(el.ident, { meta: {'name': el.name,
-                'mime': el.mime, 'mtime': self.mtime, 'readable': true} },
-                function(err, res) {
+            delete el['title'];
+            var file = new HttpLink(el);
+            file.update(el, opts, function(err, res) {
                 if (!err) {
-                    self.files[res.name] = fstack_base(res);
+                    self.files[el.name] = res;
                 }
                 return lcb(null);
             });
@@ -405,23 +362,25 @@ TextHtml.prototype._readdir = function(opts, cb) {
         });
     }
 
-    self.read({context: opts.context, type: "text"}, ef(cb, function(res) {
-        return makefiles(res);
+    self.read(opts, ef(cb, function(res) {
+        to('text', res, {}, ef(cb, function(txt) {
+            return makefiles(txt);
+        }));
     }));
 };
 
-TextHtml.prototype.update = function(meta, opts, cb) {
+TextHtml2.prototype.update = function(meta, opts, cb) {
     var self = this;
 
     if (meta.mtime !== undefined && self.mtime !== meta.mtime) {
         self.populated = false;
         self.files = {};
     }
-    mergeattr(self, meta, ["mtime", "owner", "readable", "writable", "size"]);
+    mergeattr_x(self, meta, ["name", "ident", "fs", "mime", "populated", "files"]);
     return File.prototype.update.call(self, meta, opts, cb);
 };
 
-TextHtml.prototype.bundle = function(opts, cb) {
+TextHtml2.prototype.bundle = function(opts, cb) {
     var self = this;
 
     function do_dump(str) {
@@ -485,11 +444,44 @@ TextHtml.prototype.bundle = function(opts, cb) {
     }));
 };
 
-pigshell.HttpFS = HttpFS;
+var HttpLink = function(file) {
+    this.mtime = -1;
+    this.files = {};
+    this.readable = true;
 
-VFS.register_uri_handler('http', HttpFS, {}, 10);
-VFS.register_uri_handler('https', HttpFS, {}, 10);
+    HttpLink.base.apply(this, arguments);
+    this.html = sprintf('<div class="nativeFile"><a href="%s" target="_blank">{{name}} -> %s</a></div>', this.ident, this.ident);
+    assert("HttpLink.1", this.ident !== undefined && this.name !== undefined &&
+        this.fs !== undefined && this.href !== undefined, this);
+};
 
-VFS.register_media_handler('text/html', TextHtml, {}, 100);
-VFS.register_media_handler('text/vnd.pigshell.html+dir', TextHtml, {}, 100);
-VFS.register_media_handler('application/octet-stream', MediaHandler, {}, 100);
+inherit(HttpLink, File);
+
+HttpLink.prototype.update = function(meta, opts, cb) {
+    var self = this;
+
+    return cb(null, self);
+};
+
+HttpLink.prototype.read = function(opts, cb) {
+    var self = this,
+        u = URI.parse(self.href),
+        fso = u.isAbsolute() ? {} : {fs: self.fs},
+        opts2 = $.extend({}, opts, fso);
+
+    return VFS.lookup_uri(self.ident, opts2, ef(cb, function(res) {
+        fstack_addtop(self, fstack_base(res));
+        return cb(E('ESTACKMOD'));
+    }));
+};
+
+HttpLink.prototype.readdir = HttpLink.prototype.read;
+
+pigshell.HttpFS2 = HttpFS2;
+
+VFS.register_uri_handler('http', HttpFS2, {}, 1);
+//VFS.register_uri_handler('https', HttpFS2, {}, 0);
+
+VFS.register_media_handler('text/html', TextHtml2, {}, 10);
+VFS.register_media_handler('text/vnd.pigshell.html+dir', TextHtml2, {}, 10);
+VFS.register_media_handler('application/octet-stream', MediaHandler2, {}, 10);
