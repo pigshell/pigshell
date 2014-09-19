@@ -17,12 +17,7 @@ var PstyFS = function() {
 inherit(PstyFS, HttpFS);
 
 PstyFS.fsname = 'PstyFS';
-PstyFS.filesystems = [];
-
-/* Inherit classmethods by hand */
-["merge_attrs", "lookup_uri", "lookup_fs"].forEach(function(el) {
-    PstyFS[el] = PstyFS.base[el];
-});
+PstyFS.lookup_uri = HttpFS.lookup_uri;
 
 PstyFS.prototype.dirmime = 'application/vnd.pigshell.dir+json';
 PstyFS.prototype.bdlmime = 'application/vnd.pigshell.bundle+json';
@@ -90,38 +85,12 @@ PstyFile.prototype.getmeta = function(opts, cb) {
         if (!mime.match('vnd.pigshell')) {
             return cb("Expected vnd.pigshell-* mime type at " + self.ident);
         }
-        var data = $.parseJSON(res.response);
+        var data = parse_json(res.response);
         if (!data) {
             return cb('JSON parsing error for ' + self.ident);
         }
-        data._mime_valid = true;
         return cb(null, data);
     }));
-};
-
-PstyFile.prototype.update = function(meta, opts, cb) {
-    var self = this,
-        ufile = self._ufile,
-        curmime = ufile ? ufile.mime : null,
-        attrlist = ["mtime", "size", "atime", "readable", "writable"],
-        mime;
-
-    meta = meta || {};
-    mime = meta.mime;
-
-    if (ufile && curmime !== mime) {
-        fstack_rmtop(self);
-    }
-    if (mime && (!self._mime_valid || curmime !== mime)) {
-        mergeattr(self, meta, ["_mime_valid"].concat(attrlist));
-        var mh = VFS.lookup_media_handler(mime) ||
-            VFS.lookup_media_handler('application/octet-stream');
-        var mf = new mh.handler(self, meta);
-        fstack_addtop(self, mf);
-        return mf.update(meta, opts, cb);
-    }
-    mergeattr(self, meta, attrlist);
-    return File.prototype.update.call(self, meta, opts, cb);
 };
 
 PstyFile.prototype.putdir = mkblob(function(file, blob, opts, cb) {
@@ -143,6 +112,7 @@ PstyFile.prototype.link = function(file, name, opts, cb) {
 
     form.append("op", "link");
     form.append("name", name);
+    // YYY Serialize
     form.append("data", '{"ident": "' + file.ident + '"}');
 
     self.fs.tx.POST(self.ident, form, opts, pef(cb, function(res) {
@@ -160,7 +130,7 @@ PstyFile.prototype.append = function(item, opts, cb) {
         form.append("data", blob);
         self.fs.tx.POST(self.ident, form, opts,
             pef(cb, function(res) {
-            var data = $.parseJSON(res.response);
+            var data = parse_json(res.response);
 
             if (!data) {
                 return cb("JSON parsing error while appending to " + self.ident);
@@ -201,7 +171,7 @@ var PstyDir = function(file) {
     this.files = {};
     this.populated = false;
     this.mime = this.fs.dirmime || 'application/vnd.pigshell.dir+json';
-    this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">%s</a></div>', file.ident, file.name);
+    this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">%s</a></div>', this.ident, this.name);
     this.cookie = -1;
 };
 
@@ -252,7 +222,6 @@ PstyDir.prototype.readdir = function(opts, cb) {
                     self.files[entryname] = bfile;
                     return lcb(null);
                 } else {
-                    el._mime_valid = true;
                     bfile.update(el, opts, function() {
                         self.files[entryname] = bfile;
                         return lcb(null);
@@ -261,7 +230,6 @@ PstyDir.prototype.readdir = function(opts, cb) {
             } else {
                 var klass = self.fs.constructor.fileclass,
                     file = new klass({ident: ident, name: el.name, fs: self.fs});
-                el._mime_valid = true;
                 file.update(el, opts, function(err, res) {
                     self.files[entryname] = file;
                     return lcb(null);
@@ -276,61 +244,72 @@ PstyDir.prototype.readdir = function(opts, cb) {
     if (self.fs.cachedir && self.populated) {
         return cb(null, fstack_topfiles(self.files));
     }
-    self.read({context: opts.context, type: "text"}, ef(cb, function(res) {
-        var data = parse_json(res);
-        if (!data) {
-            return cb("JSON parsing error at " + self.ident);
-        }
-        if (!(opts.readdir && opts.readdir.noupdate)) {
-            fstack_base(self).update(data, opts, ef(cb, function(res) {
-                var b = fstack_base(res);
-                while (b) {
-                    if (b === self) {
-                        return makefiles(data);
+    self.read(opts, ef(cb, function(res) {
+        to('text', res, {}, ef(cb, function(txt) {
+            var data = parse_json(txt);
+            if (!data) {
+                return cb("JSON parsing error at " + self.ident);
+            }
+            if (!(opts.readdir && opts.readdir.noupdate)) {
+            /*
+                fstack_base(self).update(data, opts, ef(cb, function(res) {
+                    var b = fstack_base(res);
+                    while (b) {
+                        if (b === self) {
+                            return makefiles(data);
+                        }
+                        b = b._ufile;
                     }
-                    b = b._ufile;
-                }
-                console.log("PstyDir WTF");
-                return res.readdir(opts, cb);
-            }));
-        } else {
-            return makefiles(data);
-        }
+                    console.log("PstyDir WTF");
+                    return res.readdir(opts, cb);
+                }));
+            */
+                self.update(data, opts, ef(cb, function(res) {
+                    return makefiles(data);
+                }));
+            } else {
+                self._update(data, opts);
+                return makefiles(data);
+            }
+        }));
     }));
 };
 
 PstyDir.prototype.update = function(meta, opts, cb) {
     var self = this,
-        bdlmatch = self.name.match(/(.*)\.bdl$/),
-        bdlmime = self.fs.bdlmime || 'application/vnd.pigshell.bundle+json';
+        bdlmatch = self.name.match(/(.*)\.bdl$/);
 
     if (!self._update(meta, opts)) {
         /* Short-circuit update of the stack here */
         return cb(null, fstack_top(self));
     }
+    self.populated = false;
     if (bdlmatch) {
-        var mh = VFS.lookup_media_handler(bdlmime),
-            mf = mh ? new mh.handler(self) : null;
-        if (!mh) {
-            return cb(null, self);
+        var bdlmime = self.fs.bdlmime || 'application/vnd.pigshell.bundle+json';
+
+        assert("PstyDir.update.1", !self._ufile || self._ufle.mime !== bdlmime, self);
+        if (!self._ufile) {
+            var mh = VFS.lookup_media_handler(bdlmime),
+                mf = mh ? new mh.handler(self) : null;
+            if (!mh) {
+                return cb(null, self);
+            }
+            fstack_addtop(self, mf);
+            return mf.update(meta, opts, cb);
         }
-        fstack_addtop(self, mf);
-        return mf.update(meta, opts, cb);
     }
     return File.prototype.update.call(self, meta, opts, cb);
 };
 
 PstyDir.prototype._update = function(meta, opts) {
     var self = this,
-        data = $.extend({}, meta),
         changed = false;
 
-    if (self.cookie !== data['cookie']) {
-        self.populated = false;
-        fstack_rmtop(self);
+    if (self.cookie !== meta['cookie']) {
         changed = true;
     }
-    mergeattr(self, data, ["mtime", "readable", "writable", "size", "cookie"]);
+    
+    mergeattr_x(self, meta, ["name", "ident", "fs", "mime", "populated", "files"]);
     return changed;
 };
 
@@ -443,7 +422,7 @@ PstyBundle.prototype.update = function(meta, opts, cb) {
             if (err) {
                 return ret(err);
             }
-            var dotmeta = $.parseJSON(res);
+            var dotmeta = parse_json(res);
             if (!dotmeta || !dotmeta.meta) {
                 return ret("Meta parsing error");
             }
@@ -530,43 +509,7 @@ PstyBundle.prototype.read = PstyBundle.prototype.getdata;
     PstyBundle.prototype[op] = fstack_invaldir_wrap(op);
 });
 
-var PstyLink = function(file) {
-    PstyLink.base.apply(this, arguments);
-    this.html = sprintf('<div class="pfile"><a href="%s" target="_blank">%s</a></div>', this.ident, this.name);
-    this.mtime = -1;
-};
-
-inherit(PstyLink, MediaHandler);
-
-PstyLink.prototype.update = function(meta, opts, cb) {
-    var self = this,
-        uri = meta['href'],
-        linkmeta = meta['meta'],
-        opts2 = linkmeta ? {meta: linkmeta} : {};
-
-    opts2.context = opts.context;
-    if (self.mtime === meta.mtime) {
-        return cb(null, fstack_top(self));
-    }
-    fstack_rmtop(self);
-    mergeattr(self, meta, ["mtime", "size", "readable"]);
-    if (!uri) {
-        return cb('Invalid link format at ' + self.ident);
-    }
-
-    VFS.lookup_uri(uri, opts2, function(err, res) {
-        if (err) {
-            var klass = self.fs.constructor.fileclass,
-                res = new klass({ident: self.ident, name: self.name,
-                    fs: self.fs});
-            res.error = err;
-        }
-        fstack_addtop(self, fstack_base(res));
-        return cb(err, res);
-    });
-};
-
 VFS.register_uri_handler('http://localhost:50937', PstyFS, {}, 0);
 VFS.register_media_handler('application/vnd.pigshell.dir+json', PstyDir, {}, 100);
-VFS.register_media_handler('application/vnd.pigshell.link+json', PstyLink, {}, 100);
+VFS.register_media_handler('application/vnd.pigshell.link+json', HttpLink, {}, 100);
 VFS.register_media_handler('application/vnd.pigshell.bundle+json', PstyBundle, {}, 100);

@@ -42,7 +42,6 @@ CHECK_SOURCES = src/mimeMap.js\
     src/auth.js\
     src/init.js\
     src/httpfs.js\
-    src/httpfs2.js\
     src/httptx.js\
     src/uri.js\
     src/pstyfs.js\
