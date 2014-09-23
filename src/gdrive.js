@@ -3,9 +3,8 @@
  * This program is free software - see the file COPYING for license details.
  */
 
-var GDriveFS = function(opts, authuser, uri) {
+var GDriveFS = function(opts, uri) {
     GDriveFS.base.apply(this, [opts, uri]);
-    this.authuser = authuser;
     this.baseuri = "https://www.googleapis.com/drive/v2/files";
     this.rootraw = null;
 };
@@ -13,10 +12,11 @@ var GDriveFS = function(opts, authuser, uri) {
 inherit(GDriveFS, HttpFS);
 
 GDriveFS.fsname = 'GDriveFS';
-GDriveFS.filesystems = [];
+GDriveFS.defaults = { 'tx': 'fallthrough' };
 
 GDriveFS.prototype.dirmime = 'application/vnd.google-apps.folder';
-GDriveFS.prototype.docmimes = [ 'application/vnd.google-apps.document',
+GDriveFS.prototype.docmimes = [
+    'application/vnd.google-apps.document',
     'application/vnd.google-apps.spreadsheet',
     'application/vnd.google-apps.presentation',
     'application/vnd.google-apps.form',
@@ -40,15 +40,12 @@ GDriveFS.prototype.synthdirs = {
 };
 
 GDriveFS.prototype.access_token = function() {
-    var auth = GoogleOAuth2.authdata.tokens[this.authuser];
+    var auth = GoogleOAuth2.authdata.tokens[this.opts.user];
 
     return (auth && auth.access_token) ? auth.access_token : 'invalid';
 };
 
-/* Inherit classmethods by hand */
-["merge_attrs", "create", "lookup_uri"].forEach(function(el) {
-    GDriveFS[el] = GDriveFS.base[el];
-});
+GDriveFS.lookup_uri = HttpFS.lookup_uri;
 
 GDriveFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
     dfilename, opts, cb) {
@@ -81,40 +78,12 @@ var GDriveFile = function() {
     GDriveFile.base.apply(this, arguments);
     this.mime = 'application/vnd.pigshell.gdrivefile';
     this.populated = false;
-    this.mtime = -1;
     this.files = {};
 };
 
 inherit(GDriveFile, HttpFile);
 
 GDriveFS.fileclass = GDriveFile;
-
-GDriveFS.lookup_fs = function(uri, opts, cb) {
-    var self = this,
-        u = URI.parse(uri),
-        mountopts = opts.mountopts || {};
-
-    function create_fs(mountopts, uri) {
-        var user = mountopts.user,
-            auth = GoogleOAuth2.authdata.tokens[user];
-        if (!auth) {
-            return cb("Need to authenticate with Google first");
-        }
-        var fs = new self(mountopts, user, uri);
-        self.filesystems.push(fs);
-        return cb(null, fs);
-    }
-
-    if (mountopts.tx === undefined) {
-        mountopts.tx = 'fallthrough';
-    }
-    if (opts.mount) {
-        return create_fs(mountopts, uri);
-    }
-
-    var fs = _lookup_fs(uri, mountopts, self.filesystems);
-    return fs ? cb(null, fs) : cb(null, create_fs(mountopts, uri));
-};
 
 GDriveFile.prototype.getmeta = function(opts, cb) {
     var self = this,
@@ -125,7 +94,6 @@ GDriveFile.prototype.getmeta = function(opts, cb) {
     if (self._is_synthuri(self.ident)) {
         var raw = self._synthraw(self.ident),
             meta = self._raw2meta(raw);
-        meta._mime_valid = true;
         return cb(null, meta);
     }
     self.fs.tx.GET(self.ident, opts2, ef(cb, function(res) {
@@ -143,7 +111,6 @@ GDriveFile.prototype.getmeta = function(opts, cb) {
         if (!meta.mime) {
             return cb("Could not determine valid GDrive mime type");
         }
-        meta._mime_valid = true;
         return cb(null, meta);
     }));
 };
@@ -192,30 +159,6 @@ GDriveFile.prototype._synthraw = function(uri) {
             iconLink: rootraw.iconLink
         };
     return raw;
-};
-
-GDriveFile.prototype.update = function(meta, opts, cb) {
-    var self = this,
-        ufile = self._ufile,
-        curmime = ufile ? ufile.mime : null,
-        mime;
-
-    meta = meta || {};
-    mime = meta.mime;
-
-    if (ufile && curmime !== mime) {
-        fstack_rmtop(self);
-    }
-    if (mime && (!self._mime_valid || curmime !== mime)) {
-        mergeattr(self, meta, ["_mime_valid", "ctime", "owner", "mtime", "size", "readable", "writable", "raw"]);
-        var mh = VFS.lookup_media_handler(mime) ||
-            VFS.lookup_media_handler('application/octet-stream');
-        var mf = new mh.handler(self, meta);
-        fstack_addtop(self, mf);
-        return mf.update(meta, opts, cb);
-    }
-    mergeattr(self, meta, ["mtime", "ctime", "owner", "size", "readable", "writable", "raw"]);
-    return File.prototype.update.call(self, meta, opts, cb);
 };
 
 GDriveFile.prototype.getdata = function(opts, cb) {
@@ -317,7 +260,6 @@ GDriveFile.prototype.readdir = function(opts, cb) {
                 mtime = meta.mtime,
                 bfile = files[f.name];
 
-            meta._mime_valid = true;
             if (bfile && ident === bfile.ident) {
                 if (bfile.mtime === mtime) {
                     self.files[f.name] = bfile;

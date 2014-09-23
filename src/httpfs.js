@@ -49,22 +49,29 @@ HttpFS.lookup_uri = function(uri, opts, cb) {
     var self = this,
         u = URI.parse(uri),
         mountopts = opts.mountopts || {},
-        file = new self.fileclass({name: basenamedir(uri), ident: uri,
-            fs: opts.fs || new self(mountopts, uri)}),
+        fs = opts.fs,
         opts2 = $.extend({}, opts);
 
+    if (!fs) {
+        try {
+            fs = new self(mountopts, uri);
+        } catch (e) {
+            return cb(e.message);
+        }
+    }
+    var file = new self.fileclass({name: basenamedir(uri), ident: uri, fs: fs});
+    
     delete opts2['mountopts'];
     delete opts2['fs'];
     return file.stat(opts2, cb);
 };
 
 var HttpFile = function(meta) {
+    HttpFile.base.call(this, mergeattr({}, meta, ["name", "ident", "fs"]));
+
     this.mtime = -1;
     this.size = 0;
     this.readable = true;
-
-    HttpFile.base.call(this, mergeattr({}, meta, ["name", "ident", "fs"]));
-
     this.mime = 'application/vnd.pigshell.httpfile';
     this.html = sprintf('<div class="pfile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
 
@@ -122,9 +129,9 @@ HttpFile.prototype.update = function(meta, opts, cb) {
         umime = ufile ? ufile.mime : null,
         mime;
 
-    assert("HttpFile.update.1", meta && meta.mime);
+    assert("HttpFile.update.1", meta && meta.mime, meta);
     mime = meta.mime;
-    assert("HttpFile.update.2", !umime || umime === mime);
+    //assert("HttpFile.update.2", !umime || umime === mime, self, meta);
     mergeattr_x(self, meta, ["name", "ident", "fs", "mime"]);
     if (umime !== mime) {
         if (ufile) {

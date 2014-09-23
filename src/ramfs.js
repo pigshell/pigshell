@@ -36,54 +36,10 @@ inherit(RamFS, Filesystem);
 RamFS.fsname = 'RamFS';
 RamFS.filesystems = [];
 
-/* Inherit classmethods by hand */
-["lookup_uri"].forEach(function(el) {
-    RamFS[el] = RamFS.base[el];
-});
-
 RamFS.prototype.dirmime = 'application/vnd.pigshell.dir+json';
 RamFS.prototype.bdlmime = 'application/vnd.pigshell.bundle+json';
 
-RamFS.lookup_fs = function(uri, opts, cb) {
-    var self = this,
-        u = URI.parse(uri),
-        mountopts = opts.mountopts || {};
-
-    function create_fs(opts, uri) {
-        var fs = new self(opts, uri);
-        self.filesystems.push(fs);
-        return fs;
-    }
-
-    if (opts.mount) {
-        var path = u.path();
-        if (path && path !== '/') {
-            return cb(E('EINVAL'));
-        }
-        return cb(null, create_fs(mountopts, uri));
-    }
-
-    var fs = _lookup_fs(uri, mountopts, self.filesystems);
-    return fs ? cb(null, fs) : cb(E('ENXIO'));
-};
-
-RamFS.lookup_uri = function(uri, opts, cb) {
-    var self = this,
-        u = URI.parse(uri),
-        url = u.setFragment('').toString(),
-        meta = (opts && opts.meta) ? opts.meta : null;
-
-    if (!url) {
-        return cb(E('EINVAL'));
-    }
-
-    self.lookup_fs(uri, opts, ef(cb, function(fs) {
-        var path = u.path(),
-            name = basenamedir(path),
-            file = new self.fileclass({ident: uri, name: name, fs: fs});
-        return file.stat(opts, cb);
-    }));
-};
+RamFS.lookup_uri = HttpFS.lookup_uri;
 
 RamFS.prototype.lookup_rfile = function(path, opts, cb) {
     var self = this,
@@ -171,7 +127,6 @@ RamFile.prototype.getmeta = function(opts, cb) {
 
     self.fs.lookup_rfile(u.path(), opts, ef(cb, function(rfile) {
         var meta = $.extend(true, {}, rfile.meta);
-        meta._mime_valid = true;
         return cb(null, meta);
     }));
 };
@@ -189,12 +144,14 @@ RamFile.prototype.getdata = function(opts, cb) {
             }
         }
 
+        /* Directory case */
         var meta = $.extend(true, {}, rfile.meta),
             data = rfile.data,
             files = [];
 
         for (var f in data) {
             var file = {};
+            // YYY Why only these attributes and not the whole thing?
             mergeattr(file, data[f]["meta"], ["ident", "mtime", "mime", "size",
                 "name", "ctime", "readable", "writable"]);
             files.push(file);
