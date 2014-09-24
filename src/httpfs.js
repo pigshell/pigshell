@@ -24,15 +24,14 @@ var HttpFS = function(opts, uri) {
     HttpFS.base.apply(this, [opts]);
     self.uri = uri;
     self.Uri = Uri;
-    self.opts = $.extend(true, {}, HttpFS.defaults, self.defaults,
-        HttpFS.hosts[host], opts);
+    self.opts = $.extend(true, {}, self.defaults, HttpFS.hosts[host], opts);
     self.tx = HttpTX.lookup(self.opts.tx);
 };
 
 inherit(HttpFS, Filesystem);
 
 HttpFS.fsname = 'HttpFS';
-HttpFS.defaults = { 'tx': 'proxy' };
+HttpFS.prototype.defaults = { 'tx': 'proxy' };
 
 HttpFS.hosts = {
     'localhost': {'tx': 'direct'},
@@ -482,7 +481,7 @@ HttpLink.prototype.readdir = HttpLink.prototype.read;
 pigshell.HttpFS = HttpFS;
 
 VFS.register_uri_handler('http', HttpFS, {}, 1);
-//VFS.register_uri_handler('https', HttpFS, {}, 0);
+VFS.register_uri_handler('https', HttpFS, {}, 0);
 
 VFS.register_media_handler('text/html', TextHtml, {}, 10);
 VFS.register_media_handler('text/vnd.pigshell.html+dir', TextHtml, {}, 10);

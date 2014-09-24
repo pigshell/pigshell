@@ -14,6 +14,7 @@ inherit(GDriveFS, HttpFS);
 GDriveFS.fsname = 'GDriveFS';
 GDriveFS.defaults = { 'tx': 'fallthrough' };
 
+GDriveFS.prototype.defaults = { 'tx': 'direct' };
 GDriveFS.prototype.dirmime = 'application/vnd.google-apps.folder';
 GDriveFS.prototype.docmimes = [
     'application/vnd.google-apps.document',
@@ -77,8 +78,10 @@ GDriveFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
 var GDriveFile = function() {
     GDriveFile.base.apply(this, arguments);
     this.mime = 'application/vnd.pigshell.gdrivefile';
+    /*
     this.populated = false;
     this.files = {};
+    */
 };
 
 inherit(GDriveFile, HttpFile);
@@ -97,7 +100,7 @@ GDriveFile.prototype.getmeta = function(opts, cb) {
         return cb(null, meta);
     }
     self.fs.tx.GET(self.ident, opts2, ef(cb, function(res) {
-        var raw = $.parseJSON(res.response),
+        var raw = parse_json(res.response),
             meta;
 
         if (!raw) {
@@ -124,7 +127,9 @@ GDriveFile.prototype._raw2meta = function(raw) {
             owner: raw.owners[0].displayName,
             readable: true,
             writable: raw.editable,
-            size: +raw.fileSize || 0
+            size: +raw.fileSize || 0,
+            ident: raw.selfLink,
+            title: raw.title
         };
     return meta;
 };
@@ -172,7 +177,7 @@ GDriveFile.prototype.getdata = function(opts, cb) {
     if (fmt && !(fmt instanceof Array)) {
         fmt = [fmt];
     }
-    if (!mime || mime === self.fs.dirmime) {
+    if (!mime) {
         return cb(E('ENOSYS'));
     }
 
@@ -188,6 +193,38 @@ GDriveFile.prototype.getdata = function(opts, cb) {
             return cb(E('ENODATA'));
         }
         bopts.uri = links[0];
+        return GDriveFile.base.prototype.getdata.call(self, bopts, cb);
+    } else if (mime === self.fs.dirmime) {
+        var query = self._is_synthuri(self.ident) ?
+            self.fs.synthdirs[self.ident].q :
+            "'" + self.raw.id + "' in parents and trashed != true",
+            params = {
+                "access_token": self.fs.access_token(),
+                "q": query,
+                "maxResults": 1000
+            },
+            opts2 = $.extend({}, opts, {params: params});
+
+        // TODO Handle directories with more than 1000 files
+        self.fs.tx.GET(self.fs.baseuri, opts2, ef(cb, function(res) {
+                var data = parse_json(res.response);
+
+                if (!data) {
+                    return cb('JSON parsing error for ' + self.ident);
+                }
+                if (self.ident === self.fs.rooturi) {
+                    for (var sd in self.fs.synthdirs) {
+                        data.items.push(self._synthraw(sd));
+                    }
+                }
+                var files = [];
+                data.items.forEach(function(el) {
+                    var meta = self._raw2meta(el);
+                    files.push(meta);
+                });
+                files = unique_names(files);
+                return cb(null, JSON.stringify({files: files}));
+        }));
     } else {
         var link = self.raw.downloadUrl;
 
@@ -195,126 +232,13 @@ GDriveFile.prototype.getdata = function(opts, cb) {
             return cb(E('ENODATA'));
         }
         bopts.uri = link;
+        return GDriveFile.base.prototype.getdata.call(self, bopts, cb);
     }
-
-    return GDriveFile.base.prototype.getdata.call(self, bopts, cb);
-};
-
-var GDriveFolder = function(file) {
-    GDriveFolder.base.apply(this, arguments);
-    this.files = {};
-    this.populated = false;
-    this.mime = 'application/vnd.google-apps.folder';
-    this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
-    this.mtime = -1;
-};
-
-inherit(GDriveFolder, MediaHandler);
-
-GDriveFolder.prototype.update = function(meta, opts, cb) {
-    var self = this,
-        lfile = self._lfile;
-
-    if (self.mtime === meta.mtime) {
-        return cb(null, self);
-    }
-
-    mergeattr(self, meta, ["mtime", "ctime", "owner", "size", "readable", "writable", "raw"]);
-    self.html = '<div class="pfolder gdFolder"><a target="_blank" href="' + self.raw.alternateLink + '"><img src="' + self.raw.iconLink + '">{{name}}</a></div>';
-    self.populated = false;
-    self.files = {};
-    self.readdir = fstack_passthrough("readdir");
-    self.lookup = fstack_passthrough("lookup");
-    self.search = fstack_passthrough("search");
-    return File.prototype.update.call(self, meta, opts, cb);
-};
-
-GDriveFile.prototype.readdir = function(opts, cb) {
-    var self = this,
-        ufile = self._ufile,
-        mime = ufile ? ufile.mime : null;
-
-    if (!mime || mime != self.fs.dirmime) {
-        return cb(E('ENOTDIR'));
-    }
-
-    if (self.populated) {
-        return cb(null, fstack_topfiles(self.files));
-    }
-
-    function makefiles(data) {
-        var flist = data.items;
-        if (!flist) {
-            self.files = {};
-            self.populated = true;
-            return cb(null, self.files);
-        }
-        flist = unique_names(flist);
-
-        var files = self.files;
-        self.files = {};
-
-        async.forEachSeries(flist, function(f, lcb) {
-            var ident = f.selfLink,
-                meta = self._raw2meta(f),
-                mtime = meta.mtime,
-                bfile = files[f.name];
-
-            if (bfile && ident === bfile.ident) {
-                if (bfile.mtime === mtime) {
-                    self.files[f.name] = bfile;
-                    return lcb(null);
-                } else {
-                    bfile.update(meta, opts, function() {
-                        self.files[f.name] = bfile;
-                        return lcb(null);
-                    });
-                }
-            } else {
-                var klass = self.fs.constructor.fileclass,
-                    file = new klass({ident: ident, name: f.name, fs: self.fs});
-        
-                file.update(meta, opts, function(err, res) {
-                    self.files[f.name] = file;
-                    return lcb(null);
-                });
-            }
-        }, function(err) {
-            self.populated = true;
-            return cb(null, fstack_topfiles(self.files));
-        });
-    }
-
-    var query = self._is_synthuri(self.ident) ? self.fs.synthdirs[self.ident].q : "'" + self.raw.id + "' in parents and trashed != true",
-        params = {
-            "access_token": self.fs.access_token(),
-            "q": query,
-            "maxResults": 1000
-        },
-        opts2 = $.extend({}, opts, {params: params});
-
-    // TODO Handle directories with more than 1000 files
-    self.fs.tx.GET(self.fs.baseuri, opts2, ef(cb, function(res) {
-        var data = $.parseJSON(res.response);
-
-        if (!data) {
-            return cb('JSON parsing error for ' + self.ident);
-        }
-        if (self.ident === self.fs.rooturi) {
-            for (var sd in self.fs.synthdirs) {
-                data.items.push(self._synthraw(sd));
-            }
-        }
-        return makefiles(data);
-    }));
 };
 
 var GDriveDoc = function(file) {
     GDriveDoc.base.apply(this, arguments);
-    this.files = {};
-    this.populated = false;
     this.html = sprintf('<div class="pfile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
-    this.mtime = -1;
 };
 
 inherit(GDriveDoc, MediaHandler);
@@ -323,7 +247,7 @@ GDriveDoc.prototype.update = function(meta, opts, cb) {
     var self = this,
         lfile = self._lfile;
 
-    if (self.mtime === meta.mtime) {
+    if (meta.mtime && self.mtime === meta.mtime) {
         return cb(null, self);
     }
 
@@ -376,7 +300,7 @@ GDriveFile.prototype.rm = function(filename, opts, cb) {
         ufile = self._ufile,
         mime = ufile ? ufile.mime : null;
 
-    if (!mime) {
+    if (!mime || mime !== self.fs.dirmime) {
         return cb(E('ENOSYS'));
     }
 
@@ -388,7 +312,7 @@ GDriveFile.prototype.rm = function(filename, opts, cb) {
             return cb(err, res);
         });
     }
-    self.lookup(filename, opts, ef(cb, function(file) {
+    ufile.lookup(filename, opts, ef(cb, function(file) {
         var b = fstack_base(file),
             uri = self.fs.baseuri + '/' + b.raw.id + '/trash';
 
@@ -507,7 +431,7 @@ GDriveFile.prototype.putdir = mkblob(function(filename, blob, opts, cb) {
 });
 
 VFS.register_uri_handler('https://www.googleapis.com/drive/v2', GDriveFS, {}, 0);
-VFS.register_media_handler('application/vnd.google-apps.folder', GDriveFolder, {}, 100);
+VFS.register_media_handler('application/vnd.google-apps.folder', PstyDir, {}, 100);
 VFS.register_media_handler('application/vnd.google-apps.presentation', GDriveDoc, {}, 100);
 VFS.register_media_handler('application/vnd.google-apps.spreadsheet', GDriveDoc, {}, 100);
 VFS.register_media_handler('application/vnd.google-apps.document', GDriveDoc, {}, 100);

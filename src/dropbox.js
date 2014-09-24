@@ -3,58 +3,28 @@
  * This program is free software - see the file COPYING for license details.
  */
 
-var DropboxFS = function(opts, authuser, uri) {
+var DropboxFS = function(opts, uri) {
     DropboxFS.base.apply(this, [opts, uri]);
-    this.authuser = authuser;
     this.metauri = 'https://api.dropbox.com/1/metadata/dropbox';
-    this.cachedir = true; /* Cache dir contents unless explicitly invalidated */
+    this.opts.cachedir = true; /* Cache dir contents unless explicitly invalidated */
 };
 
 inherit(DropboxFS, HttpFS);
 
 DropboxFS.fsname = 'DropboxFS';
-DropboxFS.filesystems = [];
 
+DropboxFS.prototype.defaults = { 'tx': 'direct' };
 DropboxFS.prototype.access_token = function() {
-    var auth = DropboxOAuth2.authdata.tokens[this.authuser];
+    var auth = DropboxOAuth2.authdata.tokens[this.opts.user];
 
     return (auth && auth.access_token) ? auth.access_token : 'invalid';
 };
 
 
-/* Inherit classmethods by hand */
-["lookup_uri"].forEach(function(el) {
-    DropboxFS[el] = DropboxFS.base[el];
-});
+DropboxFS.lookup_uri = HttpFS.lookup_uri;
 
 DropboxFS.prototype.dirmime = 'application/vnd.pigshell.dir+json';
 DropboxFS.prototype.bdlmime = 'application/vnd.pigshell.bundle+json';
-
-DropboxFS.lookup_fs = function(uri, opts, cb) {
-    var self = this,
-        u = URI.parse(uri),
-        mountopts = opts.mountopts || {};
-
-    function create_fs(mountopts, uri) {
-        var user = mountopts.user,
-            auth = DropboxOAuth2.authdata.tokens[user];
-        if (!auth) {
-            return cb("Need to authenticate with Dropbox first");
-        }
-        var fs = new self(mountopts, user, uri);
-        self.filesystems.push(fs);
-        return cb(null, fs);
-    }
-
-    if (mountopts.tx === undefined) {
-        mountopts.tx = 'direct';
-    }
-    if (opts.mount) {
-        return create_fs(mountopts, uri);
-    }
-    var fs = _lookup_fs(uri, mountopts, self.filesystems);
-    return fs ? cb(null, fs) : cb(null, create_fs(mountopts, uri));
-};
 
 var DropboxFile = function() {
     DropboxFile.base.apply(this, arguments);
@@ -73,7 +43,7 @@ DropboxFile.prototype.getmeta = function(opts, cb) {
         opts2 = $.extend({}, opts, {params: params});
 
     self.fs.tx.GET(self.ident, opts2, ef(cb, function(res) {
-        var raw = $.parseJSON(res.response),
+        var raw = parse_json(res.response),
             meta;
 
         if (!raw) {
@@ -84,7 +54,6 @@ DropboxFile.prototype.getmeta = function(opts, cb) {
         if (!meta.mime) {
             return cb("Could not determine valid Dropbox mime type");
         }
-        meta._mime_valid = true;
         return cb(null, meta);
     }));
 };
@@ -97,40 +66,16 @@ DropboxFile.prototype._raw2meta = function(raw) {
             readable: true,
             writable: true,
             size: raw.bytes,
-            ident: this.fs.metauri + raw.path
+            ident: this.fs.metauri + raw.path,
+            name: basename(raw.path)
         };
 
-    meta.name = basename(raw.path);
     if (raw.is_dir) {
         meta.mime = this.fs.dirmime;
     } else {
         meta.mime = raw.mime_type;
     }
     return meta;
-};
-
-DropboxFile.prototype.update = function(meta, opts, cb) {
-    var self = this,
-        ufile = self._ufile,
-        curmime = ufile ? ufile.mime : null,
-        mime;
-
-    meta = meta || {};
-    mime = meta.mime;
-
-    if (ufile && curmime !== mime) {
-        fstack_rmtop(self);
-    }
-    if (mime && (!self._mime_valid || curmime !== mime)) {
-        mergeattr(self, meta, ["_mime_valid", "owner", "mtime", "size", "readable", "writable", "raw"]);
-        var mh = VFS.lookup_media_handler(mime) ||
-            VFS.lookup_media_handler('application/octet-stream');
-        var mf = new mh.handler(self, meta);
-        fstack_addtop(self, mf);
-        return mf.update(meta, opts, cb);
-    }
-    mergeattr(self, meta, ["mtime", "owner", "size", "readable", "writable", "raw"]);
-    return File.prototype.update.call(self, meta, opts, cb);
 };
 
 DropboxFile.prototype.getdata = function(opts, cb) {
@@ -147,19 +92,21 @@ DropboxFile.prototype.getdata = function(opts, cb) {
 
     if (mime === self.fs.dirmime) {
         DropboxFile.base.prototype.getdata.call(self, bopts, ef(cb, function(res) {
-            var data = $.parseJSON(res);
-            if (!data || !data.contents) {
-                return cb("JSON parsing error at " + self.ident);
-            }
-            var files;
-            files = data.contents.map(function(f) {
-                var meta =  self._raw2meta(f);
-                return meta;
-            });
-            delete data["contents"];
-            var dirdata = self._raw2meta(data);
-            dirdata.files = files;
-            return cb(null, JSON.stringify(dirdata));
+            to('text', res, {}, ef(cb, function(txt) {
+                var data = parse_json(txt);
+                if (!data || !data.contents) {
+                    return cb("JSON parsing error at " + self.ident);
+                }
+                var files;
+                files = data.contents.map(function(f) {
+                    var meta =  self._raw2meta(f);
+                    return meta;
+                });
+                delete data["contents"];
+                var dirdata = self._raw2meta(data);
+                dirdata.files = files;
+                return cb(null, JSON.stringify(dirdata));
+            }));
         }));
     } else {
         bopts.uri = uri + self.raw.path;

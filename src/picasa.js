@@ -3,23 +3,19 @@
  * This program is free software - see the file COPYING for license details.
  */
 
-var PicasaFS = function(opts, authuser, uri) {
+var PicasaFS = function(opts, uri) {
     PicasaFS.base.apply(this, [opts, uri]);
-    this.authuser = authuser;
 };
 
 inherit(PicasaFS, HttpFS);
 
 PicasaFS.fsname = 'PicasaFS';
-PicasaFS.filesystems = [];
+PicasaFS.lookup_uri = HttpFS.lookup_uri;
 
-/* Inherit classmethods by hand */
-["merge_attrs", "create", "lookup_uri"].forEach(function(el) {
-    PicasaFS[el] = PicasaFS.base[el];
-});
+PicasaFS.prototype.defaults = { 'tx': 'direct' };
 
 PicasaFS.prototype.access_token = function() {
-    var auth = GoogleOAuth2.authdata.tokens[this.authuser];
+    var auth = GoogleOAuth2.authdata.tokens[this.opts.user];
 
     return (auth && auth.access_token) ? auth.access_token : 'invalid';
 };
@@ -35,39 +31,6 @@ inherit(PicasaFile, HttpFile);
 
 PicasaFS.fileclass = PicasaFile;
 
-PicasaFS.lookup_fs = function(uri, opts, cb) {
-    var self = this,
-        u = URI.parse(uri),
-        mountopts = opts.mountopts || {},
-        m = u ? u.path().match(/\/data\/feed\/api\/user\/(\d+)/) : null,
-        userid = m ? parseInt(m[1], 10) : 0;
-
-    if (!userid) {
-        return cb("Doesn't look like a Picasa URL");
-    }
-        
-    function create_fs(mountopts, uri) {
-        var user = mountopts.user,
-            auth = GoogleOAuth2.authdata.tokens[user];
-        if (!auth) {
-            return cb("Need to authenticate with Google first");
-        }
-        var fs = new self(mountopts, user, uri);
-        self.filesystems.push(fs);
-        return cb(null, fs);
-    }
-
-    if (mountopts.tx === undefined) {
-        mountopts.tx = 'direct';
-    }
-    if (opts.mount) {
-        return create_fs(mountopts, uri);
-    }
-
-    var fs = _lookup_fs(uri, mountopts, self.filesystems);
-    return fs ? cb(null, fs) : cb(null, create_fs(mountopts, uri));
-};
-
 PicasaFile.prototype.getmeta = function(opts, cb) {
     var self = this,
         u = URI.parse(self.ident),
@@ -77,7 +40,7 @@ PicasaFile.prototype.getmeta = function(opts, cb) {
 
     self.fs.tx.GET(self.ident, opts2, ef(cb, function(res) {
         var headers = header_dict(res),
-            data = $.parseJSON(res.response),
+            data = parse_json(res.response),
             meta = {};
 
         if (!data) {
@@ -95,7 +58,6 @@ PicasaFile.prototype.getmeta = function(opts, cb) {
         if (!meta.mime) {
             return cb("Could not determine valid Picasa mime type");
         }
-        meta._mime_valid = true;
         return cb(null, meta);
     }));
 };
@@ -229,7 +191,6 @@ var PicasaUser = function(file) {
     this.populated = false;
     this.mime = 'application/vnd.pigshell.picasa.user+json';
     this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
-    this.mtime = -1;
 };
 
 inherit(PicasaUser, MediaHandler);
@@ -414,7 +375,6 @@ var PicasaAlbum = function(file) {
     PicasaAlbum.base.apply(this, arguments);
     this.mime = 'application/vnd.pigshell.picasa.album+json';
     this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">%s</a></div>', file.ident, file.name);
-    this.mtime = -1;
 };
 
 inherit(PicasaAlbum, MediaHandler);

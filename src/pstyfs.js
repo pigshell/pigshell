@@ -184,7 +184,7 @@ inherit(PstyDir, MediaHandler);
 PstyDir.prototype.readdir = function(opts, cb) {
     var self = this,
         dirmime = self.fs.dirmime || 'application/vnd.pigshell.dir+json',
-        bdlmime = self.fs.bdlmime || 'application/vnd.pigshell.bundle+json';
+        bdlmime = self.fs.bdlmime;
 
     function makefiles(data) {
         if (self.populated) {
@@ -197,23 +197,29 @@ PstyDir.prototype.readdir = function(opts, cb) {
             bdls = [],
             bdlseen = {};
             
-        /* Bdls win any aliasing contest */
-        data.files.forEach(function(el) {
-            var bdlmatch = (el.mime === dirmime) ? el.name.match(/(.*)\.bdl$/) : null;
-            if (bdlmatch) {
-                bdlseen[bdlmatch[1]] = true;
-                bdls.push(el);
-            } else {
-                flist.push(el);
-            }
-        });
-        flist = flist.filter(function(f) { return !bdlseen[f.name]; });
-        flist = flist.concat(bdls);
+        if (bdlmime) {
+            /* Bdls win any aliasing contest */
+            data.files.forEach(function(el) {
+                var bdlmatch = (el.mime === dirmime) ?
+                    el.name.match(/(.*)\.bdl$/) : null;
+                if (bdlmatch) {
+                    bdlseen[bdlmatch[1]] = true;
+                    bdls.push(el);
+                } else {
+                    flist.push(el);
+                }
+            });
+            flist = flist.filter(function(f) { return !bdlseen[f.name]; });
+            flist = flist.concat(bdls);
+        } else {
+            flist = data.files;
+        }
         self.files = {};
         async.forEachSeries(flist, function(el, lcb) {
             var uri = URI.parse(el.ident),
                 ident = base.resolve(uri),
-                bdlmatch = (el.mime === dirmime) ? el.name.match(/(.*)\.bdl$/) : null,
+                bdlmatch = (bdlmime && el.mime === dirmime) ?
+                    el.name.match(/(.*)\.bdl$/) : null,
                 entryname = bdlmatch ? bdlmatch[1] : el.name,
                 bfile = bfiles[entryname];
 
@@ -241,7 +247,7 @@ PstyDir.prototype.readdir = function(opts, cb) {
         });
     }
 
-    if (self.fs.cachedir && self.populated) {
+    if (self.fs.opts.cachedir && self.populated) {
         return cb(null, fstack_topfiles(self.files));
     }
     self.read(opts, ef(cb, function(res) {
@@ -277,17 +283,17 @@ PstyDir.prototype.readdir = function(opts, cb) {
 
 PstyDir.prototype.update = function(meta, opts, cb) {
     var self = this,
-        bdlmatch = self.name.match(/(.*)\.bdl$/);
+        bdlmatch = self.name.match(/(.*)\.bdl$/),
+        bdlmime = self.fs.bdlmime;
 
     if (!self._update(meta, opts)) {
         /* Short-circuit update of the stack here */
         return cb(null, fstack_top(self));
     }
     self.populated = false;
-    if (bdlmatch) {
-        var bdlmime = self.fs.bdlmime || 'application/vnd.pigshell.bundle+json';
+    if (bdlmime && bdlmatch) {
 
-        assert("PstyDir.update.1", !self._ufile || self._ufle.mime !== bdlmime, self);
+        assert("PstyDir.update.1", !self._ufile || self._ufile.mime === bdlmime, self);
         if (!self._ufile) {
             var mh = VFS.lookup_media_handler(bdlmime),
                 mf = mh ? new mh.handler(self) : null;
@@ -305,7 +311,10 @@ PstyDir.prototype._update = function(meta, opts) {
     var self = this,
         changed = false;
 
-    if (self.cookie !== meta['cookie']) {
+    if (meta.cookie === undefined) {
+        meta.cookie = self._get_cookie(meta);
+    }
+    if (self.cookie !== meta.cookie) {
         changed = true;
     }
     

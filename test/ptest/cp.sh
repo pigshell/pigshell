@@ -81,8 +81,8 @@ function gdrivefs_test {
     cp -vrc $COPTS $GDRIVESRC/sample $TMP1 2>$RESDIR/cp.gdrive.3
     dcheck $? true cp.gdrive.3
 
+    rm -r $GDRIVESRC/target* 2>/dev/null
     mkdir $GDRIVESRC/target 2>/dev/null
-    rm -r $GDRIVESRC/target/* 2>/dev/null
     cp -vr $SAMPLEDIR $GDRIVESRC/target 2>$RESDIR/cp.gdrive.4
     dcheck $? true cp.gdrive.4
 
