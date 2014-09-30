@@ -931,7 +931,6 @@ function fproc(file, opts, worker, cb) {
  * be restored. This directory presumably belongs to a generic-container
  * filesystem like pstyfs (unlike special-container filesystems like picasa)
  *
- *
  * First argument contains a tree of file-like objects to be restored to the
  * current directory.
  * obj={  'foo.bdl': {
@@ -952,12 +951,12 @@ function restoretree(obj, opts, cb) {
         fnamelist = Object.keys(obj);
 
     function streamcp(tname, sfile, cb) {
-        sys.lookup(self, tname, opts, function(err, res) {
+        self.lookup(tname, opts, function(err, res) {
             if (!err && opts['resume']) {
                 return cp3(res);
             }
-            sys.putdir(self, tname, [''], opts, ef(cb, function() {
-                sys.lookup(self, tname, opts, ef(cb, cp3));
+            self.putdir(tname, [''], opts, ef(cb, function() {
+                self.lookup(tname, opts, ef(cb, cp3));
             }));
         });
 
@@ -984,12 +983,12 @@ function restoretree(obj, opts, cb) {
         if (data instanceof File) {
             streamcp(fname, data, acb);
         } else if (isstring(data)) {
-            sys.lookup(self, fname, opts, function(err, res) {
+            self.lookup(fname, opts, function(err, res) {
                 if (!err && opts['resume']) {
                     var basefile = fstack_base(res);
                     return basefile.append(data.slice(basefile.size), opts, ef(cb, acb));
                 } else {
-                    return sys.putdir(self, fname, [data], opts, ef(cb, acb));
+                    return self.putdir(fname, [data], opts, ef(cb, acb));
                 }
             });
         } else {
@@ -998,9 +997,9 @@ function restoretree(obj, opts, cb) {
             } catch (e) {
                 return acb("Invalid object " + fname);
             }
-            sys.mkdir(self, fname, opts, function(err, dir) {
+            self.mkdir(fname, opts, function(err, dir) {
                 if (!err || err.code === 'EEXIST') {
-                    sys.lookup(self, fname, opts, ef(acb, function(dir) {
+                    self.lookup(fname, opts, ef(acb, function(dir) {
                         var pd = fstack_base(dir);
                         while (pd && pd.mime !== self.fs.dirmime) {
                             pd = pd._ufile;
