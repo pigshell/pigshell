@@ -31,7 +31,7 @@ Simply visit [http://pigshell.com](http://pigshell.com) and type away. Modern
 (~early 2014) versions of Chrome, Firefox and Safari should work fine on all
 desktop platforms. Mobile browsers, Internet Explorer and others are not supported at the moment.
 
-Running the [psty](psty.html) server on your desktop is strongly recommended.
+Running the [psty](src/doc/psty.md) server on your desktop is strongly recommended.
 It exposes a local directory for _pigshell_ to use as a `/home`, serves as a
 proxy HTTP server, and lets _pigshell_ pipe web data through desktop Unix
 utilities. _Psty_ works only on Unix currently.
@@ -178,7 +178,7 @@ as simple as
     mkdir /home/drivebackup
     cp -rv -X /Trash /gdrive/username@gmail.com /home/drivebackup
 
-More details on [using Google Drive](gdrive.html) with _pigshell_.
+More details on [using Google Drive](src/doc/gdrive.md) with _pigshell_.
 
 Backing up a Picasa album:
 
@@ -280,7 +280,7 @@ tree first)
 _Pigshell_ is under active development. No commands, APIs or interfaces are
 frozen at this point. Tests and documentation are very sparse at the moment.
 
-The [user guide](pigshell.html) has more detailed coverage of _pigshell_
+The [user guide](src/doc/pigshell.md) has more detailed coverage of _pigshell_
 concepts and the scripting language.
 
 ## Contact
