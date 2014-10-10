@@ -283,8 +283,7 @@ function picasa_bundle(opts, cb) {
         raw = $.extend({}, self.raw);
 
     var dotmeta = {
-        'mime': self.mime,
-        'mtime': self.mtime,
+        'version': '1.0',
         'origin': self.redirect_url || self.ident
     };
 
@@ -347,12 +346,9 @@ function picasa_bundle(opts, cb) {
 
     function do_dump() {
         dotmeta.meta = {
-            'type': 'object',
-            'value': {
-                'mime': self.mime,
-                'mtime': self.mtime,
-                'raw': raw
-            }
+            'mime': self.mime,
+            'mtime': self.mtime,
+            'raw': raw
         };
 
         data['.meta'] = JSON.stringify(dotmeta, null, "  ");

@@ -386,15 +386,12 @@ TextHtml.prototype.bundle = function(opts, cb) {
             elist = $('link, img, script').toArray();
 
         var dotmeta = {
-            'mime': 'text/html',
-            'mtime': self.mtime,
+            'version': '1.0',
             'origin': self.redirect_url || self.ident,
-            'meta': { 'type': 'object',
-                        'value': {
-                            'mime': 'text/html',
-                            'mtime': self.mtime
-                        }
-                    }
+            'meta': { 
+                'mime': 'text/html',
+                'mtime': self.mtime
+            }
         };
         async.forEachSeries(elist, function(el, lcb) {
             var e = $(el),

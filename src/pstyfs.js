@@ -166,12 +166,15 @@ PstyFile.prototype.mkdir = function(file, opts, cb) {
     }));
 };
 
-var PstyDir = function(file) {
+var PstyDir = function() {
     PstyDir.base.apply(this, arguments);
     this.files = {};
     this.populated = false;
     this.mime = this.fs.dirmime || 'application/vnd.pigshell.dir+json';
-    this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">%s</a></div>', this.ident, this.name);
+    
+    var bdlmatch = this.name.match(/(.*)\.bdl$/),
+        name = bdlmatch ? bdlmatch[1] : this.name;
+    this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">%s</a></div>', this.ident, name);
     this.cookie = -1;
 };
 
@@ -384,7 +387,7 @@ PstyDir.prototype.rm = function(filename, opts, cb) {
                 return rmbundle(l1);
             }
         } else {
-            return self._lfile.rm(filename, opts, cb);
+            return self._lfile.rm(file.name, opts, cb);
         }
     }));
 };
@@ -435,11 +438,11 @@ PstyBundle.prototype.update = function(meta, opts, cb) {
             if (!dotmeta || !dotmeta.meta) {
                 return ret("Meta parsing error");
             }
-            self.dotmeta = dotmeta;
-            if (dotmeta.meta.type !== 'object') {
-                return ret("Unsupported meta format");
+            if (dotmeta.version && dotmeta.version !== '1.0') {
+                return ret("Unsupported bundle version");
             }
-            var meta = dotmeta.meta.value,
+            self.dotmeta = dotmeta;
+            var meta = dotmeta.meta,
                 ddata = dotmeta.data,
                 mime = meta.mime;
 
