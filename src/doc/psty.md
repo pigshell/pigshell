@@ -1,10 +1,10 @@
 Psty
 ====
 
-[Psty](../psty.py) is a little server you run on your desktop as a sidekick to
-[Pigshell](http://pigshell.com). While _pigshell_ can be used standalone,
-_psty_ (the p is silent, as in Psmith) adds so much to its power and reach
-as to be practically indispensable.
+[Psty](../../psty.py) is a little server you run on your desktop as a sidekick
+to [Pigshell](http://pigshell.com). While _pigshell_ can be used standalone,
+_psty_ (the p is silent, as in Psmith) adds so much to its power and reach as
+to be practically indispensable.
 
 _Psty_ implements three services:
 
@@ -36,7 +36,7 @@ Linux and Mac OS. A Windows port is in the works.
 Installation
 ------------
 
-<a href="../psty.py" download="psty.py">Download _psty_</a> and run it from a shell as follows:
+<a href="../../psty.py" download="psty.py">Download _psty_</a> and run it from a shell as follows:
 
         bash$ python psty.py -a -d /some/scratch/directory
 
