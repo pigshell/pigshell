@@ -401,7 +401,7 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.send_header("Connection", "close")
             self.send_header("Content-type", entry["mime"])
             self.send_header("Content-Length", str(reqsize))
-            self.send_header("Last-Modified", self.date_time_string(entry["mtime"]))
+            self.send_header("Last-Modified", self.date_time_string(entry["mtime"] / 1000))
             self.send_cors_headers()
             self.end_headers()
             if self.command == 'GET':
