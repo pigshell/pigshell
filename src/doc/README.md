@@ -272,7 +272,7 @@ To visualize disk usage in a zoomable treemap,
 
 ![du-treemap](/images/screenshots/du-treemap.png)
 
-Note that `du` of a deep tree may take a while, try with a shallow directory
+(Note that `du` of a deep tree may take a while, try with a shallow directory
 tree first)
 
 ## Status ##
