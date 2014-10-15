@@ -17,8 +17,7 @@ several ideas from Plan 9 and `rc`, mixing syntax and features in a manner
 calculated to annoy experienced users of both systems.
 
 The name _pigshell_ comes from the time-honoured tradition of weak puns and
-recursive acronyms: **GNU**'s **N**ot **U**nix, and **PIG** **I**sn't
-**GNU**.
+recursive acronyms: **GNU's Not Unix**, and **PIG Isn't GNU**.
 
 Shells and shell scripts occupy an important niche in the Unix users' universe:
 they can quickly assemble ad-hoc tools from simple components to interact with
@@ -72,6 +71,14 @@ are crucial differences. The most important of these are:
 3. The pipeline is the fundamental unit of "process management". You can kill,
    stop, resume pipelines of commands, rather than individual commands
    themselves.
+4. In addition to environment variables, functions and the current directory,
+   the namespace of mounted filesystems is inherited from the parent shell. 
+   Modifications of these properties in the child do not affect the parent.
+   i.e. `cd /foo` and `mount http://reddit.com /mnt` in a script will not
+   change the current working directory or the contents of `/mnt` in the
+   parent. In order to affect the parent, `sh -s /some/script` is used to
+   "source" the script within the current shell (analogous to `. /some/script`
+   or `source /some/script` in bash).
 
 ### Terminal usage ###
 
@@ -365,17 +372,15 @@ filesystems. Many of these commands follow a common set of idioms.
    transform them, and emit objects to `Stdout`. These commands can be
    supplied with files in one of two ways:
 
-   1. As a list of arguments, corresponding to the `<file>...` option given
-      in the usage. These arguments may be strings representing file paths,
-      actual File objects, or a mixture of both. e.g.
+   1. As a list of file objects, corresponding to the `<obj>...` option given
+      in the usage.
 
-      `grep -f gender "female" /facebook/friends/*`  
-      `grep -f gender "female" /facebook/friends/A* $close_friends` where the
-      `close_friends` variable a list of File objects.
+      `grep -f gender "female" $(ls /facebook/friends)`
+      `family=$(ls /facebook/friends | grep Mylastname); grep -f gender "female" $family`
    2. As a list of File objects from `Stdin`. e.g.
 
       `ls /facebook/friends | grep -f gender "female"`  
-      `echo $close_friends | grep -f gender "female"`
+      `echo $family | grep -f gender "female"`
 
    If you accidentally fail to give either of these, a line with a blinking
    cursor will open up below the command. This is `Stdin` trying to get input
@@ -404,6 +409,9 @@ filesystems. Many of these commands follow a common set of idioms.
       sorts photos based on how many pixels they contain. The expression will
       be called with the argument `x` set to the object. `width` and `height`
       are attributes of the object.
+5. The `printf` command at the end of the pipeline, often preceded by a
+   `head`, is used to print out the JSON representation of objects being
+   yielded by the pipeline.
 
 ### Process Management ###
 

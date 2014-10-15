@@ -58,10 +58,10 @@
             <div class="clear"></div>
             <div class="topright-scrollable">
                 <h3 class="tagbar">Documentation</h3>
-                <a href="doc/README.html" target="_blank">README</a>
-                <a href="doc/psty.html" target="_blank">Psty</a>
-                <a href="doc/pigshell.html" target="_blank">User Guide</a>
-                <a href="doc/gdrive.html" target="_blank">Using GDrive</a>
+                <a href="usr/doc/README.html" target="_blank">README</a>
+                <a href="usr/doc/psty.html" target="_blank">Psty</a>
+                <a href="usr/doc/pigshell.html" target="_blank">User Guide</a>
+                <a href="usr/doc/gdrive.html" target="_blank">Using GDrive</a>
                 <h3 class="tagbar">Examples</h3>
                 <div id="examples">
                 </div>
@@ -69,9 +69,9 @@
             <div class="bottom"></div>
         </div>
         <div class="bottom">
-            <a href="usr/share/doc/about.html">About</a>
-            <a href="usr/share/doc/tos.html">Terms</a>
-            <a href="usr/share/doc/privacy.html">Privacy</a>
+            <a href="usr/doc/about.html">About</a>
+            <a href="usr/doc/tos.html">Terms</a>
+            <a href="usr/doc/privacy.html">Privacy</a>
         </div>
     </div>
     </div>
@@ -81,9 +81,9 @@
     <script src="https://maps.google.com/maps/api/js?sensor=false"></script>
     <script type="text/javascript">
         var examples = [
-            ['Life expectancy map', 'cat http://pigshell.com/sample/life-expectancy.html | table2js -e "tr" foo country data | iframe -g /usr/share/template/d3-worldmap1'],
+            ['Life expectancy map', 'cat http://pigshell.com/sample/life-expectancy.html | table2js -e "tr" foo country data | iframe -g /usr/template/d3-worldmap1'],
             ['Life expectancy top 10', 'cat http://pigshell.com/sample/life-expectancy.html | table2js -e "table.wikitable tr" foo country data | sort -rnf data | head | printf "%(country)s %(data)s\\n"'],
-            ['GDP (PPP) map', 'cat http://pigshell.com/sample/gdp-ppp.html | to text | jf \'$$.html($$(x).find("table").first())\' | table2js -e "tr" foo country data | jf \'x.data = Math.round(+x.data.replace(/,/g,"")) / 1000, x\' | iframe -o title="GDP PPP (thousand USD)",proj=orthographic -g /usr/share/template/d3-worldmap1'],
+            ['GDP (PPP) map', 'cat http://pigshell.com/sample/gdp-ppp.html | to text | jf \'$$.html($$(x).find("table").first())\' | table2js -e "tr" foo country data | jf \'x.data = Math.round(+x.data.replace(/,/g,"")) / 1000, x\' | iframe -o title="GDP PPP (thousand USD)",proj=orthographic -g /usr/template/d3-worldmap1'],
             ['Friend stats', '/bin/fbstats'],
             ['Most liked photos', '/bin/mostliked photo'],
             ['Upcoming birthdays', '/usr/bin/bday -n 4'],

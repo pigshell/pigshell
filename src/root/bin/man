@@ -15,7 +15,7 @@ if ! docopt $usage $*; then
     exit false
 fi
 
-searchpath=/usr/share/man
+searchpath=/usr/man
 if [ -n $"MANPATH ]; then searchpath=$MANPATH; fi
 
 if [ -n $"section ]; then

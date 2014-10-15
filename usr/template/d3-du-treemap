@@ -10,7 +10,7 @@ Click on any of the cells to zoom in, click the orange bar to zoom out one
 level.
 
 Example:
-wsh du /Users/foo | to -g text | iframe -g /usr/share/template/d3-du-treemap
+wsh du /Users/foo | to -g text | iframe -g /usr/template/d3-du-treemap
 
 You could use a du.out from a previous du or a du from another system. It
 can handle a surprisingly large dump (my home dir weighs in at 120k lines)

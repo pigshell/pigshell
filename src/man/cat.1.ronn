@@ -60,11 +60,11 @@ Display a PDF:
 
 Read this manpage:
 
-    $ cat http://pigshell.com/v/0.6.0/usr/share/man/cat.1.html
+    $ cat http://pigshell.com/v/0.6.0/usr/man/cat.1.html
 
 Convert the manpage to text:
 
-    $ cat http://pigshell.com/v/0.6.0/usr/share/man/cat.1.html | to text
+    $ cat http://pigshell.com/v/0.6.0/usr/man/cat.1.html | to text
 
 Read a pipeline:
 

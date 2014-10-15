@@ -16,9 +16,6 @@ NameVirtualHost *:80
 
     DocumentRoot    PATH_TO_PIGSHELL
     Alias   /v/PIGSHELL_VERSION/usr    PATH_TO_PIGSHELL/usr
-    Alias   /sample PATH_TO_PIGSHELL/sample
-    Alias   /common PATH_TO_PIGSHELL/common
-    Alias   /images/screenshots PATH_TO_PIGSHELL/screenshots
 
     Header set Access-Control-Allow-Origin "*"
 
@@ -60,9 +57,6 @@ NameVirtualHost *:80
 #	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
 #
 #	DocumentRoot	PATH_TO_PIGSHELL
-#    Alias   /sample PATH_TO_PIGSHELL/sample
-#    Alias   /common PATH_TO_PIGSHELL/common
-#    Alias   /images/screenshots PATH_TO_PIGSHELL/screenshots
 #    Alias   /v/PIGSHELL_VERSION/usr    PATH_TO_PIGSHELL/usr
 #    Header set Access-Control-Allow-Origin "*"
 #

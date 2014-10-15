@@ -40,9 +40,9 @@ utilities. _Psty_ works only on Unix currently.
 
 Click on the first example in the sidebar, or type the following at the prompt:
 
-    cat http://pigshell.com/sample/life-expectancy.html | table2js -e "table.wikitable tr" foo country data | iframe -g /usr/share/template/d3-worldmap1
+    cat http://pigshell.com/sample/life-expectancy.html | table2js -e "table.wikitable tr" foo country data | iframe -g /usr/template/d3-worldmap1
 
-![Life expectancy](images/screenshots/helloworld.jpg)
+![Life expectancy](./images/screenshots/helloworld.jpg)
 
 We got a page from a website, extracted a table, converted it to a list of
 Javascript objects and fed it to a D3-based template for visualization.
@@ -123,7 +123,7 @@ Where in the world are my friends?
 
     map /facebook/friends/*
 
-![Friends map](images/screenshots/mapfriends.jpg)
+![Friends map](./images/screenshots/mapfriends.jpg)
 
 `map` is a command which plots files with location attributes on a map.
 Another way of doing this would be
@@ -149,7 +149,7 @@ Pie chart of relationship status of all female friends
 
 ## $HOME sweet $HOME ##
 
-Get a `/home`. <a href="psty.py" download="psty.py">Download _Psty_</a>, run it on your desktop:
+Get a `/home`. <a href="./psty.py" download="psty.py">Download _Psty_</a>, run it on your desktop:
 
     python psty.py -a -d /some/dir # Run in DESKTOP SHELL (bash), not pigshell
 
@@ -157,7 +157,9 @@ and on _pigshell_,
 
     mount http://localhost:50937/ /home # Run in PIGSHELL, not desktop
 
-The _psty_ server runs only on Linux and Mac OS at present.
+The _psty_ server runs only on Linux and Mac OS at present. It has been
+reported to work on Windows using Cygwin.
+
 Now you can read and write to `/home` it will be backed by `/some/directory`.
 `cat` images and PDFs stored on your desktop inside `/some/directory`.
 
@@ -228,7 +230,7 @@ and displays it as a canvas. Similarly,
 
 is detected as a PDF and displayed using pdf.js. In case it could not figure
 out the contents, it attempts to convert it to text and displays it as the
-usual control-character porridge (though it is mercifully silent, unlike Unix
+usual weird-character porridge (though it is mercifully silent, unlike Unix
 terminals)
 
 In some cases, you have to manually convert data between stages in the 
@@ -255,7 +257,7 @@ mount arbitrary, non-CORS-enabled URLs, you need to run _psty_.
 
 ## Processing on the desktop - Wsh ##
 
-_Psty_ runs a websocket service, effectively converting every Unix utility
+_Psty_ runs a websocket service, effectively converting any Unix utility
 which uses stdin/stdout into a potential member of the _pigshell_ pipeline.
 For instance, if you have ImageMagick installed,
 
@@ -264,15 +266,15 @@ For instance, if you have ImageMagick installed,
 will grab a png file from the web, pipe it through ImageMagick on the desktop,
 and display the result in _pigshell_.
 
-![Implode](images/screenshots/implode.jpg)
+![Implode](./images/screenshots/implode.jpg)
 
 To visualize disk usage in a zoomable treemap,
 
-    wsh du /Users/foo | to -g text | iframe -g /usr/share/template/d3-du-treemap
+    wsh du /Users/foo | to -g text | iframe -g /usr/template/d3-du-treemap
 
-![du-treemap](images/screenshots/du-treemap.png)
+![du-treemap](./images/screenshots/du-treemap.png)
 
-Note that `du` of a deep tree may take a while, try with a shallow directory
+(Note that `du` of a deep tree may take a while, try with a shallow directory
 tree first)
 
 ## Status ##

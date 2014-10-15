@@ -168,7 +168,7 @@ To copy a file to the desktop,
 The file will hit the default downloads directory of your browser.
 
 For dealing with files in bulk, it is much more convenient to
-[download](../psty.py) and run [psty](psty.html), which exports a designated
+[download](../../psty.py) and run [psty](psty.md), which exports a designated
 directory on the desktop to _pigshell_ using a simple filesharing protocol over
 HTTP.
 

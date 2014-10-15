@@ -22,7 +22,7 @@ pipelines. For instance:
 
     pig> cat http://pigshell.com/sample/oslogos.png | wsh convert -implode 1 - - | to -g canvas
 
-![Implode](/images/screenshots/implode.jpg)
+![Implode](../../images/screenshots/implode.jpg)
 
 We grabbed an image from pigshell.com using the proxy, piped it via websocket
 to the local Unix host running _psty_, ran the ImageMagick convert tool to
@@ -31,7 +31,8 @@ _pigshell_ and displayed the transformed image.
 
 _Psty_ is implemented as a single standalone Python file weighing < 1000
 lines, and requires only a standard Python 2.7 distribution. It can run on
-Linux and Mac OS. A Windows port is in the works.
+Linux and Mac OS. _Psty_ is reported to partially work (local file and proxy
+services) on Windows under Cygwin.
 
 Installation
 ------------
@@ -91,7 +92,7 @@ Examples
 
         pig> wsh du /Users/foo | to -g text | iframe -g /templates/d3-du-treemap
 
-![du-treemap](/images/screenshots/du-treemap.png)
+![du-treemap](../../images/screenshots/du-treemap.png)
 
     (Note that `du` of a deep tree may take a while, try with a shallow
     directory tree first)
@@ -129,9 +130,9 @@ There are several issues holding it back from this goal:
     desktop from Javascript has always been a challenge because there is no
     way to "stream" it. The File API is still very much a work in progress.
 
-    Accessing the local filesystem via an HTTP server gives us a ton of
-    benefits: streaming reads and writes, ability to move data back and forth
-    from the cloud to the desktop, and an unlimited workspace.
+    Accessing the local filesystem via an HTTP server gives us many benefits:
+    streaming reads and writes, the ability to move data back and forth from
+    the cloud to the desktop, and an unlimited workspace.
 
 3.  **Utilities:** Tons of apps are coming to Javascript every day, many of them
     via the Emscripten route, but there are still a wealth of tools available

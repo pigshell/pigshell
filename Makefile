@@ -4,10 +4,9 @@ CSS = pigshell.css
 PIGSHELL = pigshell.js
 LIBS = libs.js
 RELDIR = build
-USRDOCDIR = usr/share/doc
-DOCDIR = doc
-USRMANDIR = usr/share/man
-PROD_FILES = $(ROOT) $(CSS) $(PIGSHELL) $(LIBS) $(DOCDIR) psty.py extra usr css/fonts images index.html
+USRDOCDIR = usr/doc
+USRMANDIR = usr/man
+PROD_FILES = $(ROOT) $(CSS) $(PIGSHELL) $(LIBS) psty.py extra usr css/fonts images index.html
 # Clone from https://github.com/ganeshv/pegjs
 PEGJS = pegjs
 RONN = ronn
@@ -17,7 +16,7 @@ CURDIR = $(shell pwd)
 VERSION_MAJOR = 0
 VERSION_MINOR = 6
 VERSION_PATCH = 3
-VERSION_TAG = -pre4
+VERSION_TAG = -pre5
 VERSION_STR = $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)$(VERSION_TAG)
 VERSION_GIT = $(shell git rev-list --max-count=1 HEAD)
 
@@ -73,13 +72,11 @@ CSS_FILES = css/pigshell.css\
 	css/bootstrap.css\
 	css/font-awesome.css
 
-DOCS = $(addprefix $(DOCDIR)/,$(patsubst %.md,%.html,$(notdir $(wildcard src/doc/*.md))))
-
 USRDOCS = $(addprefix $(USRDOCDIR)/,$(patsubst %.md,%.html,$(notdir $(wildcard src/doc/*.md))))
 
 MANPAGES = $(addprefix $(USRMANDIR)/,$(patsubst %.ronn,%.html,$(notdir $(wildcard src/man/*.ronn))))
 
-all: $(ROOT) $(DOCS) $(USRDOCS) $(MANPAGES) $(LIBS) $(PIGSHELL) $(CSS) etc/httpd-vhosts.conf
+all: $(ROOT) $(DOCS) $(USRDOCS) $(MANPAGES) $(LIBS) $(PIGSHELL) $(CSS) etc/httpd-vhosts.conf usr/doc/README.html
 
 release: all
 	#@if [ "`git status -s -uno`" != "" ]; then echo Commit or rollback changes before running make release; exit 1; fi
@@ -105,14 +102,17 @@ src/version.js: FORCE
 $(ROOT): src/root/bin src/root/usr src/root/etc src/root
 	tar --posix -c -C src/root --exclude .gitignore -f $@ .
 
-$(DOCS): $(DOCDIR)/%.html: src/doc/%.md header.html footer.html
-	cat header.html >$@
-	marked $< >>$@
-	cat footer.html >>$@
+# Generate html from markdown, changing md->html and tweaking relative links
+# Fragile html regexes.
 
 $(USRDOCS): $(USRDOCDIR)/%.html: src/doc/%.md usrheader.html usrfooter.html
 	cat usrheader.html >$@
-	marked $< >>$@
+	marked $< | sed 's|href=\(.*\).md|href=\1.html|g' >>$@
+	cat usrfooter.html >>$@
+
+usr/doc/README.html: README.md usrheader.html usrfooter.html
+	cat usrheader.html >$@
+	marked $< | sed -e 's|href="src/doc/\(.*\).md|href="\1.html|g' -e 's|a href="\./|a href="../../|g' -e 's|img src="\./|img src="../../|g' >>$@
 	cat usrfooter.html >>$@
 
 $(MANPAGES): $(USRMANDIR)/%.html: src/man/%.ronn 
@@ -137,7 +137,7 @@ check: $(CHECK_SOURCES)
 	jshint --config jshintrc $(CHECK_SOURCES)
 
 clean:
-	rm -f $(DOCS) $(USRDOCS) $(MANPAGES) $(ROOT) $(PIGSHELL) $(LIBS) $(PARSER) $(CSS) src/version.js src/commands.js etc/httpd-vhosts.conf
+	rm -f $(DOCS) $(USRDOCS) usr/doc/README.html $(MANPAGES) $(ROOT) $(PIGSHELL) $(LIBS) $(PARSER) $(CSS) src/version.js src/commands.js etc/httpd-vhosts.conf
 	rm -rf $(RELDIR)/$(VERSION_STR)
 
 FORCE:

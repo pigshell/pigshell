@@ -7,6 +7,8 @@ public web pages as well as private data in Facebook, Google Drive and Picasa
 albums. It provides a command line interface to construct pipelines of simple
 commands to filter, display and copy data.
 
+**_Pigshell_ is free software**, released under the GNU GPLv3.
+
 [Pigshell](http://pigshell.com) has been developed by
 [Coriolis Technologies](http://www.coriolis.co.in), a software company based
 in Pune, India. It consists of several components developed by us,
