@@ -8,10 +8,11 @@ USRDOCDIR = usr/share/doc
 DOCDIR = doc
 USRMANDIR = usr/share/man
 PROD_FILES = $(ROOT) $(CSS) $(PIGSHELL) $(LIBS) $(DOCDIR) psty.py extra usr css/fonts images index.html
-#PEGJS = pegjs
 # Clone from https://github.com/ganeshv/pegjs
-PEGJS = ~/tmp/pegjs/bin/pegjs
+PEGJS = pegjs
 RONN = ronn
+
+CURDIR = $(shell pwd)
 
 VERSION_MAJOR = 0
 VERSION_MINOR = 6
@@ -78,7 +79,7 @@ USRDOCS = $(addprefix $(USRDOCDIR)/,$(patsubst %.md,%.html,$(notdir $(wildcard s
 
 MANPAGES = $(addprefix $(USRMANDIR)/,$(patsubst %.ronn,%.html,$(notdir $(wildcard src/man/*.ronn))))
 
-all: $(ROOT) $(DOCS) $(USRDOCS) $(MANPAGES) $(LIBS) $(PIGSHELL) $(CSS)
+all: $(ROOT) $(DOCS) $(USRDOCS) $(MANPAGES) $(LIBS) $(PIGSHELL) $(CSS) etc/httpd-vhosts.conf
 
 release: all
 	#@if [ "`git status -s -uno`" != "" ]; then echo Commit or rollback changes before running make release; exit 1; fi
@@ -88,6 +89,9 @@ release: all
 	find $(RELDIR)/$(VERSION_STR) -name .gitignore | xargs rm -f
 
 dev: $(ROOT) $(PARSER) $(DOCS)
+
+etc/httpd-vhosts.conf: etc/httpd-vhosts.conf.in src/version.js
+	sed 's,PATH_TO_PIGSHELL,$(CURDIR),g;s,PIGSHELL_VERSION,$(VERSION_STR),g' < $< >$@
 
 src/version.js: FORCE
 	@if [ -f $@ ]; then \
@@ -133,7 +137,7 @@ check: $(CHECK_SOURCES)
 	jshint --config jshintrc $(CHECK_SOURCES)
 
 clean:
-	rm -f $(DOCS) $(USRDOCS) $(MANPAGES) $(ROOT) $(PIGSHELL) $(LIBS) $(PARSER) $(CSS) src/version.js src/commands.js
+	rm -f $(DOCS) $(USRDOCS) $(MANPAGES) $(ROOT) $(PIGSHELL) $(LIBS) $(PARSER) $(CSS) src/version.js src/commands.js etc/httpd-vhosts.conf
 	rm -rf $(RELDIR)/$(VERSION_STR)
 
 FORCE:

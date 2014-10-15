@@ -1,0 +1,88 @@
+#
+# Sample Apache 2.2 configuration for running pigshell locally
+#
+# You also need to comment out ReadmeName and IndexIgnore lines in your apache
+# config. They look like:
+# IndexIgnore .??* *~ *# HEADER* README* RCS CVS *,v *,t
+# ReadmeName README.html
+#
+
+NameVirtualHost *:80
+
+<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    ServerName  pigshell.com
+    ServerAlias www.pigshell.com
+
+    DocumentRoot    PATH_TO_PIGSHELL
+    Alias   /v/PIGSHELL_VERSION/usr    PATH_TO_PIGSHELL/usr
+    Alias   /sample PATH_TO_PIGSHELL/sample
+    Alias   /common PATH_TO_PIGSHELL/common
+    Alias   /images/screenshots PATH_TO_PIGSHELL/screenshots
+
+    Header set Access-Control-Allow-Origin "*"
+
+    <Directory PATH_TO_PIGSHELL/>
+        Options FollowSymLinks
+        AllowOverride All
+        Order allow,deny
+        allow from all
+        AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-tar
+    </Directory>
+
+    <Directory PATH_TO_PIGSHELL/usr/>
+        Options Indexes
+        IndexIgnore ..
+        IndexOptions IgnoreClient
+        #IndexOptions IgnoreClient Type=text/vnd.pigshell.html+dir
+        DirectoryIndex disabled
+
+    </Directory>
+
+    CustomLog /var/log/apache2/pigshell-access.log combined
+    ServerSignature On
+</VirtualHost>
+
+#<IfModule mod_ssl.c>
+#NameVirtualHost *:443
+#<VirtualHost *:443>
+#	ServerAdmin	webmaster@localhost
+#	ServerName	pigshell.com
+#	ServerAlias	www.pigshell.com
+#
+#	SSLEngine on
+#	SSLCertificateFile    /etc/ssl/certs/selfsigned.crt EDITME
+#	SSLCertificateKeyFile /etc/ssl/private/selfsigned.key EDITME
+#	BrowserMatch "MSIE [2-6]" \
+#		nokeepalive ssl-unclean-shutdown \
+#		downgrade-1.0 force-response-1.0
+#	# MSIE 7 and newer should be able to use keepalive
+#	BrowserMatch "MSIE [17-9]" ssl-unclean-shutdown
+#
+#	DocumentRoot	PATH_TO_PIGSHELL
+#    Alias   /sample PATH_TO_PIGSHELL/sample
+#    Alias   /common PATH_TO_PIGSHELL/common
+#    Alias   /images/screenshots PATH_TO_PIGSHELL/screenshots
+#    Alias   /v/PIGSHELL_VERSION/usr    PATH_TO_PIGSHELL/usr
+#    Header set Access-Control-Allow-Origin "*"
+#
+#	<Directory PATH_TO_PIGSHELL/>
+#		Options FollowSymLinks
+#		AllowOverride All
+#		Order allow,deny
+#		allow from all
+#		AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-tar
+#	</Directory>
+#
+#    <Directory PATH_TO_PIGSHELL/usr/>
+#        Options Indexes
+#        IndexIgnore ..
+#        IndexOptions IgnoreClient
+#        #IndexOptions IgnoreClient Type=text/vnd.pigshell.html+dir
+#        DirectoryIndex disabled
+#    </Directory>
+#
+#	CustomLog /var/log/apache2/access.log combined
+#	ServerSignature On
+#</VirtualHost>
+#</IfModule>

@@ -11,3 +11,4 @@ libs.js
 pigshell.js
 pigshell.css
 root.tar
+etc/httpd-vhosts.conf
