@@ -15,7 +15,7 @@ NameVirtualHost *:80
     ServerAlias www.pigshell.com
 
     DocumentRoot    PATH_TO_PIGSHELL
-    Alias   /v/PIGSHELL_VERSION/usr    PATH_TO_PIGSHELL/usr
+    Alias   /v/PIGSHELL_VERSION    PATH_TO_PIGSHELL
 
     Header set Access-Control-Allow-Origin "*"
 

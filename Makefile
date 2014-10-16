@@ -106,14 +106,16 @@ $(ROOT): src/root/bin src/root/usr src/root/etc src/root
 # Fragile html regexes.
 
 $(USRDOCS): $(USRDOCDIR)/%.html: src/doc/%.md usrheader.html usrfooter.html
-	cat usrheader.html >$@
-	marked $< | sed 's|href=\(.*\).md|href=\1.html|g' >>$@
-	cat usrfooter.html >>$@
+	@echo Generating $@ from $<
+	@cat usrheader.html >$@
+	@marked $< | sed 's|href=\(.*\).md|href=\1.html|g' >>$@
+	@cat usrfooter.html >>$@
 
 usr/doc/README.html: README.md usrheader.html usrfooter.html
-	cat usrheader.html >$@
-	marked $< | sed -e 's|href="src/doc/\(.*\).md|href="\1.html|g' -e 's|a href="\./|a href="../../|g' -e 's|img src="\./|img src="../../|g' >>$@
-	cat usrfooter.html >>$@
+	@echo Generating $@ from $<
+	@cat usrheader.html >$@
+	@marked $< | sed -e 's|href="src/doc/\(.*\).md|href="\1.html|g' -e 's|a href="\./|a href="../../|g' -e 's|img src="\./|img src="../../|g' >>$@
+	@cat usrfooter.html >>$@
 
 $(MANPAGES): $(USRMANDIR)/%.html: src/man/%.ronn 
 	$(RONN) -5 --style=toc --pipe $< >$@
