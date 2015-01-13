@@ -13,9 +13,10 @@ inherit(Edit, Command);
 
 Edit.prototype.usage = 'edit         -- edit file\n\n' +
     'Usage:\n' +
-    '    edit <file>\n' +
+    '    edit [-o <opts>] <file>\n' +
     '    edit -h | --help\n\n' +
     'Options:\n' +
+    '    -o <opts>    Options to pass to lower layers\n' +
     '    -h --help    Show this message.\n';
 
 Edit.prototype.next = check_next(do_docopt(function(opts, cb) {
@@ -24,6 +25,7 @@ Edit.prototype.next = check_next(do_docopt(function(opts, cb) {
     if (!isatty(opts.term)) {
         return self.exit("edit needs a terminal at stdout");
     }
+    var cliopts = optstr_parse(self.docopts['-o']);
     fread.call(self, self.docopts['<file>'], function(err, res) {
         if (err) {
             if (err.code !== 'ENOENT') {
@@ -50,13 +52,14 @@ Edit.prototype.next = check_next(do_docopt(function(opts, cb) {
             '<div class="pe-status"></div>' +
             '</div>';
         self.div.append(navbar);
-        var cmdiv = $('<div/>').appendTo(self.div);
-        self.cm = CodeMirror(cmdiv[0], {
-            value: res,
-            lineNumbers: true,
-            lineWrapping: true,
-            cursorBlinkRate: 630
-        });
+        var cmdiv = $('<div/>').appendTo(self.div),
+            cmopts = $.extend({
+                value: res,
+                lineNumbers: true,
+                lineWrapping: true,
+                cursorBlinkRate: 630
+            }, cliopts.CodeMirror);
+        self.cm = CodeMirror(cmdiv[0], cmopts);
         self.div.data('codemirror', self.cm);
         self.cm.onSave = function() {
             var contents = self.cm.getValue();
