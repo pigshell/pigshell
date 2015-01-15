@@ -260,7 +260,7 @@ Ls.prototype.next = check_next(do_docopt(function(opts, cb) {
         }
         var c = $.extend({}, entry.file);
         if (c._mounted !== undefined || c.html === undefined) {
-            c.html = '<div class="nativeFolder">' + basenamedir(entry.path) + '</div>';
+            c.html = '<div class="pfolder">' + basenamedir(entry.path) + '</div>';
         } else {
             c.html = c.html.replace(/\{\{\s*name\s*\}\}/g, basenamedir(entry.path));
         }

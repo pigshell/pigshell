@@ -105,7 +105,7 @@ UploadFile.prototype.populate = function(files, cb) {
             size: f.size,
             readable: true,
             writable: false,
-            html: '<div class="nativeFile">' + f.name + '</div>',
+            html: '<div class="pfile">' + f.name + '</div>',
             raw: f
         },
         ufile = new UploadFile(newfile);
@@ -124,7 +124,7 @@ var UploadFS = function() {
             writable: true,
             fs: self,
             mime: 'directory',
-            htmlClass: 'nativeFolder',
+            htmlClass: 'pfolder',
             files: {},
             populated: true
         };

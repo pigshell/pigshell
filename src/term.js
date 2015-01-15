@@ -12,12 +12,12 @@ var PtermBase = function(opts, pdir, div) {
     self.fs = pdir.fs;
     self.name = self.fs.newtid().toString();
     self.ident = pathjoin(pdir.ident, self.name);
-    self.html = '<div class="nativeFolder">' + self.name + '</div>';
+    self.html = '<div class="pfolder">' + self.name + '</div>';
 
     var dataf = {name: 'data', ident: pathjoin(self.ident, 'data'), 
         readable: true, writable: true, removable: false, fs: self.fs,
         mime: 'text/plain', size: 0};
-    dataf.html = '<div class="nativeFile">' + dataf.name + '</div>';
+    dataf.html = '<div class="pfile">' + dataf.name + '</div>';
     self.data = new File(dataf);
     self.div = div;
     self.files = {'data': self.data};
@@ -242,7 +242,7 @@ var PtermFS = function(opts) {
         writable: true,
         fs: this,
         mime: 'directory',
-        htmlClass: 'nativeFolder',
+        htmlClass: 'pfolder',
         files: {},
         populated: true
     };

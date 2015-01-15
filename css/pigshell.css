@@ -202,6 +202,168 @@
     width: 600px;
 }
 
+.pigshell .picasaPhoto {
+    margin-left: 1em;
+    width: 16em;
+    margin-bottom: 1em;
+}
+.pigshell .picasaPhoto .image {
+    padding: 4px;
+    border: 1px solid #CCCCCC;
+}
+.pigshell .picasaPhoto .name {
+    margin: 0;
+}
+.pigshell .gdFolder, .pigshell .gdFile {
+    margin-left: 1em;
+    margin-top: 0.5em;
+    width: 16em;
+}
+.pigshell .gdFolder img, .pigshell .gdFile img {
+    vertical-align: middle;
+    margin-right: 0.5em;
+}
+
+.pigshell .pfolder {
+    display: inline-block;
+    margin-left: 1em;
+    width: 16em;
+    font-weight: bold;
+    color: #268BD2;
+}
+
+.pigshell .pfile {
+    display: inline-block;
+    margin-left: 1em;
+    width: 16em;
+    color: #268BD2;
+}
+
+.pigshell .pfolder a, .pigshell .pfile a {
+    color: #268BD2;
+    text-decoration: none;
+}
+.pigshell .pfolder a:hover, .pigshell .pfile a:hover {
+    text-decoration: underline;
+}
+
+.pigshell .tabdialog {
+    overflow: hidden;
+}
+.pigshell .tabdialog-entry {
+    min-width: 20em;
+    float: left;
+    color: #888;
+    padding: .2em .1em .2em .2em; /* should be same as CodeMirror-gutter-text */
+}
+.pigshell .ls-item {
+    display: inline-block;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+.pigshell .title {
+    text-align: center;
+    font-size: 15px;
+}
+
+.pigshell .warning {
+    font-size: 16px;
+    background-color: #f2dede;
+    font-family: monospace;
+    padding: 1em;
+    border: 1px solid #d9534f;
+}
+
+.pigshell .info {
+    font-size: 14px;
+    font-family: monospace;
+}
+
+/*
+ * Related to obsolete or soon-to-be obsolete modules: Twitter, Facebook
+ * Eventually to be junked
+ */
+
+.pigshell .slice text {
+    font-size: 16pt;
+    font-family: sans-serif;
+}
+.pigshell .chart {
+    height: 450px;
+    width: 600px;
+}
+
+.pigshell .plFolder {
+    color: #FF0000;
+    font-weight: bold;
+    margin-left: 1em;
+    width: 16em;
+}
+.pigshell .plFile {
+    color: #FF0000;
+    margin-left: 1em;
+    width: 16em;
+}
+
+.pigshell .stat {
+}
+.pigshell .stat .field {
+    color: #AA0000;
+    font-weight: bold;
+    margin-right: 1em;
+}
+.pigshell .twFolder {
+    color: #3E79AB;
+    font-weight: bold;
+    margin-left: 1em;
+    width: 16em;
+}
+.pigshell .twFile {
+    position: relative;
+    padding: 0.5em;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.pigshell .twUser {
+    width: 16em;
+}
+.pigshell .twFile .avatar {
+    display: inline-block;
+    height: 100%;
+}
+.pigshell .twFile .avatar .image {
+    border-radius: 3px;
+}
+.pigshell .twFile .text {
+    display: inline-block;
+    height: 100%;
+    padding-left: 1em;
+}
+.pigshell .twFile .text .from {
+    display: inline-block;
+    font-weight: bold;
+    margin-right: 0.5em;
+}
+.pigshell .twFile .text .screen_name {
+    display: inline-block;
+    color: #999999;
+}
+.pigshell .twFile .text .time {
+    float: right;
+    display: inline-block;
+    color: #999999;
+}
+.pigshell .twFile .text .tweet {
+    width: 60em;
+}
+.pigshell .twFile a {
+    color: #3A96D5;
+    text-decoration: none;
+}
+.pigshell .twFile a:hover {
+    text-decoration: underline;
+}
+
 .pigshell .fbFolder {
     color: #254376;
     font-weight: bold;
@@ -287,160 +449,4 @@
 .pigshell .fbFriend .name {
     margin: 0;
     color: #254376;
-}
-.pigshell .picasaPhoto {
-    margin-left: 1em;
-    width: 16em;
-    margin-bottom: 1em;
-}
-.pigshell .picasaPhoto .image {
-    padding: 4px;
-    border: 1px solid #CCCCCC;
-}
-.pigshell .picasaPhoto .name {
-    margin: 0;
-    color: #A8402B;
-}
-.pigshell div[class^="gd"] {
-    color: #A8402B;
-    margin-left: 1em;
-    margin-top: 0.5em;
-    width: 16em;
-}
-.pigshell div[class^="gd"] a {
-    color: #A8402B;
-    text-decoration: none;
-}
-.pigshell div[class^="gd"] a:hover {
-    text-decoration: underline;
-}
-.pigshell div[class^="gd"] img {
-    vertical-align: middle;
-    margin-right: 0.5em;
-}
-.pigshell .gdFolder {
-    font-weight: bold;
-}
-.pigshell .picasaFolder {
-    color: #5688D2;
-    font-weight: bold;
-    margin-left: 1em;
-    width: 16em;
-}
-.pigshell div[class^="native"] {
-    color: #51B1C8;
-    display: inline-block;
-    margin-left: 1em;
-    width: 16em;
-}
-.pigshell .nativeFolder {
-    font-weight: bold;
-}
-.pigshell .plFolder {
-    color: #FF0000;
-    font-weight: bold;
-    margin-left: 1em;
-    width: 16em;
-}
-.pigshell .plFile {
-    color: #FF0000;
-    margin-left: 1em;
-    width: 16em;
-}
-.pigshell .twFolder {
-    color: #3E79AB;
-    font-weight: bold;
-    margin-left: 1em;
-    width: 16em;
-}
-.pigshell .twFile {
-    position: relative;
-    padding: 0.5em;
-    border-bottom: 1px solid #e8e8e8;
-}
-
-.pigshell .twUser {
-    width: 16em;
-}
-.pigshell .twFile .avatar {
-    display: inline-block;
-    height: 100%;
-}
-.pigshell .twFile .avatar .image {
-    border-radius: 3px;
-}
-.pigshell .twFile .text {
-    display: inline-block;
-    height: 100%;
-    padding-left: 1em;
-}
-.pigshell .twFile .text .from {
-    display: inline-block;
-    font-weight: bold;
-    margin-right: 0.5em;
-}
-.pigshell .twFile .text .screen_name {
-    display: inline-block;
-    color: #999999;
-}
-.pigshell .twFile .text .time {
-    float: right;
-    display: inline-block;
-    color: #999999;
-}
-.pigshell .twFile .text .tweet {
-    width: 60em;
-}
-.pigshell .twFile a {
-    color: #3A96D5;
-    text-decoration: none;
-}
-.pigshell .twFile a:hover {
-    text-decoration: underline;
-}
-.pigshell .slice text {
-    font-size: 16pt;
-    font-family: sans-serif;
-}
-.pigshell .chart {
-    height: 450px;
-    width: 600px;
-}
-.pigshell .tabdialog {
-    overflow: hidden;
-}
-.pigshell .tabdialog-entry {
-    min-width: 20em;
-    float: left;
-    color: #888;
-    padding: .2em .1em .2em .2em; /* should be same as CodeMirror-gutter-text */
-}
-.pigshell .ls-item {
-    display: inline-block;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
-.pigshell .stat {
-}
-.pigshell .stat .field {
-    color: #AA0000;
-    font-weight: bold;
-    margin-right: 1em;
-}
-.pigshell .title {
-    text-align: center;
-    font-size: 15px;
-}
-
-.pigshell .warning {
-    font-size: 16px;
-    background-color: #f2dede;
-    font-family: monospace;
-    padding: 1em;
-    border: 1px solid #d9534f;
-}
-
-.pigshell .info {
-    font-size: 14px;
-    font-family: monospace;
 }

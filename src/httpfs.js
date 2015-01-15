@@ -97,7 +97,7 @@ var HttpFile = function() {
     HttpFile.base.apply(this, arguments);
 
     this.mime = 'application/vnd.pigshell.httpfile';
-    this.html = sprintf('<div class="nativeFile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
+    this.html = sprintf('<div class="pfile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
 };
 
 inherit(HttpFile, File);
@@ -301,7 +301,7 @@ var MediaHandler = function(file, meta) {
     this.name = file.name;
     this.fs = file.fs;
     this.mime = meta ? meta.mime : undefined;
-    this.html = sprintf('<div class="nativeFile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
+    this.html = sprintf('<div class="pfile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
 };
 
 inherit(MediaHandler, File);
@@ -323,7 +323,7 @@ MediaHandler.prototype.update = function(meta, opts, cb) {
 var TextHtml = function(file, meta) {
     TextHtml.base.apply(this, arguments);
     this.mime = "text/html";
-    this.html = sprintf('<div class="nativeFolder"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
+    this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
     if (this.fs === undefined) {
         console.log('undefined fs');
     }

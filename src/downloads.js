@@ -29,7 +29,7 @@ var DownloadFS = function() {
             writable: true,
             fs: self,
             mime: 'directory',
-            htmlClass: 'nativeFolder',
+            htmlClass: 'pfolder',
             files: {},
             populated: true
         };

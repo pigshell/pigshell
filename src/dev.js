@@ -42,7 +42,7 @@ var DevFS = function() {
             fs: self,
             owner: 'me',
             mime: 'device',
-            html: '<div class="nativeFile">null</div>'
+            html: '<div class="pfile">null</div>'
         },
         rootfile = {
             name: 'dev',
@@ -51,7 +51,7 @@ var DevFS = function() {
             writable: true,
             fs: self,
             mime: 'directory',
-            htmlClass: 'nativeFolder',
+            htmlClass: 'pfolder',
             files: {}
         };
     DevFS.base.call(self);

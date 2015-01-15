@@ -459,7 +459,7 @@ JsonFile.prototype.addfile = function(obj, name) {
             readable: true,
             writable: true,
             fs: self.fs,
-            html: '<div class="nativeFile">' + name + '</div>',
+            html: '<div class="pfile">' + name + '</div>',
             size: 0
         };
     if (obj.__lookupGetter__(name) || obj.__lookupSetter__(name)) {
@@ -469,7 +469,7 @@ JsonFile.prototype.addfile = function(obj, name) {
         newfile.size = 0;
     } else if (obj[name].constructor === Object || obj[name]._jfs) {
         newfile.mime = 'directory';
-        newfile.html = '<div class="nativeFolder">' + name + '</div>';
+        newfile.html = '<div class="pfolder">' + name + '</div>';
     } else if (isstring(obj[name])) {
         newfile.mime = 'text/plain';
         newfile.size = obj[name].length;
@@ -625,7 +625,7 @@ var JsonFS = function(obj, opts) {
         writable: true,
         fs: this,
         mime: 'directory',
-        htmlClass: 'nativeFolder',
+        htmlClass: 'pfolder',
         files: {},
         populated: false
     };

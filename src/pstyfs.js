@@ -201,7 +201,7 @@ var PstyDir = function(file) {
     this.files = {};
     this.populated = false;
     this.mime = this.fs.dirmime || 'application/vnd.pigshell.dir+json';
-    this.html = sprintf('<div class="nativeFolder"><a href="%s" target="_blank">%s</a></div>', file.ident, file.name);
+    this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">%s</a></div>', file.ident, file.name);
     this.cookie = -1;
 };
 
@@ -532,7 +532,7 @@ PstyBundle.prototype.read = PstyBundle.prototype.getdata;
 
 var PstyLink = function(file) {
     PstyLink.base.apply(this, arguments);
-    this.html = sprintf('<div class="nativeFile"><a href="%s" target="_blank">%s</a></div>', this.ident, this.name);
+    this.html = sprintf('<div class="pfile"><a href="%s" target="_blank">%s</a></div>', this.ident, this.name);
     this.mtime = -1;
 };
 

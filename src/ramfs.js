@@ -158,7 +158,7 @@ RamFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
 var RamFile = function() {
     RamFile.base.apply(this, arguments);
     this.mime = 'application/vnd.pigshell.ramfile';
-    this.html = sprintf('<div class="nativeFile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
+    this.html = sprintf('<div class="pfile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
 };
 
 inherit(RamFile, HttpFile);

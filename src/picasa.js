@@ -228,7 +228,7 @@ var PicasaUser = function(file) {
     this.files = {};
     this.populated = false;
     this.mime = 'application/vnd.pigshell.picasa.user+json';
-    this.html = sprintf('<div class="nativeFolder"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
+    this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
     this.mtime = -1;
 };
 
@@ -413,7 +413,7 @@ function picasa_bundle(opts, cb) {
 var PicasaAlbum = function(file) {
     PicasaAlbum.base.apply(this, arguments);
     this.mime = 'application/vnd.pigshell.picasa.album+json';
-    this.html = sprintf('<div class="nativeFolder"><a href="%s" target="_blank">%s</a></div>', file.ident, file.name);
+    this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">%s</a></div>', file.ident, file.name);
     this.mtime = -1;
 };
 
@@ -433,7 +433,7 @@ PicasaAlbum.prototype.update = function(meta, opts, cb) {
     self.ctime = moment(data.published.$t).valueOf();
     self.mtime = mtime;
     self.count = data.gphoto$numphotos.$t;
-    self.html = '<div class="picasaPhoto"><a href="' +
+    self.html = '<div class="pfile picasaPhoto"><a href="' +
         u.resolve(picasa_getlink(data, "alternate")) +
         '" target = "_blank"><img class="image"' +
         ' height="' + data.media$group.media$thumbnail[0].height + 'px"' +
@@ -455,7 +455,7 @@ PicasaAlbum.prototype.bundle = picasa_bundle;
 var PicasaPhoto = function(file) {
     PicasaPhoto.base.apply(this, arguments);
     this.mime = 'application/vnd.pigshell.picasa.photo+json';
-    this.html = sprintf('<div class="nativeFolder"><a href="%s" target="_blank">{{name}}</a></div>', file.ident);
+    this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">{{name}}</a></div>', file.ident);
 };
 
 inherit(PicasaPhoto, MediaHandler);
@@ -473,7 +473,7 @@ PicasaPhoto.prototype.update = function(meta, opts, cb) {
         width: data.media$group.media$thumbnail[0].width,
         height: data.media$group.media$thumbnail[0].height
     };
-    self.html = '<div class="picasaPhoto"><a href="' +
+    self.html = '<div class="pfile picasaPhoto"><a href="' +
         picasa_getlink(data, "alternate") +
         '" target="_blank"><img class="image"' +
         ' height="' + self.thumbnail.height + 'px"' +

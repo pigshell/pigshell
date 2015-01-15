@@ -262,7 +262,7 @@ var GDriveFolder = function(file) {
     this.files = {};
     this.populated = false;
     this.mime = 'application/vnd.google-apps.folder';
-    this.html = sprintf('<div class="nativeFolder"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
+    this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
     this.mtime = -1;
 };
 
@@ -277,7 +277,7 @@ GDriveFolder.prototype.update = function(meta, opts, cb) {
     }
 
     mergeattr(self, meta, ["mtime", "ctime", "owner", "size", "readable", "writable", "raw"]);
-    self.html = '<div class="gdFolder"><a target="_blank" href="' + self.raw.alternateLink + '"><img src="' + self.raw.iconLink + '">{{name}}</a></div>';
+    self.html = '<div class="pfolder gdFolder"><a target="_blank" href="' + self.raw.alternateLink + '"><img src="' + self.raw.iconLink + '">{{name}}</a></div>';
     self.populated = false;
     self.files = {};
     self.readdir = fstack_passthrough("readdir");
@@ -371,7 +371,7 @@ var GDriveDoc = function(file) {
     GDriveDoc.base.apply(this, arguments);
     this.files = {};
     this.populated = false;
-    this.html = sprintf('<div class="nativeFile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
+    this.html = sprintf('<div class="pfile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
     this.mtime = -1;
 };
 
@@ -386,7 +386,7 @@ GDriveDoc.prototype.update = function(meta, opts, cb) {
     }
 
     mergeattr(self, meta, ["mime", "mtime", "ctime", "owner", "size", "readable", "writable", "raw"]);
-    self.html = '<div class="gdFile"><a target="_blank" href="' + self.raw.alternateLink + '"><img src="' + self.raw.iconLink + '">{{name}}</a></div>';
+    self.html = '<div class="pfile gdFile"><a target="_blank" href="' + self.raw.alternateLink + '"><img src="' + self.raw.iconLink + '">{{name}}</a></div>';
 
     return File.prototype.update.call(self, meta, opts, cb);
 };

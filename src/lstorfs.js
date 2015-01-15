@@ -29,7 +29,7 @@ LstorFile.prototype._readdir = function(opts, cb) {
                 readable: true,
                 writable: true,
                 fs: self.fs,
-                html: '<div class="nativeFile">' + name + '</div>',
+                html: '<div class="pfile">' + name + '</div>',
                 size: 0
             };
         if (isstring(lstor[key])) {
@@ -115,7 +115,7 @@ var LstorFS = function(obj, opts) {
         writable: true,
         fs: this,
         mime: 'directory',
-        htmlClass: 'nativeFolder',
+        htmlClass: 'pfolder',
         files: {},
         populated: false
     };
