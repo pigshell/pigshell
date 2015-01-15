@@ -40,7 +40,9 @@ utilities. _Psty_ works only on Unix currently.
 
 Click on the first example in the sidebar, or type the following at the prompt:
 
-    cat http://pigshell.com/sample/life-expectancy.html | table2js -e "table.wikitable tr" foo country data | iframe -g /usr/template/d3-worldmap1
+```sh
+cat http://pigshell.com/sample/life-expectancy.html | table2js -e "table.wikitable tr" foo country data | iframe -g /usr/template/d3-worldmap1
+```
 
 ![Life expectancy](./images/screenshots/helloworld.jpg)
 
@@ -88,7 +90,9 @@ pipelines.
 Many commands support a `-f` option to use a given object field, and
 `-e` to specify a Javascript expression. For instance:
 
-    ls /gdrive/username@gmail.com | grep -f mime spreadsheet | grep -e 'x.mtime > Date.parse("Dec 31, 2013")' | cp .
+```sh
+ls /gdrive/username@gmail.com | grep -f mime spreadsheet | grep -e 'x.mtime > Date.parse("Dec 31, 2013")' | cp .
+```
 
 The above command finds all files in the given user's GDrive containing the
 string "spreadsheet" in their `mime` property, selects those files which
@@ -115,47 +119,63 @@ mounted filesystems.
 Everything is a file. Friends are files too. After attaching your Facebook
 account,
 
-    cd /facebook/friends; ls
+```sh
+cd /facebook/friends; ls
+```
 
 will give you a list of your friends. 
 
 Where in the world are my friends?
 
-    map /facebook/friends/*
+```sh
+map /facebook/friends/*
+```
 
 ![Friends map](./images/screenshots/mapfriends.jpg)
 
 `map` is a command which plots files with location attributes on a map.
 Another way of doing this would be
 
-    ls /facebook/friends/ | map
+```sh
+ls /facebook/friends/ | map
+```
 
 _Pigshell_ passes objects over pipes. In this case, `ls` emits a stream of
 *file* objects, which are consumed by map.
 
 Let's refine the above query: Where are all my male friends?
 
-    ls /facebook/friends | grep -f gender "^male" | map
+```sh
+ls /facebook/friends | grep -f gender "^male" | map
+```
 
 `grep` is a generic filter command, which may filter either by an object's text representation, or a specific field - in this case, gender.
   
 How many friends do I have?
 
-    ls /facebook/friends | sum
+```sh
+ls /facebook/friends | sum
+```
 
 Pie chart of relationship status of all female friends
 
-        ls /facebook/friends | grep -f gender "female" | chart -t pie -o field=relationship_status
+```sh
+ls /facebook/friends | grep -f gender "female" | chart -t pie -o field=relationship_status
+```
 
 ## $HOME sweet $HOME ##
 
 Get a `/home`. <a href="./psty.py" download="psty.py">Download _Psty_</a>, run it on your desktop:
 
-    python psty.py -a -d /some/dir # Run in DESKTOP SHELL (bash), not pigshell
+```sh
+python psty.py -a -d /some/dir # Run in DESKTOP SHELL (bash), not pigshell
+```
 
 and on _pigshell_,
 
-    mount http://localhost:50937/ /home # Run in PIGSHELL, not desktop
+```sh
+mount http://localhost:50937/ /home # Run in PIGSHELL, not desktop
+```
 
 The _psty_ server runs only on Linux and Mac OS at present. It has been
 reported to work on Windows using Cygwin.
@@ -166,7 +186,9 @@ Now you can read and write to `/home` it will be backed by `/some/directory`.
 This mount command needs to be typed every time you start or reload the page.
 To do it automatically, 
 
-    echo "HOME=/home; mount http://localhost:50937/ $HOME" >/local/rc.sh
+```sh
+echo "HOME=/home; mount http://localhost:50937/ $HOME" >/local/rc.sh
+```
 
 /local/rc.sh is a script stored in the browser's LocalStorage and will be
 invoked every time http://pigshell.com is (re)loaded. You need to create a
@@ -177,24 +199,32 @@ invoked every time http://pigshell.com is (re)loaded. You need to create a
 Assuming you're running _psty_, backing up Google Drive to your desktop is
 as simple as
 
-    mkdir /home/drivebackup
-    cp -rv -X /Trash /gdrive/username@gmail.com /home/drivebackup
+```sh
+mkdir /home/drivebackup
+cp -rv -X /Trash /gdrive/username@gmail.com /home/drivebackup
+```
 
 More details on [using Google Drive](src/doc/gdrive.md) with _pigshell_.
 
 Backing up a Picasa album:
 
-    mkdir /home/foo; cp /picasa/foo/* /home/foo
+```sh
+mkdir /home/foo; cp /picasa/foo/* /home/foo
+```
 
 Similarly, creating an album and uploading a bunch of pictures to Picasa:
 
-    mkdir /picasa/bar; cp /home/barpics/*JPG /picasa/bar
+```sh
+mkdir /picasa/bar; cp /home/barpics/*JPG /picasa/bar
+```
 
 (note that album creation and uploads to Picasa require _psty_'s proxy services)
 
 Copying random URLs to your desktop also works:
 
-    cp -c http://ftp.freebsd.org/pub/FreeBSD/ISO-IMAGES-amd64/10.0/FreeBSD-10.0-RELEASE-amd64-bootonly.iso /home
+```sh
+cp -c http://ftp.freebsd.org/pub/FreeBSD/ISO-IMAGES-amd64/10.0/FreeBSD-10.0-RELEASE-amd64-bootonly.iso /home
+```
 
 The `-c` option continues where it left off, so you can resume interrupted
 downloads.
@@ -206,15 +236,19 @@ If you don't have _psty_:
     anything inside the `/downloads` directory, it's just a pseudo-target to
     trigger a browser download. For example,
 
-        cp /picasa/foo/DSC_1290.JPG /downloads
+  ```sh
+  cp /picasa/foo/DSC_1290.JPG /downloads
+  ```
 
 -   Click on _Upload Files_ and select a file or files from your desktop.
     These files are now visible under the directory `/uploads`. Use `ls`
     to verify that they're there. Now use `cp` to copy them to the
     target directory.
 
-        cp /uploads/cat.jpg /gdrive
-        cp /uploads/cat.jpg /facebook/me/albums/MyCat/
+  ```sh
+  cp /uploads/cat.jpg /gdrive
+  cp /uploads/cat.jpg /facebook/me/albums/MyCat/
+  ```
 
 ## Data conversion ##
 
@@ -226,7 +260,9 @@ command to convert incoming data into the type it likes. In the command
 `cat` returns a blob. The terminal figures out that the blob contains PNG data,
 and displays it as a canvas. Similarly,
 
-    cat http://pigshell.com/sample/clickingofcuthbert.pdf
+```sh
+cat http://pigshell.com/sample/clickingofcuthbert.pdf
+```
 
 is detected as a PDF and displayed using pdf.js. In case it could not figure
 out the contents, it attempts to convert it to text and displays it as the
@@ -236,7 +272,9 @@ terminals)
 In some cases, you have to manually convert data between stages in the 
 pipeline. For example,
 
-    cat http://pigshell.com/sample/README.md | to text | jf 'x.split("\\n")' | sum
+```sh
+cat http://pigshell.com/sample/README.md | to text | jf 'x.split("\\n")' | sum
+```
 
 implements a poor man's `wc`: `cat` returns a blob, `to` converts it to text,
 `jf` splits it into lines, `sum` counts the number of objects it gets. A `cat
@@ -249,11 +287,12 @@ Absolute URLs can be used in most places where a file path is expected.
 Mounting an HTTP URL exposes all links within that page as directories. To
 mount arbitrary, non-CORS-enabled URLs, you need to run _psty_.
 
-    mount http://pigshell.com/sample/ /mnt; cd /mnt; ls
-    cat oslogos.png
-    cat .
-    cat . | to text
-
+```sh
+mount http://pigshell.com/sample/ /mnt; cd /mnt; ls
+cat oslogos.png
+cat .
+cat . | to text
+```
 
 ## Processing on the desktop - Wsh ##
 
@@ -261,7 +300,9 @@ _Psty_ runs a websocket service, effectively converting any Unix utility
 which uses stdin/stdout into a potential member of the _pigshell_ pipeline.
 For instance, if you have ImageMagick installed,
 
-    cat http://pigshell.com/sample/oslogos.png | wsh /usr/local/bin/convert -implode 1 - - | to -g blob
+```sh
+cat http://pigshell.com/sample/oslogos.png | wsh /usr/local/bin/convert -implode 1 - - | to -g blob
+```
 
 will grab a png file from the web, pipe it through ImageMagick on the desktop,
 and display the result in _pigshell_.
@@ -270,7 +311,9 @@ and display the result in _pigshell_.
 
 To visualize disk usage in a zoomable treemap,
 
-    wsh du /Users/foo | to -g text | iframe -g /usr/template/d3-du-treemap
+```sh
+wsh du /Users/foo | to -g text | iframe -g /usr/template/d3-du-treemap
+```
 
 ![du-treemap](./images/screenshots/du-treemap.png)
 
