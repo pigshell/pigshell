@@ -1,0 +1,23 @@
+usage='theme        -- add CSS\
+\
+Usage:\
+    theme [<file>]\
+    theme -h | --help\
+\
+Options:\
+    -h --help   Show this message.\
+    <file>      File containing CSS enclosed in <style>...</style>\
+'
+
+if ! docopt $usage $*; then
+    exit false
+fi
+if [ -z $"file ]; then
+    jf '$("head style").remove(), "CSS reset to default"' 1
+elif [ -r $file ]; then
+    cat $file | to text | jf '$("head style").remove(), $("head").append(x), ""'
+else
+    echo Theme file $file not found
+    exit false
+fi
+exit true

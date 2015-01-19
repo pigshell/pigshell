@@ -1,0 +1,54 @@
+<style>
+
+/* Solarized dark theme, based on http://ethanschoonover.com/solarized */
+
+/* Important settings - you must change these in any new theme */
+
+html {
+    background-color: #002b36;
+    color: #839496;
+}
+
+.pigshell .pterm-output, .pigshell .pterm-cli {
+    color: #839496;
+}
+
+.pigshell a, .pigshell a:active, .pigshell a:visited {
+    color: #93a1a1;
+}
+
+.pigshell .CodeMirror .prompt { color: #839496 }
+
+.CodeMirror pre.CodeMirror-cursor { border-left: 1px solid #839496 }
+
+/* Optional settings */
+
+.pigshell h1, .pigshell h2, .pigshell h3, .pigshell h4, .pigshell h5, .pigshell h6 {
+    color: #93a1a1;
+    border-color: #839496;
+}
+
+
+.pigshell .sidebar {
+    background-color: #073642;
+}
+
+.pigshell h3.tagbar {
+    background-color: #586e75;
+}
+
+.pigshell .sidebar img {
+    padding: 10px;
+    background-color: #839496;
+    border-radius: 5px;
+}
+
+.pigshell .dsbuttons button {
+    background-color: #839496;
+}
+
+.pigshell .rightbox {
+    border-left: 1px solid #839496;
+}
+
+</style>
