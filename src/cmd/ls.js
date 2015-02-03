@@ -33,7 +33,7 @@ Ls.prototype.usage = 'ls           -- list directory contents\n\n' +
     '    -r           Reverse order of sorting\n' +
     '    -t           Use time of last modification for sorting\n' +
     '    -c           Use time of creation for sorting\n' +
-    '    -T           Force text display, even if file has HTML representation\n' +
+    '    -T           Force text display, one entry per line\n' +
     '    -G           Output pathnames, similar to find .\n' +
     '    -D           Descend any file which implements readdir(), e.g. HTML\n'+
     '    -X           Cross filesystems during recursive descent\n'+
@@ -247,7 +247,7 @@ Ls.prototype.next = check_next(do_docopt(function(opts, cb) {
             if (entry.spacer) {
                 return entry.spacer;
             }
-            return entry.path.split('/').pop();
+            return basenamedir(entry.path) + '\n';
         }
         if (self.docopts['-G']) {
             if (entry.spacer) {
