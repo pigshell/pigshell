@@ -54,16 +54,16 @@ expect $? true mount.2
 
 for i in 0 1; do
     X=$TMNT($i)
-    ls -l $X/$TDIR > $RESDIR/ls.$i.1
+    ls -T $X/$TDIR > $RESDIR/ls.$i.1
     dcheck $? true ls.$i.1
 
-    ls -lR $X/$TDIR/directory\ 1  >$RESDIR/ls.$i.2
+    ls -TR $X/$TDIR >$RESDIR/ls.$i.2
     dcheck $? true ls.$i.2
 
-    ls -ld $X/$TDIR >$RESDIR/ls.$i.3
+    ls -Td $X/$TDIR >$RESDIR/ls.$i.3
     dcheck $? true ls.$i.3
 
-    ls -ld $X/$TDIR/ >$RESDIR/ls.$i.4
+    ls -Td $X/$TDIR/ >$RESDIR/ls.$i.4
     dcheck $? true ls.$i.4
 
     rm $RESDIR/foo
@@ -87,17 +87,17 @@ X=$X/$TMPDIR
 mkdir $X 2>/dev/null
 mkdir $X/mkdirtest
 expect $? true mkdir.1
-cp /doc/README.md $X/mkdirtest
+cp /doc/pigshell.md $X/mkdirtest
 expect $? true cp.1
-cmp /doc/README.md $X/mkdirtest/README.md
+cmp /doc/pigshell.md $X/mkdirtest/pigshell.md
 expect $? true cp.2
-cp /doc/README.md $X/mkdirtest/README2.md
+cp /doc/pigshell.md $X/mkdirtest/pigshell2.md
 expect $? true cp.3
-cmp /doc/README.md $X/mkdirtest/README2.md
+cmp /doc/pigshell.md $X/mkdirtest/pigshell2.md
 expect $? true cp.4
 rm $X/mkdirtest 2>/dev/null
 dont_expect $? true rm.1
-rm $X/mkdirtest/README*.md
+rm $X/mkdirtest/pigshell*.md
 expect $? true rm.2
 rm $X/mkdirtest
 expect $? true rm.3
