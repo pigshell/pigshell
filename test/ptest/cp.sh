@@ -1,15 +1,18 @@
 #!pigshell
 
 sh -s testlib.sh
+sh -s config.sh
 echo "cp tests started on" $(date)
 
 SAMPLEDIR="/home/sample"
 
 CHUNKSIZE=262144
 COPTS="-o cp.chunksize="^$CHUNKSIZE
-#GDRIVEUSER1="changeme@gmail.com"
-#GDRIVEUSER2="changemetoo@somecompany.com"
+GDRIVEUSER1=$GDRIVEUSERS(0)
+GDRIVEUSER2=$GDRIVEUSERS(1)
 DEATHSTAR=1
+
+TMP="/tmp/cptest"
 
 # simplercp sourcedir targetdir checkdir num
 function simplercp {
@@ -32,9 +35,8 @@ function partcp {
 }
 
 function ramfs_test {
-    TMP="/tmp/cptest"
-    TMP1="/tmp/cptest/cptest1"
-    TMP2="/tmp/cptest/cptest2"
+    TMP1=$TMP/cptest1
+    TMP2=$TMP/cptest2
 
     mkdir $TMP $TMP1 $TMP2 2>/dev/null
 
@@ -47,9 +49,9 @@ function ramfs_test {
 }
 
 function pstyfs_test {
-    TMP="/home/cptest"
-    TMP1="/home/tmp/cptest/cptest1"
-    TMP2="/home/tmp/cptest/cptest2"
+    TMP1=$TMP/cptest1
+    TMP2=$TMP/cptest2
+
     mkdir $TMP $TMP1 $TMP2 2>/dev/null
     rm -r $TMP1/*  2>/dev/null
     rm -r $TMP2/* 2>/dev/null
@@ -57,7 +59,7 @@ function pstyfs_test {
     simplercp $SAMPLEDIR/ $TMP1 $TMP1 pstyfs.slash
     simplercp $SAMPLEDIR $TMP2 $TMP2/sample pstyfs.noslash
 
-    partcp $SAMPLEDIR/clickingofcuthbert.pdf /home/tmp/clickingofcuthbert.pdf pstyfs.partcp
+    partcp $SAMPLEDIR/clickingofcuthbert.pdf $TMP/clickingofcuthbert.pdf pstyfs.partcp
 }
 
 # GDrive as source
@@ -66,7 +68,7 @@ function gdrivefs_test {
     GDRIVEDST=/gdrive/$GDRIVEUSER2/pigshell-test
 
     if ! [ -d $"GDRIVESRC ]; then echo "GDRIVEUSER1 not available; skipping"; return; fi
-    TMP1="/home/tmp/cptest/cptest-gdrive"
+    TMP1=$TMP/cptest-gdrive
     mkdir $TMP1 2>/dev/null
     rm -r $TMP1/* 2>/dev/null
 
@@ -94,11 +96,11 @@ function gdrivefs_test {
 }
 
 function gdrivefs_doc_test {
-    SRCDIR="/home/tmp/sampledocs"
+    SRCDIR=$SAMPLEDIR/docs
     DSTDIR=/gdrive/$GDRIVEUSER1/pigshell-test
     DSTDIR2=/gdrive/$GDRIVEUSER2/pigshell-test
-    TMP1="/home/tmp/cptest/cptest-gdrive"
-    TMP2="/home/tmp/cptest/cptest-gdrive/pdf"
+    TMP1=$TMP/cptest-gdrive
+    TMP2=$TMP/cptest-gdrive/pdf
 
     if ! [ -d $"DSTDIR ]; then echo "GDRIVEUSER1 not available; skipping"; return; fi
 

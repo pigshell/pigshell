@@ -107,6 +107,7 @@ REFDIR=$TESTBASE/ref
 function dcheck {
     e=$(expect $*)
     if T $? = true; then
+        ls $RESDIR >/dev/null
         cmp $RESDIR/$3 $REFDIR/$3
         if T $? = false; then
             echo $e "(diff failed)"
