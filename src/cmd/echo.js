@@ -25,7 +25,7 @@ Echo.prototype.next = check_next(do_docopt(function() {
         items = (self.docopts['-n'] || self.docopts['-r']) ? self.opts.argv.slice(2) : self.opts.argv.slice(1);
 
     if (items.length === 0) {
-        return self.exit();
+        items = [''];
     }
     self.done = true;
     if (!self.docopts['-r'] && isstring(items[0])) {
