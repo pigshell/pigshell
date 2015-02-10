@@ -45,7 +45,7 @@ Rm.prototype.next = check_next(do_docopt(function() {
          */
         return self.exit(nuke);
     }
-    if (self.docopts['-r'] && deathstar === undefined) {
+    if (self.docopts['-r'] && (!deathstar || !deathstar.length)) {
         var msg = "rm -r is VERY DANGEROUS and can wipe out all your cloud data with one command. To enable recursive removal, set the shell variable DEATHSTAR=1";
         return self.exit(msg);
     }
