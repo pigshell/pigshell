@@ -3,6 +3,7 @@
 # Tests for join
 
 sh -s testlib.sh
+echo "join tests started on" $(date)
 
 a=${cat http://pigshell.com/sample/life-expectancy.html | table2js -e "tr" foo name years | jf 'x.name = x.name.trim(), x' | sort -f name}
 b=${cat /usr/misc/countries.json | to text | jf 'JSON.parse(x)'|sort -f name}

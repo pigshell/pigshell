@@ -34,6 +34,7 @@ starting the tests.
 
 In pigshell, run the following commands:
 
+    mount http://localhost:50937/ /home  # Skip if /home already mounted
     cd /home/test/ptest
     ./runall.sh
 

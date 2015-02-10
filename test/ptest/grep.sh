@@ -3,6 +3,7 @@
 # Tests for grep and fgrep
 
 sh -s testlib.sh
+echo "grep tests started on" $(date)
 
 grep foo fo o bar "baz\nf" oo2 >$RESDIR/grep.1
 dcheck $? true grep.1

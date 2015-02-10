@@ -103,19 +103,34 @@ TDIR=sample
 TMPDIR=tmp
 RESDIR=$TESTBASE/results
 REFDIR=$TESTBASE/ref
+SAMPLEDIR=/home/sample
 
 function dcheck {
-    e=$(expect $*)
+    _e=$(expect $*)
     if T $? = true; then
         ls $RESDIR >/dev/null
         cmp $RESDIR/$3 $REFDIR/$3
         if T $? = false; then
-            echo $e "(diff failed)"
+            echo $_e "(diff failed)"
             return false
         fi
     fi
-    echo $e
+    echo $_e
 }
+
+# Diff-test. Most common type of test where we run a command and compare
+# its output with the expected reference output.
+# Usage: dtest <testname> "pipe | of | commands | in | quotes"
+# e.g.  dtest echo.4 echo -n foo bar baz
+#       dtest echo.6 "echo 1 2 3 4 5 | sum"
+
+function dtest {
+    _name=$1
+    shift
+    sh -sc $"* >$RESDIR/$_name
+    dcheck $? true $_name
+}
+
 # Testing testing
 # expect 2 3 ff.3 abort
 # expect 1 2 ff.1 debug
