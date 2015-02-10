@@ -19,6 +19,7 @@ MD5.prototype.usage = 'md5          -- compute MD5 checksum\n\n' +
     '    md5 [-h | --help]\n\n' +
     'Options:\n' +
     '    -s <str>     MD5 of string\n' +
+    '    <file>       Contents of files are concatenated and summed\n' +
     '    -h --help    Show this message.\n';
 
 MD5.scripts = [
@@ -50,7 +51,7 @@ MD5.prototype.next = check_next(loadscripts(do_docopt(fileargs(function() {
         if (item === null) {
             self.done = true;
             var hash = self.hash.finalize();
-            return self.output(hash.toString());
+            return self.output(hash.toString() + '\n');
         }
         if (typeof item.read === 'function') {
             fproc.call(self, item, {}, function(chunk, range, acb) {
