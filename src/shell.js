@@ -1022,16 +1022,11 @@ Shell.prototype.next = check_next(do_docopt(function(opts, cb) {
             }
         }
 
-        if (!self.docopts['-c'] && !self.docopts['-a']) {
+        if (!self.docopts['-a']) {
             if (name) {
                 args.unshift(name);
             }
-            for (var i = 0; i < args.length; i++) {
-                self.argvars[i] = [args[i]];
-            }
-            self.argvars['*'] = args.slice(1);
-            var nargs = (args.length > 1) ? args.length - 1: 0;
-            self.argvars['#'] = [nargs.toString()];
+            self._setargvars(args);
         }
         if (srcstr) {
             return parse_run(srcstr);
@@ -1061,6 +1056,17 @@ Shell.prototype.next = check_next(do_docopt(function(opts, cb) {
     }
     return self._nextfunc();
 }));
+
+Shell.prototype._setargvars = function(args) {
+    var self = this;
+
+    for (var i = 0; i < args.length; i++) {
+        self.argvars[i] = [args[i]];
+    }
+    self.argvars['*'] = args.slice(1);
+    var nargs = (args.length > 1) ? args.length - 1: 0;
+    self.argvars['#'] = [nargs.toString()];
+};
 
 Shell.prototype.kill = function(reason) {
     var self = this,
@@ -1126,6 +1132,15 @@ Shell.prototype.builtin_exit = function(exitval) {
         return self.shell.builtin_exit(exitval);
     }
     return self.byebye(exitval);
+};
+
+Shell.prototype.builtin_shift = function(num) {
+    var self = this,
+        args = self.argvars['*'].slice(num);
+
+    args.unshift(self.argvars[0]);
+    self._setargvars(args);
+    return;
 };
 
 Shell.prototype.parse = function(str, srcfile) {
