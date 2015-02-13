@@ -30,7 +30,7 @@ Echo.prototype.next = check_next(do_docopt(function() {
     self.done = true;
     if (!self.docopts['-r'] && isstring(items[0])) {
         /* Assume everything's a string */
-        var out = $.map(self.docopts['<item>'], function(element) { return element.toString(); }).join(' ');
+        var out = items.map(function(x) { return x.toString(); }).join(' ');
         if (!self.docopts['-n']) {
             out = out + '\n';
         }
