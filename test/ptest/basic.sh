@@ -126,3 +126,13 @@ dcheck $res true rm.4
 bq1=$(echo -n)
 expect $? true backquote.1
 expect $#bq1 0 backquote.2
+
+list1=(able baker)
+list2=$list1(0 1 2 3 4)
+list3=$list1(5)
+[ $#list1 -eq 2 ]
+expect $? true var.1
+[ $#list2 -eq 2 ]
+expect $? true var.2
+[ $#list3 -eq 0 ]
+expect $? true var.3

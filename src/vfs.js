@@ -731,7 +731,7 @@ var sys = {
     getenv: function(cmd, varname) {
         var shell = cmd instanceof Shell ? cmd : cmd.shell;
 
-        return shell.vars[varname];
+        return shell.vars[varname] || [];
     },
 
     putenv: function(cmd, varname, val) {

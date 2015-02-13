@@ -358,7 +358,9 @@ Shell.prototype.arg_eval = check_live(function(arg, context, cb) {
                     if (isNaN(arg)) {
                         return cb('Non-numeric list index');
                     }
-                    result.push(vars[varname][arg]);
+                    if (vars[varname][arg] !== undefined) {
+                        result.push(vars[varname][arg]);
+                    }
                 }
                 return cb(null, result);
             });
