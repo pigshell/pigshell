@@ -248,6 +248,9 @@ StringLiteral "StringLiteral"
     / parts:("'" SingleStringCharacters? "'") {
         return {'SQUOTED_STRING': parts[1]};
     }
+    / heredoc:HereDoc {
+        return {'HEREDOC': heredoc};
+    }
     / BareStringCharacters
 
 DoubleStringCharacters
@@ -288,6 +291,24 @@ BareStringCharacters "BareString"
 BareStringCharacter
     = !(WhiteSpace / LineTerminator / SimpleCmdSep / "$" / "#" / '"' / "\\" / "'") char:SourceCharacter { return char;}
     / "\\" sequence:SourceCharacter { return sequence; }
+
+HereDoc
+    = "<<" hereterm:BareStringCharacters LineTerminator
+      &{ here_terminator = hereterm; return true; }
+      lines:HereBodyLine*
+      HereTerminator
+      {
+        return lines.join("\n");
+      }
+
+HereBodyLine
+    = !HereTerminator line:HereChars LineTerminator { return line; }
+
+HereTerminator
+    = terminator:BareStringCharacters &EOC &{ return terminator === here_terminator; }
+
+HereChars
+    = chars:[^\n\r]* { return chars.join(""); }
 
 PipeCmdSep
     = [\|&><\(\)\^};]

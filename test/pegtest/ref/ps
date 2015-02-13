@@ -10,29 +10,20 @@
     {
         "ASSIGN": {
             "format": {
-                "DQUOTED_STRING": "%-6s %-8s %s"
+                "DQUOTED_STRING": "%-6s %-8s %s\n"
             }
         }
     },
     {
         "ARGLIST": [
-            "echo",
+            "printf",
+            "-s",
             {
-                "BACKQUOTE": [
-                    {
-                        "ARGLIST": [
-                            "printf",
-                            "-s",
-                            {
-                                "VARVAL": "format"
-                            },
-                            "PID",
-                            "STATE",
-                            "CMD"
-                        ]
-                    }
-                ]
-            }
+                "VARVAL": "format"
+            },
+            "PID",
+            "STATE",
+            "CMD"
         ]
     },
     {
@@ -52,51 +43,42 @@
             [
                 {
                     "ARGLIST": [
-                        "echo",
+                        "printf",
+                        "-s",
+                        {
+                            "VARVAL": "format"
+                        },
+                        {
+                            "VARVAL": "i"
+                        },
                         {
                             "BACKQUOTE": [
                                 {
                                     "ARGLIST": [
-                                        "printf",
-                                        "-s",
+                                        "cat",
                                         {
-                                            "VARVAL": "format"
-                                        },
-                                        {
-                                            "VARVAL": "i"
-                                        },
-                                        {
-                                            "BACKQUOTE": [
+                                            "^": [
                                                 {
-                                                    "ARGLIST": [
-                                                        "cat",
-                                                        {
-                                                            "^": [
-                                                                {
-                                                                    "VARVAL": "i"
-                                                                },
-                                                                "/status"
-                                                            ]
-                                                        }
-                                                    ]
-                                                }
+                                                    "VARVAL": "i"
+                                                },
+                                                "/status"
                                             ]
-                                        },
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "BACKQUOTE": [
+                                {
+                                    "ARGLIST": [
+                                        "cat",
                                         {
-                                            "BACKQUOTE": [
+                                            "^": [
                                                 {
-                                                    "ARGLIST": [
-                                                        "cat",
-                                                        {
-                                                            "^": [
-                                                                {
-                                                                    "VARVAL": "i"
-                                                                },
-                                                                "/cmdline"
-                                                            ]
-                                                        }
-                                                    ]
-                                                }
+                                                    "VARVAL": "i"
+                                                },
+                                                "/cmdline"
                                             ]
                                         }
                                     ]

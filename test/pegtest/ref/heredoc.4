@@ -1,0 +1,34 @@
+[
+    {
+        "ASSIGN": {
+            "format": {
+                "HEREDOC": "    On that farm he had a %1$s, EIEIO\n    Here a %2$s there a %2$s, everywhere a %2$s %2$s"
+            }
+        }
+    },
+    {
+        "ASSIGN": {
+            "animal": "cat"
+        }
+    },
+    {
+        "ASSIGN": {
+            "cry": "meow"
+        }
+    },
+    {
+        "ARGLIST": [
+            "printf",
+            "-s",
+            {
+                "VARVAL": "format"
+            },
+            {
+                "VARVAL": "animal"
+            },
+            {
+                "VARVAL": "cry"
+            }
+        ]
+    }
+]

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 files="$*"
-[ -z "$files" ] && files="syntest/* ../../js/root/bin/*"
+[ -z "$files" ] && files="syntest/* ../../src/root/bin/*"
 pass=0
 fail=0
 dfail=0

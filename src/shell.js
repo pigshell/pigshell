@@ -337,6 +337,8 @@ Shell.prototype.arg_eval = check_live(function(arg, context, cb) {
         return cb(null, arg['SQUOTED_STRING']);
     } else if (arg['DQUOTED_STRING'] !== undefined) {
         return cb(null, arg['DQUOTED_STRING']);
+    } else if (arg['HEREDOC'] !== undefined) {
+        return cb(null, arg['HEREDOC']);
     } else if (arg['LIST'] !== undefined) {
         self.arglist_eval(arg['LIST'], context, cb);
     } else if (arg['VARVAL'] !== undefined) {

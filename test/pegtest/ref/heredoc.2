@@ -1,0 +1,16 @@
+[
+    {
+        "ASSIGN": {
+            "varname": {
+                "^": [
+                    {
+                        "HEREDOC": "This here's\na string most weird\nwhere \\n and \\r and \"quotes\" and | and # this is not a comment\nall other delims $foo\nwhich would otherwise signal the end;\nare allowed to proliferate\nand what's more\neven the EOH itself must appear at the beginning of the line\nto mark the end of this here doc"
+                    },
+                    {
+                        "HEREDOC": "Another here doc\nconcatenated with the previous one"
+                    }
+                ]
+            }
+        }
+    }
+]

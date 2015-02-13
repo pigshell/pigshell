@@ -4,7 +4,7 @@ sh -s testlib.sh
 sh -s config.sh
 echo "to tests started on" $(date)
 
-TESTFILE=/home/src/doc/pigshell.md
+TESTFILE=$SAMPLEDIR/gdp-ppp.html
 IMAGEFILE=$SAMPLEDIR/oslogos.png
 
 dtest to.1 "cat $TESTFILE | to text"

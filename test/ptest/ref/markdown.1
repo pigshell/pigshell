@@ -1,497 +1,76 @@
-<div class="pmarkdown"><h1>Pigshell User Guide</h1>
-<h2>Introduction</h2>
-<p><a href="http://pigshell.com"><em>Pigshell</em></a> is a pure client-side Javascript app running
-in the browser, which presents resources on the web as files.  These include
-public web pages as well as private data in Google Drive, Dropbox, Facebook and
-even the desktop. It provides a command line interface to construct pipelines
-of simple commands to transform, display and copy data.
+<div class="pmarkdown"><h1>About</h1>
+<p><a href="http://pigshell.com">Pigshell</a> is a pure client-side Javascript app running in
+the browser, which presents resources on the web as files.  These include
+public web pages as well as private data in Facebook, Google Drive and Picasa
+albums. It provides a command line interface to construct pipelines of simple
+commands to filter, display and copy data.
 
 </p>
-<p><strong><em>Pigshell</em> is open source software</strong>, released under the GNU GPLv3.
+<p><strong><em>Pigshell</em> is free software</strong>, released under the GNU GPLv3.
 
 </p>
-<p>The <em>pigshell</em> system is similar in spirit to Unix and <em>bash</em>, but also borrows
-several ideas from Plan 9 and <code>rc</code>, mixing syntax and features in a manner
-calculated to annoy experienced users of both systems.
-
-</p>
-<p>The name <em>pigshell</em> comes from the time-honoured tradition of weak puns and
-recursive acronyms: <strong>GNU's Not Unix</strong>, and <strong>PIG Isn't GNU</strong>.
-
-</p>
-<p>Shells and shell scripts occupy an important niche in the Unix users' universe:
-they can quickly assemble ad-hoc tools from simple components to interact with
-their data. For complex applications, they might open the editor and write a
-program, but for hundreds of simple operations, the humble shell suffices.
-
-</p>
-<p>There is no equivalent in the world of the web and the cloud, though an
-increasing amount of our data resides there. One is forced to go through GUIs,
-each with their individual warts and annoyances. Imagine having to open a
-different GUI application every time you accessed a different disk, with no way
-to directly copy from one disk to the other.
-
-</p>
-<p>The web abounds in APIs, but there is no easy way to connect half a dozen
-random APIs together without reading up a ton of API documents and do a fair
-amount of data normalization, coding and debugging before getting the first
-trickle of data to go from point A to B.
-
-</p>
-<p><em>Pigshell</em> is a place to have informal conversations with data.
-
-</p>
-<p>In this document, we describe the different components of the system, their
-main features and examples of usage. In addition, we will also point out
-the more prominent gotchas, unimplemented features and bugs.
-
-</p>
-<p>Broadly, <em>Pigshell</em> consists of the following:
+<p><a href="http://pigshell.com">Pigshell</a> has been developed by
+<a href="http://www.coriolis.co.in">Coriolis Technologies</a>, a software company based
+in Pune, India. It consists of several components developed by us,
+including
 
 </p>
 <ol>
-<li>The shell itself.</li>
+<li>The <em>pigshell</em> scripting language and interpreter.</li>
+<li>The shell and terminal interface.</li>
+<li>"Filesystem" modules to talk to Facebook/Google/Dropbox et al.</li>
 <li>Built-in commands.</li>
-<li>Filesystems, to represent resources from various data providers as filesystems.</li>
 </ol>
-<h2>Shell</h2>
-<p>The shell is designed to be feel familiar to Unix and <em>bash</em> users, but there
-are crucial differences. The most important of these are:
+<p>Several external libraries are used. In no particular order,
 
 </p>
 <ol>
-<li>Objects are the fundamental currency of the system. Objects are passed
-across pipes, rather than streams of unstructured data. The web 
-environment frequently returns structured objects, and there is no point in
-losing that structure and recovering it in every other stage of the pipeline.</li>
-<li>A <em>pigshell</em> pipeline lazily processes streams of <em>objects</em>. Commands
-should be considered as generator functions yielding objects, composed using
-the pipe operator. The pipeline starts when the last member (an implicit
-<code>Stdout</code>) asks the upstream command for the next object, which in turn
-asks its upstream command and so on, until the command at the head
-reluctantly yields an object. It is processed and "returned" downstream,
-until it hits <code>Stdout</code> which displays it on the terminal. <code>Stdout</code> has an
-insatiable appetite for objects, so it asks for one more, and the process
-continues until a <code>null</code> object, signifying the end of the stream, makes
-its way down. Unlike Unix commands, <em>pigshell</em> commands are <em>not</em>
-independently executing processes.</li>
-<li>The pipeline is the fundamental unit of "process management". You can kill,
-stop, resume pipelines of commands, rather than individual commands
-themselves.</li>
-<li>In addition to environment variables, functions and the current directory,
-the namespace of mounted filesystems is inherited from the parent shell. 
-Modifications of these properties in the child do not affect the parent.
-i.e. <code>cd /foo</code> and <code>mount http://reddit.com /mnt</code> in a script will not
-change the current working directory or the contents of <code>/mnt</code> in the
-parent. In order to affect the parent, <code>sh -s /some/script</code> is used to
-"source" the script within the current shell (analogous to <code>. /some/script</code>
-or <code>source /some/script</code> in bash).</li>
+<li><a href="http://pegjs.majda.cz">PEG.js</a> is used to generate the parser for the
+scripting language.</li>
+<li><a href="http://docopt.org">Docopt</a>, specifically the
+<a href="https://github.com/docopt/docopt.coffee">Javascript version</a>. Docopt is
+used by all built-in commands for option processing. It is available to
+scripts as well.</li>
+<li><a href="http://codemirror.net">CodeMirror</a> editor. The command line is actually a
+single-line editor instance. It also powers the <code>edit</code> command.</li>
+<li><a href="https://github.com/chjj/marked">Marked</a>, the markdown parser and compiler
+behind the <code>markdown</code> command.</li>
+<li><a href="https://github.com/caolan/async">Async</a> for asynchronous loop constructs.</li>
+<li><a href="http://handlebarsjs.com">Handlebars</a> for the <code>template</code> command.</li>
+<li><a href="https://github.com/isaacs/minimatch">Minimatch</a> for converting shell
+globs to Javascript regexes.</li>
+<li><a href="http://momentjs.com">Moment</a> is behind the <code>date</code> command and other
+internal time-crunching.</li>
+<li><a href="http://www.pixastic.com">Pixastic</a> is used for simple image processing by
+the <code>pixastic</code> command. Pixastic has a ton of neat features which will
+eventually be reflected in <code>pixastic</code>.</li>
+<li><a href="http://www.diveintojavascript.com/projects/javascript-sprintf">sprintf</a>
+is used to implement <code>printf</code>.</li>
+<li><a href="https://developers.google.com/maps/documentation/javascript/">Google Maps v3 Javascript API</a> for the <code>map</code> command</li>
+<li><a href="http://jquery.com">JQuery</a></li>
+<li><a href="https://github.com/cheeriojs/cheerio">Cheerio</a> is used for extracting
+data from HTML strings.</li>
+<li><a href="http://purl.eligrey.com/github/FileSaver.js/blob/master/FileSaver.js">FileSaver.js</a> is used to trigger the "download" reflex of the browser.</li>
+<li><a href="https://github.com/blueimp/JavaScript-Canvas-to-Blob">Canvas to Blob</a></li>
+<li><a href="http://benalman.com/projects/jquery-resize-plugin/">jQuery resize event</a></li>
+<li><a href="http://getbootstrap.com/javascript/#popovers">Popovers</a> and
+<a href="http://getbootstrap.com/javascript/#tooltip">tooltips</a> from Bootstrap.</li>
+<li><a href="https://github.com/imaya/zlib.js">zlib.js</a></li>
+<li><a href="http://code.google.com/p/canvg/">canvg.js</a> for those browsers which
+can't render SVG onto a canvas.</li>
+<li><a href="http://code.google.com/p/crypto-js">CryptoJS</a> for Javascript
+implementations of MD5 and SHA1.</li>
+<li>Mozilla's <a href="http://mozilla.github.io/pdf.js/">PDF.js</a> to render PDFs in the terminal.</li>
+<li><a href="http://d3js.org">D3</a> powers visualization commands like <code>chart</code> and
+<code>template</code></li>
+<li>Map colors based on <a href="http://www.ColorBrewer.org">ColorBrewer</a>, by
+Cynthia A. Brewer, Penn State.</li>
+<li>Country data from <a href="https://github.com/mledoze/countries">https://github.com/mledoze/countries</a></li>
+<li>TopoJSON world data (110m, 50m) from Mike Bostock.</li>
+<li>d3.geo.zoom and d3.geo.projection from
+<a href="http://www.jasondavies.com">Jason Davies</a></li>
 </ol>
-<h3>Terminal usage</h3>
-<p>The shell presents itself as a terminal with a command line.
-Emacs-style command line editing is possible. Common shortcuts include:
-
-</p>
-<ul>
-<li><strong>Ctrl-A</strong>, <strong>Ctrl-E</strong>: Go to the beginning or end of line.</li>
-<li><strong>Ctrl-U</strong>, <strong>Ctrl-K</strong>: Kill text up to the beginning or end of line.</li>
-<li><strong>Ctrl-W</strong>: Kill previous word.</li>
-<li><strong>Ctrl-L</strong>: Clear screen.</li>
-<li><strong>Up arrow</strong>, <strong>Down arrow</strong>: Navigate through command history.</li>
-<li><strong>Ctrl-D</strong>: End of input.</li>
-</ul>
-<p>The primary prompt consists of <code>pig&lt;basename_of_cwd&gt;$</code>.
-When you type a command at the primary prompt and hit <em>Enter</em>, it starts
-running immediately. This is the <em>foreground command</em>. A secondary prompt of
-<code>&gt; </code> is displayed.
-
-</p>
-<p>You can use this prompt to typeahead another command, which will be executed
-after the foreground command completes. You can queue multiple commands in this
-way, and they will be executed in strict sequence.
-
-</p>
-<p>To kill the foreground command, use <strong>Ctrl-C</strong>. This also triggers the running
-of the next queued command, if any.
-
-</p>
-<p>Similarly, to pause the foreground command and continue with any queued
-commands, use <strong>Ctrl-Z</strong>. The paused command can be resumed using <code>ps</code> and
-<code>start</code>.
-
-</p>
-<p>You may use <strong>Ctrl-B</strong> to "background" the foreground command and start running
-the next queued command. This is typically done when the foreground command
-is going to run for several seconds, and the queued command is not dependent
-on its predecessor.
-
-</p>
-<p>The output of commands is restricted to an (elastic) area below the command
-line. Thus, many commands may be running and generating output at the same
-time without stomping over each other, maintaining the question-answer
-structure of the command line conversation.
-
-</p>
-<p>This also means that multiple commands may be waiting for input, as indicated
-by blinking cursors. Simply click next to the cursor to switch focus.
-
-</p>
-<p>The running status of a pipeline is visually indicated by the colour of the
-prompt.
-
-</p>
-<ul>
-<li>A green prompt indicates that the command is running,</li>
-<li>Amber indicates that it is stopped</li>
-<li>Black indicates that it has completed with a successful exit status.</li>
-<li>Red indicates that it has completed with an unsuccessful exit status.</li>
-</ul>
-<p><strong>Reloading the webpage is equivalent to rebooting the system and the loss
-of all local state.</strong> Only files stored in /local and filesystems backed by
-a persistent remote store (e.g. PstyFS, Google) will survive a reboot.
-
-</p>
-<blockquote>
-<p>ಠ_ಠ <em>Occasionally, things may get buggered up to the point that
-there is no cursor visible anywhere. In such cases, simply click near the
-last prompt and you should get focus there, and resume typing commands.</em>
-
-</p>
-<p>ಠ_ಠ <em>Cut and paste is also somewhat iffy.</em>
-
-</p>
-</blockquote>
-<h3>Simple commands</h3>
-<pre><code>ls | sum
-echo able baker charlie &gt;/tmpfile
-echo some more &gt;&gt;/tmpfile
-ls A*
-ls *.jpg
-cat bar | grep foo &gt;/dev/null &amp;&amp; echo "bar contains foo"
-cat &lt; asd &gt; bsd
-rm somefile || echo rm failed!</code></pre>
-<h3>Escaping arguments</h3>
-<ul>
-<li>To quote an argument containing spaces or special characters, it must be
-enclosed in single or double quotes. There is no difference between the two.
-Variable interpolation is <em>not</em> done for arguments in double quotes.</li>
-<li>Arguments with one type of quote may be enclosed in the other, e.g.
-"Patrick O'Brian" and 'Benjamin "Bugsy" Siegel'.</li>
-<li>Backslashes may be used to escape special characters in unquoted strings.</li>
-</ul>
-<h3>Variables</h3>
-<p><em>Pigshell</em> variables are lists of objects. Most commonly, they are lists of
-strings. Variables may be assigned values in the usual manner:
-
-</p>
-<p><code>msg="How's it going?"</code><br><code>dirs=(/facebook /twitter /gdrive)</code>
-
-</p>
-<p>Parentheses are used to enclose lists. The variable <code>dirs</code> is thus assigned a
-list of two strings. <code>msg</code> is a list containing one string.
-
-</p>
-<p>Lists are expanded on reference.<br><code>echo $dirs</code><br>would yield<br><code>/facebook /twitter /gdrive</code><br>The <code>echo</code> command is invoked with two arguments.
-
-</p>
-<p>To add to a list,<br><code>dirs=($dirs /picasa)</code><br><code>echo $dirs</code><br>would give<br><code>/facebook /twitter /gdrive /picasa</code>
-
-</p>
-<p>Variables may be subscripted by a list of numbers (or a list of expressions
-yielding numbers) to retrieve part of the list. List indexing starts at zero.
-For example,<br><code>index=0</code><br><code>echo $dirs($index 2 $index)</code><br>would give<br><code>/facebook /gdrive /facebook</code>  
-
-</p>
-<p>The number of elements in the variable <code>dirs</code> can be found using <code>$#dirs</code>.
-
-</p>
-<p>One can do the equivalent of an <code>array.join(' ')</code> using the <code>$"</code> operator.<br><code>words=(Holy Plan9 Ripoff Batman)</code><br><code>sent=$"words</code><br><code>echo $words</code> and <code>echo $sent</code> will both print<br><code>Holy Plan9 Ripoff Batman</code>  
-
-</p>
-<p>Note that<br><code>echo $#words $#sent</code> will print<br><code>4 1</code>  
-
-</p>
-<p>Referring to a nonexistent variable yields nothing, referring to its
-length gives 0, and <code>$"nonexistent</code> gives the empty string. Therefore, when
-unsure of a variable's existence, it is better to use <code>[ $"foo = "bar" ]</code>,
-which is equivalent to <code>[ "" = "bar" ]</code>, while <code>[ $foo = "bar" ]</code> would expand
-to <code>[ = "bar" ]</code> which would throw an error.
-
-</p>
-<h3>Variable Scope</h3>
-<ol>
-<li><p><strong>Local Scope:</strong> Positional variables (<code>$1</code>, <code>$2</code>... <code>$*</code>) and
-variables whose names begin with an underscore (e.g. <code>_i</code>, <code>_foo</code>) are
-local to the enclosing function or shell.</p>
-</li>
-<li><p><strong>Global Scope:</strong> All other variables are global to the shell, and may
-be freely referenced and set inside functions.</p>
-</li>
-<li><p><strong>Exports:</strong> There is no notion of <code>export</code>, copies of all global
-variables are inherited by a child shell from its parent. Changing a
-variable in a child will not affect the value in the parent.</p>
-</li>
-</ol>
-<h3>Concatenation</h3>
-<p>Arguments may be concatenated using the <code>^</code> operator. In most cases, it is
-not necessary, since <em>pigshell</em> will automatically concatenate arguments which
-adjoin each other without any intervening whitespace. For example, in the
-command<br><code>able=able; baker=baker; echo "able"baker able'baker' "able"'baker' able$baker $able^baker $able$baker</code><br><code>echo</code> has 6 arguments, each of which is <code>ablebaker</code>. Note that a caret was
-only required to resolve ambiguity in one case.
-
-</p>
-<p>The rules for concatenating lists are as follows:
-
-</p>
-<ol>
-<li>Concatenation is a left-binding operator. i.e. <code>a^b^c</code> is parsed as <code>(a^b)^c</code></li>
-<li>Concatenation operates on strings. List elements are coerced into strings
-using the <code>toString()</code> method before concatenation.</li>
-<li>An empty list A concatenated with a list B will yield B.</li>
-<li>A list A with a single element concatenated with B will yield a list where
-A(0) is concatenated with every element of B.<br><code>a=able; b=(1 2 3)</code><br><code>echo $a$b</code> gives<br><code>able1 able2 able3</code><br><code>echo $b$a</code> gives<br><code>1able 2able 3able</code></li>
-<li>If lists A and B have the same number of elements, the result is a list of
-strings concatenated pairwise.<br><code>a=(able baker charlie); b=(1 2 3)</code><br><code>echo $a$b</code> gives<br><code>able1 baker2 charlie3</code>  </li>
-<li>Lists not conforming to any of the above rules cannot be concatenated.</li>
-</ol>
-<h3>Command substitution</h3>
-<p>Command substitution allows the standard output of a command to be converted
-into an expression, which may be used as a command argument or assigned to a
-variable. <em>Pigshell</em> supports only the <code>$(command)</code> form, not the backtick
-form. For example,<br><code>files=$(ls)</code><br><code>nfiles=$(ls | sum)</code><br><code>echo "Number of files: " $(ls | sum)</code>
-
-</p>
-<p>Note that <code>files</code> contains a list of <em>file objects</em>. Command substitution is
-the easiest way to get objects into variables.
-
-</p>
-<p>Command substitutions may be nested:<br><code>echo $(printf -s $format $i $(cat $i/status) $(cat $i/cmdline))</code>  
-
-</p>
-<h3>Deferred pipeline</h3>
-<p>Deferred pipelines are created using the <code>${&lt;command1&gt; | &lt;command2&gt;... }</code>
-syntax. The pipeline is created and assembled but not run. The expression
-yields an object, which can be stored in variable, or used as an argument to
-another command. The <code>next</code> command, with this object as an argument, can be
-used to crank the pipeline to produce one object. Further invocations of the
-<code>next</code> command produce subsequent items in the stream, until EOF is reached,
-after which the EPIPE error is returned.
-
-</p>
-<p>To run the deferred pipeline to completion and get all the objects in the
-stream in one shot, <code>cat</code> can be used.
-
-</p>
-<p><code>p=${echo foo; echo bar}</code><br>
-<code>next $p</code> gives<br>
-<code>foo</code><br>
-A further <code>next $p</code> gives<br>
-<code>bar</code><br>
-Running <code>next $p</code> again results in EOF. Any further invocations of <code>next $p</code> return an EPIPE error.
-
-</p>
-<p>Alternately,<br>
-<code>cat $p</code> gives<br>
-<code>foo</code><br>
-<code>bar</code>
-
-</p>
-<h3>Control Flow - if</h3>
-<p>The syntax of the <code>if</code> construct is very similar to <em>bash</em>.<br><code>if</code> <em>cond</em><code>; then </code><em>tcmd</em>... <code>[; elif </code> <em>cond</em><code>; then </code><em>tcmd</em>... <code>]</code> <code>[; else </code> <em>ecmd</em>... <code>]; fi</code>
-
-</p>
-<p>If the exit value of the <em>cond</em> command is <code>true</code>, we enter the <code>then</code> clause.
-Any exit value other than <code>true</code> is considered false. Commands may be spread
-over multiple lines, like in <em>bash</em>.
-
-</p>
-<h3>Control Flow - for</h3>
-<p><code>for</code> loops are also similar to <em>bash</em>.<br><code>for i in </code><em>list</em> <code>; do </code><em>cmd</em>...<code>; done</code>  
-
-</p>
-<h3>Control Flow - while</h3>
-<p><code>while</code> loops are, again, similar to <em>bash</em>.<br><code>while </code><em>cond</em><code>; do </code><em>cmd</em>...<code>; done</code>
-
-</p>
-<h3>Functions</h3>
-<p>Functions can be defined as follows:<br><code>function</code> <em>funcname</em> <code>{</code> <em>cmd</em>.. <code>}</code>
-
-</p>
-<p>Functions behave like inline scripts in how they are invoked, how arguments
-are accessed within the body, and their ability to be part of pipelines.<br><code>funcname arg1 arg2</code><br><code>funcname arg1 arg2 | grep foo</code>
-
-</p>
-<p>Arguments are accessed within the body of the function using positional
-arguments, <code>$0...$n</code> and <code>$*</code>.
-
-</p>
-<p>All global variables accessed, defined and modified in the body of a function
-are part of the global scope of the enclosing shell. Variables whose names
-begin with an underscore are local to the function.
-
-</p>
-<p>Function definitions may be deleted using<br><code>function</code> <em>funcname</em><br>with no body. Note that this is different from <code>function</code> <em>funcname</em> <code>{}</code>,
-which is a function with an empty body.
-
-</p>
-<h3>Command Execution</h3>
-<p>To execute a command, <em>pigshell</em> searches within its builtins and the paths in
-the variable PATH for a match, in that order. If a command contains a path
-separator, then it is looked up directly in the filesystem without going
-through the search process. In case the PATH variable is not set, <code>/bin/</code> is
-assumed to the default path.
-
-</p>
-<p>Note that PATH, like other <em>pigshell</em> variables, is a list. It must be set
-using the list syntax, i.e. <code>PATH=(/bin /usr/bin)</code>
-
-</p>
-<h3>Special Variables</h3>
-<p>The following special variables are maintained by <em>pigshell</em>:
-
-</p>
-<ol>
-<li><strong><code>$0, $1.. $n</code>, <code>$*</code>, <code>$#</code></strong>: These variables are used inside a script
-to determine individual arguments to the script, the list of arguments, and
-the number of arguments respectively.</li>
-<li><strong><code>$?</code></strong>: Exit value of the last command. <code>true</code> for successful commands.</li>
-<li><strong><code>$!</code></strong>: PID of the latest executed pipeline.</li>
-</ol>
-<h2>Built-in Commands</h2>
-<p><em>Pigshell</em> has a large number of built-in commands. These commands are
-implemented in Javascript and have access to all the internal APIs and
-filesystems. Many of these commands follow a common set of idioms.
-
-</p>
-<ol>
-<li>All builtin commands may be listed by the <code>help</code> command. Specific usage
-of a given command, say, <code>grep</code>, may be obtained either using <code>help grep</code>
-or <code>grep -h</code>. All builtins support the <code>-h</code> option.</li>
-<li>All pipelines have an implicit <code>Stdin</code> and <code>Stdout</code> "command" at the head
-and tail respectively. Objects which reach <code>Stdout</code> are displayed according
-to their type. Objects like files have an <code>html</code> attribute which is
-used to render them to the output div.</li>
-<li><p>Filter commands like <code>grep</code> and <code>printf</code> take in files, filter or
-transform them, and emit objects to <code>Stdout</code>. These commands can be
-supplied with files in one of two ways:</p>
-<ol>
-<li><p>As a list of file objects, corresponding to the <code>&lt;obj&gt;...</code> option given
-in the usage.</p>
-<p><code>grep -f gender "female" $(ls /facebook/friends)</code>
-<code>family=$(ls /facebook/friends | grep Mylastname); grep -f gender "female" $family</code></p>
-</li>
-<li><p>As a list of File objects from <code>Stdin</code>. e.g.</p>
-<p><code>ls /facebook/friends | grep -f gender "female"</code><br><code>echo $family | grep -f gender "female"</code></p>
-</li>
-</ol>
-<p>If you accidentally fail to give either of these, a line with a blinking
-cursor will open up below the command. This is <code>Stdin</code> trying to get input
-from the terminal. Typing into this line and pressing <em>Enter</em> will feed a
-string to the command. To indicate end of input, type <strong>Ctrl-D</strong>. To
-simply get out, click to the right of the latest shell prompt to move
-focus there.</p>
-</li>
-<li><p>Many commands which operate on objects have options to specify or extract
-attributes from the object.</p>
-<ol>
-<li><p>The <code>-f</code> option is commonly used to refer to a field in the object. For
-instance, File objects correponding to Facebook friends have attributes
-like <code>gender</code>, <code>friend_count</code>, etc. You can thus</p>
-<p><code>ls /facebook/friends | grep -f gender "^male"</code><br><code>ls /facebook/friends | sort -f friend_count</code><br>to use those specific fields for filtering or sorting.</p>
-<p>You can access nested attributes as well:</p>
-<p><code>ls /facebook/friends | grep -f raw.relationship_status single</code></p>
-</li>
-<li><p>The <code>-e</code> option can be used to specify a lambda expression in Javascript
-which can be used to combine or filter field values in complex ways.</p>
-<p><code>ls /picasa/albums/Blah | sort -e "x.width * x.height"</code><br>sorts photos based on how many pixels they contain. The expression will
-be called with the argument <code>x</code> set to the object. <code>width</code> and <code>height</code>
-are attributes of the object.</p>
-</li>
-</ol>
-</li>
-<li>The <code>printf</code> command at the end of the pipeline, often preceded by a
-<code>head</code>, is used to print out the JSON representation of objects being
-yielded by the pipeline.</li>
-</ol>
-<h3>Process Management</h3>
-<p>Pipeline status and control files are exposed in a special /proc filesystem,
-so simple scripts in /bin are sufficient to implement process management.
-
-</p>
-<ol>
-<li><strong>ps</strong>: Lists running pipelines by PID, state and commands.</li>
-<li><strong>kill</strong>: Kills one or more pipelines by PID.</li>
-<li><strong>stop</strong>: Stops a pipeline. Equivalent to the Unix <code>kill -STOP</code>.</li>
-<li><strong>start</strong>: Resume a pipeline. Equivalent to the Unix <code>kill -CONT</code>.</li>
-</ol>
-<h2>Filesystems</h2>
-<p><em>Pigshell</em> represents cloud resources and system resources as files.
-Filesystems are responsible for maintaining local file objects corresponding
-to remote resources. We will briefly go over the filesystems currently 
-supported.
-
-</p>
-<p><strong>Google</strong>: Supports Picasa and Google Drive. Click the <em>Connect Google</em>
-button to mount Picasa albums under <code>/picasa/&lt;email&gt;</code> and GDrive under
-<code>/gdrive/&lt;email&gt;</code>.
-
-</p>
-<p><strong>Dropbox</strong>: Click the <em>Connect Dropbox</em> button to mount your Dropbox under
-<code>/dropbox/&lt;email&gt;</code>.
-
-</p>
-<p><strong>Facebook</strong>: Click the <em>Connect Facebook</em> button to mount your Facebook
-account at <code>/facebook</code>. <em>Pigshell</em> is pure client-side, so privacy is
-completely assured.
-
-</p>
-<p><strong>Download</strong>: Presents a single directory, <code>/download</code>. You may copy files
-into this directory to download them to the desktop.
-
-</p>
-<p><strong>Upload</strong>: Click the <em>Upload</em> button in the right menu and select files.
-Alternately, drag and drop files onto the terminal. These files will be
-available under <code>/upload</code> and can be copied from there to a target directory.
-
-</p>
-<p><strong>Proc</strong>: The proc filesystem, mounted at <code>/proc</code>, maintains a directory
-corresponding to each running pipeline. Each directory has the following
-files:
-
-</p>
-<ol>
-<li><strong>cmdline</strong>: Command line corresponding to the pipe</li>
-<li><strong>status</strong>: Read-only, contains one of 'start', 'stop', 'done'.</li>
-<li><strong>ctl</strong>: Write-only. Write 'stop' to stop a pipeline, 'start' to resume it,
-'kill' to kill it.</li>
-</ol>
-<p><strong>Lstor</strong>: Mounted at <code>/local</code>, this filesystem is backed by HTML5 local
-storage. Files stored here will survive "reboots". It is single-level; you
-cannot make directories here.
-
-</p>
-<h2>Design Principles</h2>
-<p><em>Pigshell</em> is inspired by Unix and Plan 9. We are very familiar with several
-Unix implementations, but our experience with Plan 9 is purely platonic. We
-have tried to retain as much of a <code>bash</code> flavour as possible, to make it easy
-for experienced Unix users to start using the system and incrementally
-discover features, without having to read a long and tedious document like
-this one.
-
-</p>
-<p>There is more than one way to TIMTOWDI: one is characterized by a profusion of
-syntactic forms, where one cannot read one's own code after a few weeks. In
-another, it emerges from different ways of expressing the same meaning by
-combining of a small set of core concepts. <em>Pigshell</em> leans heavily towards
-the latter.
-
-</p>
-<p>The <em>pigshell</em> syntax is intended to be used as a glue language for composing
-"tweet"-sized sentences and short scripts. Longer and more elaborate solutions
-on the <em>pigshell</em> platform are better written in Javascript.
-
-</p>
-<p>The <em>pigshell</em> grammar is implemented using a PEG, which is far easier to
-specify and debug than BNF. The disadvantage is somewhat poor error reporting.
+<h2>Contact</h2>
+<p>Email us at <a href="mailto:pigshell@googlegroups.com">pigshell@googlegroups.com</a>, <a href="mailto:dev@pigshell.com">dev@pigshell.com</a> or tweet @pigshell
 </p>
 </div>

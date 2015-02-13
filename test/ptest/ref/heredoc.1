@@ -1,0 +1,16 @@
+This here's
+a string most weird!
+where \n and \r and "quotes" and | and # this is not a comment
+all other delims $foo
+which would otherwise signal the end;
+are allowed to proliferate
+& what's more (x*)
+the EOH itself must appear at the beginning of the line
+to mark the end of this here doc [1]
+
+x* who could've thunk?
+[1] but not the pipeline or even the argument list. Unlike other shells,
+here documents do not expand $variables and can be used anywhere a string
+can. This makes it very easy to create arbitrary \ free text arguments
+without worrying too much about what may or may not need to be escaped Another here document
+not as verbose as the one before

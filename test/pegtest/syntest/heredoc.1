@@ -1,0 +1,19 @@
+foo | bar <<EOH
+This here's
+a string most weird
+where \n and \r and "quotes" and | and # this is not a comment
+all other delims $foo
+which would otherwise signal the end;
+are allowed to proliferate
+and what's more
+even the EOH itself must appear at the beginning of the line
+to mark the end of this here doc
+EOH|grep foo | jf <<EOJF
+(function()
+    var y = x[1],
+        z = "foo\n",
+        a = 'bar';
+
+    return z + a;
+)()
+EOJF | cat

@@ -1,0 +1,13 @@
+[
+    {
+        "ARGLIST": [
+            "echo",
+            {
+                "HEREDOC": "This here's\na string most weird!\nwhere \\n and \\r and \"quotes\" and | and # this is not a comment\nall other delims $foo\nwhich would otherwise signal the end;\nare allowed to proliferate\n& what's more (x*)\nthe EOH itself must appear at the beginning of the line\nto mark the end of this here doc  [1]\n\nx* who could've thunk?\n[1] but not the pipeline or even the argument list. Unlike other shells,\nhere documents do not expand $variables and can be used anywhere a string\ncan. This makes it very easy to create arbitrary \\ free text arguments\nwithout worrying too much about what may or may not need to be escaped"
+            },
+            {
+                "HEREDOC": "Another here document\nnot as verbose as the one before"
+            }
+        ]
+    }
+]

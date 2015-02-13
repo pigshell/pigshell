@@ -161,26 +161,30 @@ a persistent remote store (e.g. PstyFS, Google) will survive a reboot.
 
 ### Variables ###
 
-_Pigshell_ variables are lists of objects. Most commonly, they are lists of
-strings. Variables may be assigned values in the usual manner:
+_Pigshell_ variables are lists of Javascript values. Variables may be assigned
+values in the usual manner:
 
 `msg="How's it going?"`  
-`dirs=(/facebook /twitter /gdrive)`
+`i=1`  
+`dirs=(/facebook /gdrive)`
 
-Parentheses are used to enclose lists. The variable `dirs` is thus assigned a
-list of two strings. `msg` is a list containing one string.
+All quoted and bare values are considered as strings, therefore all the above
+variables have been assigned strings. [Command substitution](#comsubs) may
+be used to assign values of other Javascript data types. Parentheses are used
+to enclose lists. The variable `dirs` is thus assigned a list of two strings.
+`msg` is a list containing one string.
 
 Lists are expanded on reference.  
 `echo $dirs`  
 would yield  
-`/facebook /twitter /gdrive`  
+`/facebook /gdrive`  
 The `echo` command is invoked with two arguments.
 
 To add to a list,  
 `dirs=($dirs /picasa)`  
 `echo $dirs`  
 would give  
-`/facebook /twitter /gdrive /picasa`
+`/facebook /gdrive /picasa`
 
 Variables may be subscripted by a list of numbers (or a list of expressions
 yielding numbers) to retrieve part of the list. List indexing starts at zero.
@@ -251,7 +255,38 @@ The rules for concatenating lists are as follows:
    `able1 baker2 charlie3`  
 5. Lists not conforming to any of the above rules cannot be concatenated.
 
-### Command substitution ###
+### Here documents ###
+
+_Pigshell_ supports "here documents" wherever a string may appear, providing a
+visually clean way to express text containing quotes, newlines and symbols
+without having to escape them.
+
+    echo <<EOH
+    This text can contain all manner of '"$%# symbols
+    span multiple lines without succumbing to backslashitis
+    EOH "second argument" <<EOH
+    and this is the third argument to echo
+    but that's not all! You can continue the pipeline
+    EOH | jf <<EOH
+    (function() {
+        var msg = 'and write Javascript snippets';
+        return x.toUpperCase();
+    })()
+    EOH
+
+A here document starts with the redirection symbol `<<`, followed by an
+arbitrary EOF marker. Lines following this marker, up to a line beginning with
+the EOF marker followed by a command separator character (e.g. whitespace or a
+pipe) constitute the string defined by the document. No variable substitution
+is done. `printf` supports both positional and name-based substitution and
+should be used when template-filling behaviour is desired.
+
+    echo $users | sort -f full_name | printf <<WOW
+    %(first_name)s? %(first_name)s %(middle_name)s %(last_name)s?
+    You're a %(insult[0])s, %(first_name)s. A complete %(insult[1])s.
+    WOW
+    
+### <a name="comsubs"></a> Command substitution ###
 
 Command substitution allows the standard output of a command to be converted
 into an expression, which may be used as a command argument or assigned to a
@@ -262,7 +297,7 @@ form. For example,
 `echo "Number of files: " $(ls | sum)`
 
 Note that `files` contains a list of _file objects_. Command substitution is
-the easiest way to get objects into variables.
+the easiest way to get arbitrary Javascript values into variables.
 
 Command substitutions may be nested:  
 `echo $(printf -s $format $i $(cat $i/status) $(cat $i/cmdline))`  
