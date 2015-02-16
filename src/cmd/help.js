@@ -36,33 +36,43 @@ Help.prototype.next = check_next(do_docopt(function() {
             self.done = true;
             return self.output(Command.lookup(cmdname).prototype.usage);
         } else {
-            fread.call(self, "/bin/" + cmdname, function(err, res) {
+            get_cmdhelp("/bin/" + cmdname, function(err, res) {
                 if (err) {
-                    return self.exit("Command not found in builtins or /bin: " + cmdname);
+                    return self.exit(err, res);
                 }
-                to('text', res, {}, function(err, res) {
-                    if (err) {
-                        return self.exit(err, cmdname);
-                    }
-                    var helpstr = '';
-                    try {
-                        var ast = parser.parse(res);
-                        ast = ast.filter(function(a) { return a !== ""; });
-                        if (ast[0] && ast[0]['ASSIGN'] && ast[0]['ASSIGN']['usage']) {
-                            var o = ast[0]['ASSIGN']['usage'];
-                            helpstr = o.SQUOTED_STRING || o.DQUOTED_STRING || o.toString();
-                        }
-                    } catch(e) {
-                    }
-                    if (helpstr) {
-                        self.done = true;
-                        return self.output(helpstr);
-                    }
-                    return self.exit("No help found for " + cmdname);
-                });
+                self.done = true;
+                return self.output(res);
             });
             return;
         }
+    }
+
+    function get_cmdhelp(path, cb) {
+        fread.call(self, path, function(err, res) {
+            if (err) {
+                return cb("Command not found", path);
+            }
+            to('text', res, {}, function(err, res) {
+                if (err) {
+                    return cb(err, path);
+                }
+                var helpstr = '';
+                try {
+                    var ast = parser.parse(res);
+                    ast = ast.filter(function(a) { return a !== ""; });
+                    if (ast[0] && ast[0]['ASSIGN'] && ast[0]['ASSIGN']['usage']) {
+                        var o = ast[0]['ASSIGN']['usage'];
+                        helpstr = o.SQUOTED_STRING || o.DQUOTED_STRING || o.HEREDOC || o.toString();
+                    }
+                } catch(e) {
+                }
+                if (helpstr) {
+                    return cb(null, helpstr);
+                } else {
+                    return cb("No help found for " + path);
+                }
+            });
+        });
     }
 
     helpstr.push('Builtin commands');
@@ -83,28 +93,16 @@ Help.prototype.next = check_next(do_docopt(function() {
             return done();
         }
         async.forEachSeries(res, function(entry, acb) {
-            if (entry[1].read === undefined) {
-                return acb(null);
-            }
-            sys.read(self, entry[1], {}, function(err, res) {
-                if (err) {
-                    return acb(null);
-                }
-                to('text', res, {}, function(err, res) {
-                    if (err) {
-                        return acb(null);
-                    }
+            get_cmdhelp("/bin/" + entry[0], function(err, res) {
+                if (!err) {
                     var lines = res.split('\n'),
                         line = lines[0];
                     if (line === undefined) {
                         return acb(null);
                     }
-                    var match = line.match(/\s*usage=["'](.*)[\\"']/);
-                    if (match !== null) {
-                        helpstr.push(match[1]);
-                    }
-                    return acb(null);
-                });
+                    helpstr.push(line);
+                }
+                return acb(null);
             });
         },
         function(err) {
