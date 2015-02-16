@@ -25,5 +25,5 @@ rm -r $TESTDIR
 expect $? true rm.4
 ls /tmp >/dev/null
 ls -d $TESTDIR 2>/dev/null
-dont_expect $? true rm.4
+dont_expect $? true rm.5
 DEATHSTAR=()

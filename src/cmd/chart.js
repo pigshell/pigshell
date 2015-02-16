@@ -130,7 +130,7 @@ function style(css) {
 /*
  * Vertical bar chart
  *
- * cat http://pigshell.com/sample/gdp-ppp.html | to text | jf '$$.html($$(x).find("table").first())' | table2js -e "tr" foo key data | jf 'x.data = Math.round(+x.data.replace(/,/g,"")) / 1000, x' | chart -t vertbar
+ * cat http://pigshell.com/sample/gdp-ppp.html | hgrep -r 0 table | table2js foo key data | jf 'x.data = x.data / 1000, x' | chart -t vertbar
  */
 
 function vertbar(data, term, opts, cb) {
@@ -245,7 +245,7 @@ Chart.register("vertbar", vertbar);
 /*
  * Histogram
  * Based on http://bl.ocks.org/mbostock/3048450 
- * cat http://pigshell.com/sample/gdp-ppp.html | to text | jf '$$.html($$(x).find("table").first())' | table2js -e "tr" foo key data | jf 'x.data = Math.round(+x.data.replace(/,/g,"")) / 1000, x' | chart -t histogram
+ * cat http://pigshell.com/sample/gdp-ppp.html | hgrep -r 0 table | table2js foo key data | jf 'x.data = x.data / 1000, x' | chart -t histogram
  */
 
 function histogram(idata, term, opts, cb) {

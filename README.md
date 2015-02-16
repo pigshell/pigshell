@@ -40,7 +40,7 @@ utilities. _Psty_ works only on Unix currently.
 
 Click on the first example in the sidebar, or type the following at the prompt:
 
-    cat http://pigshell.com/sample/life-expectancy.html | table2js -e "table.wikitable tr" foo country data | iframe -g /usr/template/d3-worldmap1
+    cat http://pigshell.com/sample/life-expectancy.html | hgrep table.wikitable | table2js foo country data | iframe -g /usr/template/d3-worldmap1
 
 ![Life expectancy](./images/screenshots/helloworld.jpg)
 

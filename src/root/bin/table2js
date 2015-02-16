@@ -1,17 +1,59 @@
-usage='table2js     -- convert html table to json\
-\
-Usage:\
-    table2js [-e <expr>] <cols>...\
-    table2js -h | --help\
-\
-Options:\
-    -h --help   Show this message.\
-    -e <expr>   JQuery selector, e.g. "table.wiki tr" [default: "tr"]\
-    <cols>      List of column headers, e.g. name, age\
-'
+usage=<<EOH
+table2js     -- convert html table to json
+
+Usage:
+    table2js [-r] [<cols>...]
+    table2js [-c <regex>] [<cols>...]
+    table2js -h | --help
+
+Options:
+    -h --help       Show this message.
+    -r              Raw mode; don't strip whitespace or convert numerical values
+    -c <regex>      Cleaner regex, all matches removed from data, e.g. 'AUD|USD'
+    <cols>          List of column headers, e.g. name, age
+EOH
 
 if ! docopt $usage $*; then
     exit false
 fi
 
-to text | jf '$$(x).find("'^$e^'").toArray().map(function(e){var r = $$(e).find("td").toArray().map(function(e) { return $$(e).text(); }); return r.length ? zip_object(self.shell.vars["cols"], r) : null;}).filter(function(el){return !!el;})'
+to text | jf <<EOH
+(function() {
+    var raw = sys.getenv(self, 'r')[0],
+        cols = sys.getenv(self, 'cols'),
+        rspec = sys.getenv(self, 'c')[0],
+        cleaner = rspec ? new RegExp(rspec, 'g') : null;
+
+    return $$("tr", x).toArray().map(function(e) {
+        var row = $$(e).find("td").toArray().map(function(e) {
+            var data = $$(e).text();
+            if (!raw) {
+                data = data.trim();
+                if (cleaner) {
+                    data = data.replace(cleaner, '');
+                }
+                var num = +data;
+                if (!isNaN(num)) {
+                    data = num;
+                } else {
+                    num = +data.replace(/,/g, '')
+                    if (!isNaN(num)) {
+                        data = num;
+                    }
+                }
+            }
+            return data;
+        });
+        if (!row.length) {
+            return null;
+        }
+        if (!cols.length) {
+            cols = [];
+            for (var i = 0, len = row.length; i < len; i++) {
+                cols.push(i.toString());
+            }
+        }
+        return zip_object(cols, row);
+    }).filter(function(e) { return !!e; });
+})()
+EOH

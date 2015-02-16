@@ -55,16 +55,8 @@ Docopt.prototype.next = check_next(function() {
         }
 
         var value = (varmap[name] instanceof Array) ? varmap[name] : [varmap[name]];
-        value = value.map(function(item) {
-            if (item === true) {
-                return 'true';
-            } else if (item === false) {
-                return 'false';
-            } else if (item === null) {
-                return '';
-            } else {
-                return item;
-            }
+        value = value.filter(function(item) {
+            return item !== undefined  && item !== null;
         });
         sys.putenv(self, sname, value);
     }

@@ -65,7 +65,7 @@ occurs.
 
 Plot countrywise life expectancy statistics to a world map template.
 
-    $ cat http://pigshell.com/sample/life-expectancy.html | table2js -e "table.wikitable tr" foo country data | iframe -g /usr/template/d3-worldmap1
+    $ cat http://pigshell.com/sample/life-expectancy.html | hgrep -r 0 table.wikitable | table2js foo country data | iframe -g /usr/template/d3-worldmap1
 
 Display a D3 example (no input data).
 

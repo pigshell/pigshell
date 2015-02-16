@@ -1,0 +1,44 @@
+<h1>Heading!</h1>
+<h2>Smaller heading 1</h2>
+<p class="warning">
+    <a href="http://foo.bar.com/warning.html">Warning warning!</a>
+</p>
+<h2 class="foo">Smaller heading 2</h2>
+<p class="warning">Another paragraph</p>
+<table>
+    <th>
+        <td>No.</td>
+        <td>Name</td>
+        <td>Earnings</td>
+        <td>URL</td>
+    </th>
+    
+    <tr>
+        <td> 2 </td>
+        <td>Able Baker</td>
+        <td>$-55.67</td>
+        <td>
+            <a href="http:/foo.bar.com/follow/2">Follow user</a>
+            <a href="http:/foo.bar.com/mute/2">Mute user</a>
+        </td>
+    </tr>
+    <tr>
+        <td> +3 </td>
+        <td>Able Baker</td>
+        <td>-55.67</td>
+        <td>
+            <a href="http:/foo.bar.com/follow/3">Follow user</a>
+            <a href="http:/foo.bar.com/mute/3">Mute user</a>
+        </td>
+    </tr>
+</table>
+<h2 class="bar">Smaller heading 3</h2>
+<p class="warning">Yet another</p>
+<p>Classless para</p>
+<table>
+    <tr>
+        <td>Copyright</td>
+        <td>Yoyodyne Systems</td>
+        <td><span>1234</span>2014</td>
+    </tr>
+</table>

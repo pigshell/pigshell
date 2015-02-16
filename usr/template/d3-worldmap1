@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
 
-World map chloropleth, based on http://bl.ocks.org/jasondavies/4188334
+World map choropleth, based on http://bl.ocks.org/jasondavies/4188334
 and https://www.jasondavies.com/maps/rotate/
 
 This template takes a list of Javascript objects, e.g.
@@ -28,7 +28,7 @@ dragging.
 
 Examples:
 
-cat http://en.wikipedia.org/wiki/List_of_countries_by_literacy_rate | table2js -e "table.wikitable tr" country foo bar data | jf 'x.country = x.country.trim(), x.data = +x.data.replace(/%/, ""), x.data < 0 ? undefined : x' | iframe -o title="Adult Literacy (%)" -g /usr/template/d3-worldmap1
+cat http://en.wikipedia.org/wiki/List_of_countries_by_literacy_rate | hgrep -r 0 table.wikitable | table2js country foo bar data | jf 'x.country = x.country.trim(), x.data = +x.data.replace(/%/, ""), x.data < 0 ? undefined : x' | iframe -o title="Adult Literacy (%)" -g /usr/template/d3-worldmap1
 
 Tests:
 echo '[{"country": 356, "data": 100}, {"country": "Antarctica", "data": 0}]'| jf '$.parseJSON(x)' | iframe -g /usr/template/d3-worldmap1

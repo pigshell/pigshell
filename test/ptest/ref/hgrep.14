@@ -1,0 +1,18 @@
+<tr>
+        <td>  1  </td>
+        <td>
+        Foo Bar</td>
+        <td> INR 345,000.04 </td>
+        <td>
+            <a href="http:/foo.bar.com/follow/1">Follow user</a>
+            <a href="http:/foo.bar.com/mute/1">Mute user</a>
+        </td>
+    </tr><tr>
+        <td> 2 </td>
+        <td>Able Baker</td>
+        <td>$-55.67</td>
+        <td>
+            <a href="http:/foo.bar.com/follow/2">Follow user</a>
+            <a href="http:/foo.bar.com/mute/2">Mute user</a>
+        </td>
+    </tr>

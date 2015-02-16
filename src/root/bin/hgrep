@@ -1,0 +1,61 @@
+#!pigshell
+
+usage=<<EOH
+hgrep        -- Search and extract from html
+
+Usage:
+    hgrep [-a <attr> | -t | -v] [-r <range>] <selector> [<filter>]
+    hgrep -h | --help
+
+Options:
+    -h --help   Show this message.
+    <selector>  Cheerio selector, e.g. "table.wiki tr"
+    -r <range>  Use specified range of selection, e.g. 0, 0:2, -1
+    <filter>    Descendant selector to filter selection
+    -a <attr>   Output value of attribute <attr> of selection
+    -t          Output text content of selection
+    -v          Output input document after removing selection
+EOH
+
+if ! docopt $usage $*; then
+    exit false
+fi
+
+to text | jf <<EOH
+(function() {
+    var t = sys.getenv(self, 't')[0],
+        a = sys.getenv(self, 'a')[0],
+        v = sys.getenv(self, 'v')[0],
+        selector = sys.getenv(self, 'selector')[0],
+        range = sys.getenv(self, 'r')[0],
+        filter = sys.getenv(self, 'filter')[0];
+
+    var $ = $$.load(x),
+        sel = $(selector);
+
+    if (range) {
+        var comps = range.split(':');
+        if (comps.length === 2) {
+            sel = sel.slice(+comps[0], +comps[1])
+        } else {
+            sel = sel.eq(+comps[0]);
+        }
+    }
+    if (filter) {
+        sel = sel.filter(function(i, el) {
+            return $$(el).find(filter).length !== 0;
+        });
+    }
+    if (v) {
+        $(sel).remove();
+        return $.html();
+    } else if (a || t) {
+        var out = sel.toArray().map(function(e) {
+            return a ? $$(e).attr(a) : $$(e).text();
+        }).filter(function(e) { return e !== undefined && e !== null; });
+        return out;
+    } else {
+        return $$.html(sel);
+    }
+})()
+EOH

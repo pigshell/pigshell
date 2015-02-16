@@ -60,7 +60,7 @@ Find text within an HTML file:
 
 Find countries with life expectancy < 50:
 
-    $ cat http://pigshell.com/sample/life-expectancy.html | table2js -e "tr" foo country data | grep -e '+x.data < 50' | printf
+    $ cat http://pigshell.com/sample/life-expectancy.html | table2js foo country data | grep -e '+x.data < 50' | printf
 
 ## SEE ALSO
 
