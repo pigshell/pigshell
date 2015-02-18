@@ -24,3 +24,5 @@ options(7)  options.7.ronn
 #roff(7)     http://man.cx/roff(7)
 regexp(3)   https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
 sprintf(3)  http://www.diveintojavascript.com/projects/javascript-sprintf
+cheerio(3)  https://github.com/cheeriojs/cheerio
+css-select(3)   https://github.com/fb55/css-select

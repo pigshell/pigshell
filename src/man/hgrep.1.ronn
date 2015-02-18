@@ -1,0 +1,92 @@
+hgrep(1) -- Search and extract from HTML
+========================================
+
+## SYNOPSIS
+
+`hgrep` [-a <attr> | -t | -v] [-r <range>] <selector> [<filter>]<br>
+`hgrep` -h | --help
+
+## DESCRIPTION
+
+**hgrep** searches input HTML strings and outputs a list of elements matching
+a given condition. The condition is specified as a CSS3-like <selector>, as
+implemented by cheerio(3). The list of selected elements is reduced to an
+optional range and filtered by another selector which specifies
+constraints on their descendants.
+
+Input objects which are blobs are converted to text before processing.
+
+The following parameters are available:
+
+  * `<selector>`: Specifies the elements to be selected in a JQuery/CSS3-style
+    format as implemented by cheerio(3), which uses css-select(3). Custom
+    selectors of note include `:contains`, which can be used to specify what
+    text contents the desired elements must have.
+
+  * `-r <range>`:
+    Specifies the range of elements found by the <selector> to be considered.
+    `<range>` can be a number indicating a single element at the given offset
+    from the beginning of the list. Negative numbers represent offsets from
+    the end of the list, with -1 being the last element. Alternately, a range of
+    the form `start:end` specify elements with offset from `start` through
+    `end-1`, where `start` and `end` can be negative numbers. `start` must be
+    strictly less than `end`. Finally, `start:` specifies elements from
+    `start` to the end of the list.
+
+  * `<filter>`: CSS3-like selector which specifies conditions to be met
+    by the descendants of the elements specified by <selector>. This enables
+    specifications like "select all `<tr>`s which have `<a>` elements
+    containing 'Follow User' in the link text". Note that the output will be a
+    list of `<tr>` elements.
+
+  * `-a <attr>`: Output a list containing the <attr> attribute of each selected
+    element, rather than the elements themselves.
+
+  * `-t`: Output a list of the text contents of each selected element, rather
+    than the elements themselves.
+
+  * `-v`: Output the input document with all selected elements removed.
+
+## DIAGNOSTICS
+
+**hgrep** exits with `true` regardless of whether a match was found or not.
+In case the input document was malformed or the specifier syntax is incorrect,
+**hgrep** exits with a non-`true` value.
+
+## EXAMPLES
+
+All the examples use the [Wikipedia world population](http://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population) page.
+
+    $ url="http://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population"
+
+Display all tables with the class `.wikitable`:
+
+    $ cat $url | hgrep table.wikitable | html
+
+Display the first 3 rows of the above table:
+
+    $ cat $url | hgrep -r 0:1 "table.wikitable tr" | html
+
+Output HTML for first data row of the table:
+
+    $ cat $url | hgrep -r 1 "table.wikitable tr"
+
+Display rows which were updated in 2015:
+
+    $ cat $url | hgrep "table.wikitable tr" "td:contains(2015)"
+
+Print text contents of 2nd column of each row, one line per row
+
+    $ cat $url | hgrep -t "table.wikitable td:nth-child(2)" | printf "%s\n"
+
+Display last 3 rows of the table after removing the flag elements:
+
+    $ cat $url | hgrep -r -3: "table.wikitable tr" | hgrep -v span.flagicon | html
+ 
+Strip first 3 columns of the table:
+
+    $ cat $url | hgrep "table.wikitable" | hgrep -v "td:nth-child(-n+2)" | html
+
+## SEE ALSO
+
+cheerio(3), css-select(3)

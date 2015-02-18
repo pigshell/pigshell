@@ -109,3 +109,15 @@ dtest hgrep.16 "echo $HTML | hgrep -v 'td span'"
 
 # Remove table rows whose data contains 'INR'
 dtest hgrep.17 "echo $HTML | hgrep -v tr 'td:contains(INR)'"
+
+# Last 2 table rows
+dtest hgrep.18 "echo $HTML | hgrep -r -2: tr"
+
+# Penultimate table row
+dtest hgrep.19 "echo $HTML | hgrep -r -2:-1 tr"
+
+# 2nd row onwards
+dtest hgrep.20 "echo $HTML | hgrep -r 1: tr"
+
+# Strip 1st,2nd column of first table
+dtest hgrep.21 "echo $HTML | hgrep -r 0 table | hgrep -v 'td:nth-child(-n+2)'"

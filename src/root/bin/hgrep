@@ -36,7 +36,23 @@ to text | jf <<EOH
     if (range) {
         var comps = range.split(':');
         if (comps.length === 2) {
-            sel = sel.slice(+comps[0], +comps[1])
+            var begin = +comps[0],
+                end = (comps[1] === '') ? undefined : +comps[1],
+                len = sel.length;
+
+            if (begin < 0) {
+                begin += len;
+            }
+            if (end < 0) {
+                end += len;
+            }
+            if (begin < 0 || end < 0 || begin >= len || end > len ||
+                begin >= end ) {
+                self.errmsg("Invalid range");
+                return null;
+            }
+
+            sel = sel.slice(+comps[0], comps[1] === '' ? undefined : +comps[1]);
         } else {
             sel = sel.eq(+comps[0]);
         }
