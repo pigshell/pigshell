@@ -21,6 +21,11 @@ HTML=<<EOH
     <link href="http://pigshell.com/v/0.6.2/pigshell.css" rel="stylesheet"/>
     <style>
 
+        body {
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 16px;
+        }
         button.radio {
             background-color: red;
             text-align: center;
@@ -29,8 +34,18 @@ HTML=<<EOH
             background-color: green;
         }
 
+        table {
+            margin-top: 1em;
+        }
         thead, tfoot {
             background-color: #ddd;
+        }
+        td {
+            padding: 0.25em;
+            vertical-align: top;
+        }
+        tr.passed {
+            background-color: #eee;
         }
     </style>
 </head>
@@ -41,17 +56,27 @@ HTML=<<EOH
     <script src="http://pigshell.com/common/d3.v3/d3.v3.min.js"></script>
 
     <div class="control">
-        <button name="mode" class="control">Batch Mode</button>
+        <select name="mode">
+            <option value="batch" selected>Batch Mode</option>
+            <option value="flow">Flow Mode</option>
+        </select>
         <button name="control" class="control">Pass Batch</button>
+        <button name="step" class="control">Pass 1 Item</button>
+        <button name="quit" class="control">Quit</button>
     </div>
     <table>
+        <thead>
+            <tr>
+                <td>Item</td>
+                <td><button name="selectall"></button></td>
+            </tr>
+        </thead>
         <tbody>
         </tbody>
         <tfoot>
             <tr>
                 <td></td>
-                <td>Passed</td>
-                <td></td>
+                <td>&nbsp;</td>
             </tr>
         </tfoot>
     </table>
@@ -61,7 +86,7 @@ HTML=<<EOH
     var defaults = {
         nitems: 5,
         speed: 2,
-        pass: true
+        defsel: true
     };
 
     var items = [],
@@ -73,6 +98,7 @@ HTML=<<EOH
             running: false,
             num: 0,
             last_out: 0,
+            eof: false,
             height: get_height()
         },
         body = d3.select('body');
@@ -90,10 +116,10 @@ HTML=<<EOH
         pframe.unext(function(res) {
             state.unext_pending = false;
             if (res === null) {
-                items.unshift({key: -1, value: "<EOF>", sel: true, obj: null, pass: true});
+                state.eof = true;
             } else {
                 items.unshift({key: state.num, item: obj2html(res),
-                    sel: settings.pass, obj: res, pass: false});
+                    sel: settings.defsel, obj: res, pass: false});
                 state.num++;
             }
             return update();
@@ -105,39 +131,71 @@ HTML=<<EOH
     };
 
     function update() {
+
+        if (!items.length) {
+            if (state.eof && state.next_pending) {
+                return pframe.exit(true);
+            }
+        } else if ((state.step && update_step()) ||
+                (state.batch_mode && update_batch()) ||
+                (state.running && update_flow())) {
+            if (state.next_pending) {
+                var item = items.pop();
+                state.next_pending = false;
+                state.last_out = Date.now();
+                pframe.output(item.obj);
+            }
+        }
+    
+        update_view();
+        if ((state.batch_mode || state.running) && !state.unext_pending
+            && !state.eof && items.length < settings.nitems) {
+            getnext();
+        }
+    }
+
+    function update_step() {
+        state.step = false;
+        var item = items[items.length - 1];
+        if (!item.sel) {
+            items.pop();
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    function update_batch() {
+        while (items.length) {
+            var item = items[items.length - 1];
+            if (!item.pass) {
+                break;
+            }
+            if (!item.sel) {
+                items.pop();
+            } else {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function update_flow() {
         var time = Date.now(),
             next_out = state.last_out + settings.speed * 1000;
 
-        if (!state.batch_mode && !state.running) {
-            /* continuous mode, paused */
-        } else if (!state.batch_mode && time < next_out) {
+        if (time < next_out) {
             /* continuous mode, running, but not yet time */
-            state.tid = set_timeout(update, next_out - time + 100);
-        } else if (state.next_pending) {
-            /* output one item at most */
-            while (items.length) {
-                var item = items[items.length - 1];
-                if (state.batch_mode && !item.pass) {
-                    break;
-                }
-                items.pop();
-                if (item.sel) {
-                    state.next_pending = false;
-                    state.last_out = time;
-                    if (item.obj === null) {
-                        return exit(true);
-                    } else {
-                        pframe.output(item.obj);
-                        break;
-                    }
-                }
-            }
+            set_timeout(update, next_out - time + 100);
+            return false;
         }
-        update_view();
-        if ((state.batch_mode || state.running) && !state.unext_pending
-            && items.length < settings.nitems) {
-            getnext();
+        var item = items[items.length - 1];
+        if (!item.sel) {
+            items.pop();
+            set_timeout(update, settings.speed * 1000);
+            return false;
         }
+        return true;
     }
 
     var table = d3.select("tbody");
@@ -151,6 +209,10 @@ HTML=<<EOH
                 .data(items, getkey);
 
         rows.enter().append("tr");
+        rows.classed(function(d) {
+            return d.pass ? "passed" : "";
+        });
+        rows.order();
 
         var cells =
             rows.selectAll("td")
@@ -173,9 +235,10 @@ HTML=<<EOH
         table.selectAll("tr").selectAll("button")
             .on("click", function(d, i, j) {
                 var obj = items[j];
-                obj.sel = !obj.sel;
-                console.log("CLICK", d, i, j, obj);
-                return update_view();
+                if (!obj.pass) {
+                    obj.sel = !obj.sel;
+                    return update_view();
+                }
             });
             
         rows.exit().remove();
@@ -183,20 +246,20 @@ HTML=<<EOH
         var newheight = get_height();
         if (state.height < newheight) {
             state.height = newheight;
-            pframe.config({height: newheight});
+            send_height(newheight);
         }
     }
 
-    $("button[name=mode]").on("click", function() {
-        state.batch_mode = !state.batch_mode;
+    $("select[name=mode]").on("change", function() {
+        var val = $(this).val();
+        state.batch_mode = (val === 'batch') ? true : false;
 
         if (state.batch_mode) {
-            $(this).text("Batch Mode");
             $("button[name=control]").text("Pass Batch");
         } else {
             state.running = false;
-            $(this).text("Flow Mode");
             $("button[name=control]").text("Run");
+            $("button[name=step]").prop("disabled", false);
         }
     });
     $("button[name=control]").on("click", function() {
@@ -204,10 +267,37 @@ HTML=<<EOH
             items.forEach(function(el) {
                 el.pass = true;
             });
+            $("button[name=step]").prop("disabled", false);
         } else {
             state.running = !state.running;
             $(this).text(state.running ? "Pause" : "Run");
+            $("button[name=step]").prop("disabled", !state.running);
         }
+        update();
+    });
+    $("button[name=quit]").on("click", function() {
+        exit();
+    });
+    $("button[name=selectall]").addClass("radio" + (settings.defsel ? " selected" : "")); 
+
+    $("button[name=selectall]").on("click", function() {
+        settings.defsel = !settings.defsel;
+        var el = $(this);
+        if (settings.defsel) {
+            el.addClass("selected");
+        } else {
+            el.removeClass("selected");
+        }
+        items.forEach(function(obj) {
+            if (!obj.pass) {
+                obj.sel = settings.defsel;
+            }
+        });
+        update();
+    });
+
+    $("button[name=step]").on("click", function() {
+        state.step = true;
         update();
     });
 
@@ -226,6 +316,10 @@ HTML=<<EOH
         return myheight;
     }
 
+    function send_height(height) {
+        pframe.config({height: height});
+    }
+
     function set_timeout(f, t) {
         if (state.tid) {
             console.log('timeout already set!');
@@ -237,7 +331,7 @@ HTML=<<EOH
         }, t);
     }
 
-    pframe.config({height: get_height()});
+    send_height(get_height());
 
     function exit(val) {
         if (state.tid) {
@@ -245,7 +339,7 @@ HTML=<<EOH
             state.tid = null;
         }
         document.body.innerHTML = '';
-        pframe.config({height: get_height()});
+        send_height(get_height());
         return pframe.exit(val);
     }
     </script>
