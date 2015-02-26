@@ -119,7 +119,7 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
         } else {
             iframe.setAttribute("src", self.template);
         }
-        tdiv.append($(iframe));
+        tdiv.prepend($(iframe));
     }
 
     function config(data) {
@@ -140,6 +140,7 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
             op = msg.op,
             data = msg.data;
 
+        //console.log("JFRAME RECV", op, data);
         if (op === 'next') {
             self.unext({}, cef(self, function(obj) {
                 /*

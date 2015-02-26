@@ -50,7 +50,8 @@ Paste.prototype.next = check_next(do_docopt(function() {
         term = self.pterm(),
         tdiv = term.div;
 
-    self.div = $('<div class="pterm-cli pt2"/>').appendTo(tdiv);
+    self.div = $('<div class="pterm-cli pt2"/>');
+    tdiv.prepend(self.div);
     var navbar = '<div class="pterm-editor-navbar" style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; border-left: 1px solid #ccc;">' +
         '<button class="pe-button pe-save">Emit</button>' +
         '<button class="pe-button pe-quit">Quit</button>' +

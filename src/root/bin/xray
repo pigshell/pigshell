@@ -21,166 +21,58 @@ HTML=<<EOH
     <link href="http://pigshell.com/v/0.6.2/pigshell.css" rel="stylesheet"/>
     <style>
 
-        button {
+        button.radio {
             background-color: red;
             text-align: center;
         }
-        button.selected {
+        button.radio.selected {
             background-color: green;
         }
 
+        thead, tfoot {
+            background-color: #ddd;
+        }
     </style>
 </head>
 
 <body>
     <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
-    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://pigshell.com/extra/pframe.v0.js"></script>
+    <script src="http://pigshell.com/common/d3.v3/d3.v3.min.js"></script>
 
-    <script type="text/javascript">
-    var pframe = (function() {
-
-        var name = window.name || '',
-            proto = {};
-
-        if (name.match(/^pigshell_frame:/)) {
-            try {
-                proto = JSON.parse(name.slice('pigshell_frame:'.length));
-                if (proto.ver === '1.0' && proto.msg === 'postMessage') {
-                    config({'proto': {ver: '1.0', msg: 'postMessage'}});
-                } else {
-                    return exit('Unsupported proto');
-                }
-            } catch(e) {
-                return {};
-            }
-        } else {
-            window.onload = function() {
-                if (window.demo) {
-                    window.demo();
-                }
-            }
-            return {};
-        }
-
-        var nextcb = null,
-            next_expected = true,
-            done = false;
-
-        function unext(cb) {
-            if (nextcb) {
-                return exit("pframe: nextcb already set!");
-            }
-            nextcb = cb;
-            window.parent.postMessage({op: 'next'}, '*');
-        }
-
-        function output(item) {
-            next_expected = true;
-            window.parent.postMessage({op: 'data', data: item}, '*');
-        }
-
-        function errmsg(item) {
-            window.parent.postMessage({op: 'errmsg', data: item}, '*');
-        }
-
-        function exit(value) {
-            done = true;
-            window.parent.postMessage({op: 'exit', data: value}, '*');
-        }
-
-        function config(obj) {
-            window.parent.postMessage({op: 'config', data: obj}, '*');
-        }
-
-        function read(cb) {
-            var items = [];
-            function next() {
-                return unext(function(res) {
-                    if (res === null) {
-                        return cb(items);
-                    } else {
-                        items.push(res);
-                        return next();
-                    }
-                });
-            }
-            return next();
-        }
-
-        window.addEventListener('message', function(e) {
-            var msg = e.data,
-                op = msg.op,
-                data = msg.data;
-
-            if (done) {
-                console.log("unexpected message after exit");
-                return;
-            }
-            if (op === 'data') {
-                if (!nextcb) {
-                    console.log("unexpected data ", data);
-                    return exit("pframe: unexpected data");
-                }
-                var cb = nextcb;
-                nextcb = null;
-                return cb(data);
-            } else if (op === 'next') {
-                if (!next_expected) {
-                    return exit("pframe: unexpected next");
-                }
-                next_expected = false;
-                if (!pframe.onnext) {
-                    return exit("no onnext handler");
-                }
-                return pframe.onnext();
-            } else if (op === 'config') {    
-                if (!pframe.onconfig) {
-                    console.log("no onconfig handler");
-                    return;
-                }
-                return pframe.onconfig(data);
-            } else {
-                console.log("Unknown message:", op);
-            }
-        });
-
-        return {
-            proto: proto,
-            ondata: null,
-            onnext: null,
-            onconfig: null,
-            unext: unext,
-            read: read,
-            output: output,
-            errmsg: errmsg,
-            config: config,
-            exit: exit
-        }
-    })();
-    </script>
-
+    <div class="control">
+        <button name="mode" class="control">Batch Mode</button>
+        <button name="control" class="control">Pass Batch</button>
+    </div>
     <table>
         <tbody>
         </tbody>
+        <tfoot>
+            <tr>
+                <td></td>
+                <td>Passed</td>
+                <td></td>
+            </tr>
+        </tfoot>
     </table>
 
     <script type="text/javascript">
 
     var defaults = {
         nitems: 5,
-        speed: 0.2,
+        speed: 2,
         pass: true
     };
 
     var items = [],
         settings = defaults,
         state = {
-            head_plug: true,
-            tail_plug: false,
+            batch_mode: true,
             next_pending: false,
             unext_pending: false,
-            out_pending: false,
+            running: false,
             num: 0,
+            last_out: 0,
             height: get_height()
         },
         body = d3.select('body');
@@ -190,7 +82,7 @@ HTML=<<EOH
             return exit("Unexpected next!");
         }
         state.next_pending = true;
-        //return update();
+        return update();
     };
     
     function getnext() {
@@ -198,13 +90,13 @@ HTML=<<EOH
         pframe.unext(function(res) {
             state.unext_pending = false;
             if (res === null) {
-                items.unshift({key: -1, value: "<EOF>", sel: true, obj: null});
+                items.unshift({key: -1, value: "<EOF>", sel: true, obj: null, pass: true});
             } else {
                 items.unshift({key: state.num, item: obj2html(res),
-                    sel: settings.pass, obj: res});
+                    sel: settings.pass, obj: res, pass: false});
                 state.num++;
             }
-            //return update();
+            return update();
         });
     }
 
@@ -213,22 +105,38 @@ HTML=<<EOH
     };
 
     function update() {
-        if (!state.head_plug && state.next_pending && items.length) {
-            state.next_pending = false;
-            var item = items.pop();
-            if (item.obj === null) {
-                return exit(true);
-            } else {
-                return pframe.output(item.obj);
+        var time = Date.now(),
+            next_out = state.last_out + settings.speed * 1000;
+
+        if (!state.batch_mode && !state.running) {
+            /* continuous mode, paused */
+        } else if (!state.batch_mode && time < next_out) {
+            /* continuous mode, running, but not yet time */
+            state.tid = set_timeout(update, next_out - time + 100);
+        } else if (state.next_pending) {
+            /* output one item at most */
+            while (items.length) {
+                var item = items[items.length - 1];
+                if (state.batch_mode && !item.pass) {
+                    break;
+                }
+                items.pop();
+                if (item.sel) {
+                    state.next_pending = false;
+                    state.last_out = time;
+                    if (item.obj === null) {
+                        return exit(true);
+                    } else {
+                        pframe.output(item.obj);
+                        break;
+                    }
+                }
             }
         }
-        update_view(items);
-        if (!state.tail_plug && !state.unext_pending &&
-            items.length < settings.nitems) {
+        update_view();
+        if ((state.batch_mode || state.running) && !state.unext_pending
+            && items.length < settings.nitems) {
             getnext();
-        }
-        if (items.length === settings.nitems) {
-            state.head_plug = false;
         }
     }
 
@@ -242,14 +150,7 @@ HTML=<<EOH
             table.selectAll("tr")
                 .data(items, getkey);
 
-        rows.enter()
-            .append("tr")
-            .style('opacity', 0.0)
-            .attr('class', 'enter')
-            .transition()
-            .delay(900)
-            .duration(500)
-            .style('opacity', 1.0);
+        rows.enter().append("tr");
 
         var cells =
             rows.selectAll("td")
@@ -257,10 +158,9 @@ HTML=<<EOH
                     if (!d) {
                         return d;
                     }
-                    var b = '<button class="' + (d.sel ? "selected" : "") +
+                    var b = '<button class="radio ' + (d.sel ? "selected" : "") +
                         '"></button>';
-                    return [{key: 'key', value: d['key']},
-                            {key: 'item', value: d['item']},
+                    return [{key: 'item', value: d['item']},
                             {key: 'sel', value: b}];
                 }, getkey);
 
@@ -278,22 +178,38 @@ HTML=<<EOH
                 return update_view();
             });
             
-
-        rows.exit()
-            .attr('class', 'exit')
-            .transition()
-            .delay(200)
-            .duration(500)
-            .style('opacity', 0.0)
-            .remove();
+        rows.exit().remove();
 
         var newheight = get_height();
-        if (state.height !== newheight) {
+        if (state.height < newheight) {
             state.height = newheight;
             pframe.config({height: newheight});
         }
-
     }
+
+    $("button[name=mode]").on("click", function() {
+        state.batch_mode = !state.batch_mode;
+
+        if (state.batch_mode) {
+            $(this).text("Batch Mode");
+            $("button[name=control]").text("Pass Batch");
+        } else {
+            state.running = false;
+            $(this).text("Flow Mode");
+            $("button[name=control]").text("Run");
+        }
+    });
+    $("button[name=control]").on("click", function() {
+        if (state.batch_mode) {
+            items.forEach(function(el) {
+                el.pass = true;
+            });
+        } else {
+            state.running = !state.running;
+            $(this).text(state.running ? "Pause" : "Run");
+        }
+        update();
+    });
 
     function obj2html(obj) {
         if (obj.html) {
@@ -310,11 +226,26 @@ HTML=<<EOH
         return myheight;
     }
 
-    var tid = setInterval(update, settings.speed * 1000);
+    function set_timeout(f, t) {
+        if (state.tid) {
+            console.log('timeout already set!');
+            return;
+        }
+        state.tid = setTimeout(function() {
+            state.tid = null;
+            f();
+        }, t);
+    }
+
     pframe.config({height: get_height()});
 
     function exit(val) {
-        clearInterval(tid);
+        if (state.tid) {
+            clearTimeout(state.tid);
+            state.tid = null;
+        }
+        document.body.innerHTML = '';
+        pframe.config({height: get_height()});
         return pframe.exit(val);
     }
     </script>
