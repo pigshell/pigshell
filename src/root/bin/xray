@@ -1,0 +1,326 @@
+#!pigshell
+
+usage=<<EOH
+xray         -- Inspect pipeline
+
+Usage:
+    xray [-n <items>] [-y <sec>]
+    xray -h | --help
+
+Options:
+    -h --help   Show this message.
+    -y          Pass if not stopped in <sec>. 0 to pass, -1 to inspect
+    -n <items>  Buffer upto <items> objects
+EOH
+
+HTML=<<EOH
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link href="http://pigshell.com/v/0.6.2/pigshell.css" rel="stylesheet"/>
+    <style>
+
+        button {
+            background-color: red;
+            text-align: center;
+        }
+        button.selected {
+            background-color: green;
+        }
+
+    </style>
+</head>
+
+<body>
+    <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+
+    <script type="text/javascript">
+    var pframe = (function() {
+
+        var name = window.name || '',
+            proto = {};
+
+        if (name.match(/^pigshell_frame:/)) {
+            try {
+                proto = JSON.parse(name.slice('pigshell_frame:'.length));
+                if (proto.ver === '1.0' && proto.msg === 'postMessage') {
+                    config({'proto': {ver: '1.0', msg: 'postMessage'}});
+                } else {
+                    return exit('Unsupported proto');
+                }
+            } catch(e) {
+                return {};
+            }
+        } else {
+            window.onload = function() {
+                if (window.demo) {
+                    window.demo();
+                }
+            }
+            return {};
+        }
+
+        var nextcb = null,
+            next_expected = true,
+            done = false;
+
+        function unext(cb) {
+            if (nextcb) {
+                return exit("pframe: nextcb already set!");
+            }
+            nextcb = cb;
+            window.parent.postMessage({op: 'next'}, '*');
+        }
+
+        function output(item) {
+            next_expected = true;
+            window.parent.postMessage({op: 'data', data: item}, '*');
+        }
+
+        function errmsg(item) {
+            window.parent.postMessage({op: 'errmsg', data: item}, '*');
+        }
+
+        function exit(value) {
+            done = true;
+            window.parent.postMessage({op: 'exit', data: value}, '*');
+        }
+
+        function config(obj) {
+            window.parent.postMessage({op: 'config', data: obj}, '*');
+        }
+
+        function read(cb) {
+            var items = [];
+            function next() {
+                return unext(function(res) {
+                    if (res === null) {
+                        return cb(items);
+                    } else {
+                        items.push(res);
+                        return next();
+                    }
+                });
+            }
+            return next();
+        }
+
+        window.addEventListener('message', function(e) {
+            var msg = e.data,
+                op = msg.op,
+                data = msg.data;
+
+            if (done) {
+                console.log("unexpected message after exit");
+                return;
+            }
+            if (op === 'data') {
+                if (!nextcb) {
+                    console.log("unexpected data ", data);
+                    return exit("pframe: unexpected data");
+                }
+                var cb = nextcb;
+                nextcb = null;
+                return cb(data);
+            } else if (op === 'next') {
+                if (!next_expected) {
+                    return exit("pframe: unexpected next");
+                }
+                next_expected = false;
+                if (!pframe.onnext) {
+                    return exit("no onnext handler");
+                }
+                return pframe.onnext();
+            } else if (op === 'config') {    
+                if (!pframe.onconfig) {
+                    console.log("no onconfig handler");
+                    return;
+                }
+                return pframe.onconfig(data);
+            } else {
+                console.log("Unknown message:", op);
+            }
+        });
+
+        return {
+            proto: proto,
+            ondata: null,
+            onnext: null,
+            onconfig: null,
+            unext: unext,
+            read: read,
+            output: output,
+            errmsg: errmsg,
+            config: config,
+            exit: exit
+        }
+    })();
+    </script>
+
+    <table>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script type="text/javascript">
+
+    var defaults = {
+        nitems: 5,
+        speed: 0.2,
+        pass: true
+    };
+
+    var items = [],
+        settings = defaults,
+        state = {
+            head_plug: true,
+            tail_plug: false,
+            next_pending: false,
+            unext_pending: false,
+            out_pending: false,
+            num: 0,
+            height: get_height()
+        },
+        body = d3.select('body');
+
+    pframe.onnext = function() {
+        if (state.next_pending) {
+            return exit("Unexpected next!");
+        }
+        state.next_pending = true;
+        //return update();
+    };
+    
+    function getnext() {
+        state.unext_pending = true;
+        pframe.unext(function(res) {
+            state.unext_pending = false;
+            if (res === null) {
+                items.push({key: -1, value: "<EOF>", sel: true, obj: null});
+            } else {
+                items.push({key: state.num, item: obj2html(res),
+                    sel: settings.pass, obj: res});
+                state.num++;
+            }
+            //return update();
+        });
+    }
+
+    pframe.onconfig = function(config) {
+        settings = $.extend({}, defaults, config);
+    };
+
+    function update() {
+        if (!state.head_plug && state.next_pending && items.length) {
+            state.next_pending = false;
+            var item = items.pop();
+            if (item.obj === null) {
+                return exit(true);
+            } else {
+                return pframe.output(item.obj);
+            }
+        }
+        update_view(items);
+        if (!state.tail_plug && !state.unext_pending &&
+            items.length < settings.nitems) {
+            getnext();
+        }
+        if (items.length === settings.nitems) {
+            state.head_plug = false;
+        }
+    }
+
+    var table = d3.select("tbody");
+
+    function update_view() {
+        function getkey(d) {
+            return d && d.key;
+        }
+        var rows =
+            table.selectAll("tr")
+                .data(items, getkey);
+
+        rows.enter()
+            .append("tr")
+            .style('opacity', 0.0)
+            .attr('class', 'enter')
+            .transition()
+            .delay(900)
+            .duration(500)
+            .style('opacity', 1.0);
+
+        var cells =
+            rows.selectAll("td")
+                .data(function(d) {
+                    if (!d) {
+                        return d;
+                    }
+                    var b = '<button class="' + (d.sel ? "selected" : "") +
+                        '"></button>';
+                    return [{key: 'key', value: d['key']},
+                            {key: 'item', value: d['item']},
+                            {key: 'sel', value: b}];
+                }, getkey);
+
+        cells.enter().append("td");
+
+        cells.html(function(d) {
+            return d.value;
+        });
+
+        table.selectAll("tr").selectAll("button")
+            .on("click", function(d, i, j) {
+                var obj = items[j];
+                obj.sel = !obj.sel;
+                console.log("CLICK", d, i, j, obj);
+                return update_view();
+            });
+            
+
+        rows.exit()
+            .attr('class', 'exit')
+            .transition()
+            .delay(200)
+            .duration(500)
+            .style('opacity', 0.0)
+            .remove();
+
+        var newheight = get_height();
+        if (state.height !== newheight) {
+            state.height = newheight;
+            pframe.config({height: newheight});
+        }
+
+    }
+
+    function obj2html(obj) {
+        if (obj.html) {
+            return obj.html;
+        } else {
+            return '<p>' + obj.toString() + '</p>';
+        }
+    }
+
+    function get_height() {
+        var myheight = document.documentElement.scrollHeight ||
+            document.body.scrollHeight;
+
+        return myheight;
+    }
+
+    var tid = setInterval(update, settings.speed * 1000);
+
+    function exit(val) {
+        clearInterval(tid);
+        return pframe.exit(val);
+    }
+    </script>
+
+</body>
+
+</html>
+
+EOH
+jframe -s $HTML
