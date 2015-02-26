@@ -198,9 +198,9 @@ HTML=<<EOH
         pframe.unext(function(res) {
             state.unext_pending = false;
             if (res === null) {
-                items.push({key: -1, value: "<EOF>", sel: true, obj: null});
+                items.unshift({key: -1, value: "<EOF>", sel: true, obj: null});
             } else {
-                items.push({key: state.num, item: obj2html(res),
+                items.unshift({key: state.num, item: obj2html(res),
                     sel: settings.pass, obj: res});
                 state.num++;
             }
@@ -311,6 +311,7 @@ HTML=<<EOH
     }
 
     var tid = setInterval(update, settings.speed * 1000);
+    pframe.config({height: get_height()});
 
     function exit(val) {
         clearInterval(tid);
