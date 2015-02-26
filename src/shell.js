@@ -213,7 +213,12 @@ Command.prototype.kill = function(reason) {
 
 /* Get my terminal. Equivalent to asking for /dev/tty. */
 Command.prototype.pterm = function() {
-    return this.shell.term;
+    var shell = this.shell;
+
+    while (shell && shell.term === undefined && shell !== initshell) {
+        shell = shell.shell;
+    }
+    return shell.term;
 };
 
 Command.prototype.pwd = function() {
