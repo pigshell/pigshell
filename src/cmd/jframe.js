@@ -123,6 +123,7 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
     }
 
     function config(data) {
+        console.log("CONFIG", data);
         if (data && data.height !== undefined && !self.docopts['-H']) {
             $(self.iframe).height(data.height + 10);
         }

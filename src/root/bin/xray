@@ -26,26 +26,25 @@ HTML=<<EOH
             font-size: 14px;
             line-height: 16px;
         }
-        button.radio {
-            background-color: red;
-            text-align: center;
+        div.xitem {
+            display: inline-block;
+            margin: 0.25em;
         }
-        button.radio.selected {
-            background-color: green;
-        }
-
-        table {
-            margin-top: 1em;
-        }
-        thead, tfoot {
-            background-color: #ddd;
-        }
-        td {
+        div.xitem div {
+            display: inline-block;
             padding: 0.25em;
             vertical-align: top;
         }
-        tr.passed {
+        .passed {
             background-color: #eee;
+            border: 1px solid #666;
+        }
+        .enter {
+            border: 1px solid green;
+            /*background-color: rgb(229, 245, 224);*/
+        }
+        .update {
+            border: 1px solid #222;
         }
     </style>
 </head>
@@ -62,24 +61,11 @@ HTML=<<EOH
         </select>
         <button name="control" class="control">Pass Batch</button>
         <button name="step" class="control">Pass 1 Item</button>
+        Select All: <input name="selall" type="checkbox"></input>
         <button name="quit" class="control">Quit</button>
     </div>
-    <table>
-        <thead>
-            <tr>
-                <td>Item</td>
-                <td><button name="selectall"></button></td>
-            </tr>
-        </thead>
-        <tbody>
-        </tbody>
-        <tfoot>
-            <tr>
-                <td></td>
-                <td>&nbsp;</td>
-            </tr>
-        </tfoot>
-    </table>
+
+    <div class="bag"></div>
 
     <script type="text/javascript">
 
@@ -118,7 +104,7 @@ HTML=<<EOH
             if (res === null) {
                 state.eof = true;
             } else {
-                items.unshift({key: state.num, item: obj2html(res),
+                items.push({key: state.num, item: obj2html(res),
                     sel: settings.defsel, obj: res, pass: false});
                 state.num++;
             }
@@ -134,13 +120,13 @@ HTML=<<EOH
 
         if (!items.length) {
             if (state.eof && state.next_pending) {
-                return pframe.exit(true);
+                return exit(true);
             }
         } else if ((state.step && update_step()) ||
                 (state.batch_mode && update_batch()) ||
                 (state.running && update_flow())) {
             if (state.next_pending) {
-                var item = items.pop();
+                var item = items.shift();
                 state.next_pending = false;
                 state.last_out = Date.now();
                 pframe.output(item.obj);
@@ -156,9 +142,9 @@ HTML=<<EOH
 
     function update_step() {
         state.step = false;
-        var item = items[items.length - 1];
+        var item = items[0];
         if (!item.sel) {
-            items.pop();
+            items.shift();
             return false;
         } else {
             return true;
@@ -167,12 +153,12 @@ HTML=<<EOH
 
     function update_batch() {
         while (items.length) {
-            var item = items[items.length - 1];
+            var item = items[0];
             if (!item.pass) {
                 break;
             }
             if (!item.sel) {
-                items.pop();
+                items.shift();
             } else {
                 return true;
             }
@@ -189,59 +175,64 @@ HTML=<<EOH
             set_timeout(update, next_out - time + 100);
             return false;
         }
-        var item = items[items.length - 1];
+        var item = items[0];
         if (!item.sel) {
-            items.pop();
+            items.shift();
             set_timeout(update, settings.speed * 1000);
             return false;
         }
         return true;
     }
 
-    var table = d3.select("tbody");
+    var bag = d3.select("div.bag");
 
     function update_view() {
         function getkey(d) {
             return d && d.key;
         }
-        var rows =
-            table.selectAll("tr")
-                .data(items, getkey);
+        var xitems =
+            bag.selectAll("div.xitem")
+                .data(items, getkey)
+                .classed({enter: false, update: true});
 
-        rows.enter().append("tr");
-        rows.classed(function(d) {
-            return d.pass ? "passed" : "";
+        xitems.enter()
+            .append("div")
+            .classed("xitem enter", true);
+
+        xitems.classed("passed", function(d) {
+            return d.pass;
         });
-        rows.order();
+        xitems.order();
 
         var cells =
-            rows.selectAll("td")
+            xitems.selectAll("div")
                 .data(function(d) {
                     if (!d) {
                         return d;
                     }
-                    var b = '<button class="radio ' + (d.sel ? "selected" : "") +
-                        '"></button>';
+                    var b = '<input type="checkbox"' +
+                        (d.sel ? "checked " : "") +
+                        (d.pass ? 'disabled="disabled"' : "") + '>';
                     return [{key: 'item', value: d['item']},
                             {key: 'sel', value: b}];
                 }, getkey);
 
-        cells.enter().append("td");
+        cells.enter().append("div");
 
         cells.html(function(d) {
             return d.value;
         });
 
-        table.selectAll("tr").selectAll("button")
-            .on("click", function(d, i, j) {
+        bag.selectAll("div.xitem").selectAll("input[type=checkbox]")
+            .on("change", function(d, i, j) {
                 var obj = items[j];
                 if (!obj.pass) {
-                    obj.sel = !obj.sel;
+                    obj.sel = $(this).prop('checked');
                     return update_view();
                 }
             });
             
-        rows.exit().remove();
+        xitems.exit().remove();
 
         var newheight = get_height();
         if (state.height < newheight) {
@@ -278,16 +269,12 @@ HTML=<<EOH
     $("button[name=quit]").on("click", function() {
         exit();
     });
-    $("button[name=selectall]").addClass("radio" + (settings.defsel ? " selected" : "")); 
+    $("input[name=selall]").prop("checked", settings.defsel); 
 
-    $("button[name=selectall]").on("click", function() {
+    $("input[name=selall]").on("change", function() {
         settings.defsel = !settings.defsel;
         var el = $(this);
-        if (settings.defsel) {
-            el.addClass("selected");
-        } else {
-            el.removeClass("selected");
-        }
+        el.prop("checked", settings.defsel);
         items.forEach(function(obj) {
             if (!obj.pass) {
                 obj.sel = settings.defsel;
@@ -310,10 +297,7 @@ HTML=<<EOH
     }
 
     function get_height() {
-        var myheight = document.documentElement.scrollHeight ||
-            document.body.scrollHeight;
-
-        return myheight;
+        return $(document.body).outerHeight(true);
     }
 
     function send_height(height) {
