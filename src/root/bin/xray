@@ -4,14 +4,20 @@ usage=<<EOH
 xray         -- Inspect pipeline
 
 Usage:
-    xray [-n <items>] [-y <sec>]
+    xray [-c] [-n <items>] [-t <sec>] [-e <expr>]
     xray -h | --help
 
 Options:
     -h --help   Show this message.
-    -y          Pass if not stopped in <sec>. 0 to pass, -1 to inspect
-    -n <items>  Buffer upto <items> objects
+    -c          Flow ("continuous") mode, one item passed every few seconds
+    -t <sec>    Advance one item every <sec> seconds in flow mode [default: 2]
+    -n <items>  Buffer upto <items> objects [default: 5]
+    -e <expr>   Javascript expression, e.g. 'x.attr === 10' to select objects
 EOH
+
+if ! docopt $usage $*; then
+    exit false
+fi
 
 HTML=<<EOH
 <!DOCTYPE html>
@@ -46,6 +52,19 @@ HTML=<<EOH
         .update {
             border: 1px solid #222;
         }
+
+        div.tooltip {
+            position: absolute;
+            padding: 0.5em;
+            font-size: 10px;
+            color: #222;
+            background: #FFF;
+            border-radius: 2px;
+            pointer-events: none;
+            box-shadow: 0px 0px 2px 0px #a6a6a6;
+            max-width: 30em;
+            max-height: 25em;
+        }
     </style>
 </head>
 
@@ -72,13 +91,14 @@ HTML=<<EOH
     var defaults = {
         nitems: 5,
         speed: 2,
-        defsel: true
+        defsel: true,
+        batch_mode: true,
+        expr: null
     };
 
     var items = [],
         settings = defaults,
         state = {
-            batch_mode: true,
             next_pending: false,
             unext_pending: false,
             running: false,
@@ -104,26 +124,43 @@ HTML=<<EOH
             if (res === null) {
                 state.eof = true;
             } else {
+                var sel = settings.expr ? settings.expr(res) : settings.defsel;
                 items.push({key: state.num, item: obj2html(res),
-                    sel: settings.defsel, obj: res, pass: false});
+                    sel: sel, obj: res, pass: false});
                 state.num++;
             }
             return update();
         });
     }
 
-    pframe.onconfig = function(config) {
-        settings = $.extend({}, defaults, config);
+    pframe.onconfig = function(c) {
+        var nitems = +c['-n'] || undefined,
+            speed = +c['-t'] || undefined,
+            expr = c['-e'] || null,
+            batch_mode = !c['-c'],
+            config = {
+                nitems: nitems,
+                speed: speed,
+                expr: expr,
+                batch_mode: batch_mode
+            };
+        if (config.expr) {
+            config.expr = eval_getexp(config.expr);
+        }
+        if (!batch_mode) {
+            $('select[name=mode]').val('flow');
+            $('select[name=mode]').trigger('change');
+        }
+        settings = $.extend({}, settings, config);
     };
 
     function update() {
-
         if (!items.length) {
             if (state.eof && state.next_pending) {
                 return exit(true);
             }
         } else if ((state.step && update_step()) ||
-                (state.batch_mode && update_batch()) ||
+                (settings.batch_mode && update_batch()) ||
                 (state.running && update_flow())) {
             if (state.next_pending) {
                 var item = items.shift();
@@ -134,7 +171,7 @@ HTML=<<EOH
         }
     
         update_view();
-        if ((state.batch_mode || state.running) && !state.unext_pending
+        if ((settings.batch_mode || state.running) && !state.unext_pending
             && !state.eof && items.length < settings.nitems) {
             getnext();
         }
@@ -203,7 +240,6 @@ HTML=<<EOH
             return d.pass;
         });
         xitems.order();
-
         var cells =
             xitems.selectAll("div")
                 .data(function(d) {
@@ -243,18 +279,23 @@ HTML=<<EOH
 
     $("select[name=mode]").on("change", function() {
         var val = $(this).val();
-        state.batch_mode = (val === 'batch') ? true : false;
+        settings.batch_mode = (val === 'batch') ? true : false;
 
-        if (state.batch_mode) {
+        if (settings.batch_mode) {
             $("button[name=control]").text("Pass Batch");
+            if (state.tid) {
+                clearTimeout(state.tid);
+                state.tid = null;
+            }
         } else {
-            state.running = false;
-            $("button[name=control]").text("Run");
+            state.running = true;
+            $("button[name=control]").text("Pause");
             $("button[name=step]").prop("disabled", false);
+            update();
         }
     });
     $("button[name=control]").on("click", function() {
-        if (state.batch_mode) {
+        if (settings.batch_mode) {
             items.forEach(function(el) {
                 el.pass = true;
             });
@@ -269,7 +310,6 @@ HTML=<<EOH
     $("button[name=quit]").on("click", function() {
         exit();
     });
-    $("input[name=selall]").prop("checked", settings.defsel); 
 
     $("input[name=selall]").on("change", function() {
         settings.defsel = !settings.defsel;
@@ -287,6 +327,12 @@ HTML=<<EOH
         state.step = true;
         update();
     });
+
+    $("input[name=selall]").prop("checked", settings.defsel); 
+    send_height(get_height());
+    var popupdiv = d3.select("body").append("div")
+     .attr("class", "tooltip")
+     .style("opacity", 0);
 
     function obj2html(obj) {
         if (obj.html) {
@@ -315,7 +361,16 @@ HTML=<<EOH
         }, t);
     }
 
-    send_height(get_height());
+    function eval_getexp(exp) {
+        var ret;
+        try {
+            var fstr = '"use strict"; var getfield = function(x, self) { return !!(' + exp + ');};getfield;';
+            ret = eval(fstr);
+        } catch(err) {
+            return null;
+        }
+        return ret;
+    }
 
     function exit(val) {
         if (state.tid) {
@@ -333,4 +388,4 @@ HTML=<<EOH
 </html>
 
 EOH
-jframe -s $HTML
+jframe -o $docopt -s $HTML

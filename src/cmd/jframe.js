@@ -105,6 +105,7 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
         iframe.setAttribute("sandbox", self.sboxopts);
         iframe.onload = function() {
             proc.current(self);
+            sendmsg('config', self.cliopts);
             return next();
         };
         iframe.onerror = function() {
@@ -122,8 +123,8 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
         tdiv.prepend($(iframe));
     }
 
-    function config(data) {
-        console.log("CONFIG", data);
+    function recv_config(data) {
+        //console.log("CONFIG", data);
         if (data && data.height !== undefined && !self.docopts['-H']) {
             $(self.iframe).height(data.height + 10);
         }
@@ -155,7 +156,7 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
                 return sendmsg('data', obj);
             }));
         } else if (op === 'config') {
-            return config(data);
+            return recv_config(data);
         } else if (op === 'data') {
             return self.output(data);
         } else if (op === 'errmsg') {

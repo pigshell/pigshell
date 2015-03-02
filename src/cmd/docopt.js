@@ -60,6 +60,7 @@ Docopt.prototype.next = check_next(function() {
         });
         sys.putenv(self, sname, value);
     }
+    sys.putenv(self, "docopt", JSON.stringify(varmap, null, "    "));
     return self.exit();
 });
 
