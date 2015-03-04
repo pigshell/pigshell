@@ -110,17 +110,11 @@ HTML=<<EOH
         body = d3.select('body');
 
     pframe.onnext = function() {
-        if (state.next_pending) {
-            return exit("Unexpected next!");
-        }
-        state.next_pending = true;
         return update();
     };
     
     function getnext() {
-        state.unext_pending = true;
         pframe.unext(function(res) {
-            state.unext_pending = false;
             if (res === null) {
                 state.eof = true;
             } else {
@@ -156,22 +150,21 @@ HTML=<<EOH
 
     function update() {
         if (!items.length) {
-            if (state.eof && state.next_pending) {
+            if (state.eof && pframe.next_pending) {
                 return exit(true);
             }
         } else if ((state.step && update_step()) ||
                 (settings.batch_mode && update_batch()) ||
                 (state.running && update_flow())) {
-            if (state.next_pending) {
+            if (pframe.next_pending) {
                 var item = items.shift();
-                state.next_pending = false;
                 state.last_out = Date.now();
                 pframe.output(item.obj);
             }
         }
     
         update_view();
-        if ((settings.batch_mode || state.running) && !state.unext_pending
+        if ((settings.batch_mode || state.running) && !pframe.unext_pending
             && !state.eof && items.length < settings.nitems) {
             getnext();
         }

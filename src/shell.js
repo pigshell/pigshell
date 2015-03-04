@@ -26,7 +26,6 @@ Proc.prototype.current = function(cmd) {
     if (cmd !== undefined) {
         this.current_cmd = cmd;
     }
-    //console.log("CURRENT ", cur, cmd);
     return cur;
 };
 
@@ -213,6 +212,10 @@ Command.prototype.kill = function(reason) {
 
 /* Get my terminal. Equivalent to asking for /dev/tty. */
 Command.prototype.pterm = function() {
+    if (this.term) {
+        return this.term;
+    }
+
     var shell = this.shell;
 
     while (shell && shell.term === undefined && shell !== initshell) {
@@ -310,6 +313,7 @@ function Shell(opts) {
     self.pid = proc.newpid();
 
     proc.add(self.pid, self);
+    
     //self.shell.vars['!'] = [self.pid.toString()];
 }
 
@@ -598,7 +602,7 @@ Shell.prototype.ast_eval = check_live(function(ast, context, cb) {
                         return self.output(res);
                     }
                 });
-                }
+            }
             if (iscmd(res)) {
                 self.pipe = makepipe(res, ctext, self);
                 self._nextfunc = do_next;
@@ -1012,6 +1016,7 @@ Shell.prototype.next = check_next(do_docopt(function(opts, cb) {
         if (opts.term) {
             self.term = opts.term;
         }
+        //console.log("new shell", self.pid, "parent: ", self.shell.pid, self.opts.argv.join(' '), "term: ", self.term ? self.term.name : "none", "pterm: ", self.pterm() ? self.pterm().name : "none");
         if (self.docopts['-s'] || self.docopts['-f']) {
             /* execute in same context */
             self.vars = self.shell.vars;
