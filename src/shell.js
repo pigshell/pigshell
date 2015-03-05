@@ -314,6 +314,7 @@ function Shell(opts) {
 
     proc.add(self.pid, self);
     
+    self.ediv = null;
     //self.shell.vars['!'] = [self.pid.toString()];
 }
 
@@ -710,7 +711,12 @@ Shell.prototype.ast_eval = check_live(function(ast, context, cb) {
                 if (err) {
                     return cb(err);
                 }
-                return self.find_cmd(res, cb);
+                return self.find_cmd(res, ef(cb, function(res) {
+                    if (res.ediv !== undefined && self.ediv) {
+                        res.ediv = mkediv(self.ediv);
+                    }
+                    return cb(null, res);
+                }));
             });
         } else if (ast['PIPE']) {
             var cmdlist = [];
@@ -1016,7 +1022,7 @@ Shell.prototype.next = check_next(do_docopt(function(opts, cb) {
         if (opts.term) {
             self.term = opts.term;
         }
-        //console.log("new shell", self.pid, "parent: ", self.shell.pid, self.opts.argv.join(' '), "term: ", self.term ? self.term.name : "none", "pterm: ", self.pterm() ? self.pterm().name : "none");
+        //console.log("new shell", self.pid, "parent: ", self.shell.pid, self.opts.argv.join(' '), "term: ", self.term ? self.term.name : "none", "ediv: ", !!self.ediv);
         if (self.docopts['-s'] || self.docopts['-f']) {
             /* execute in same context */
             self.vars = self.shell.vars;

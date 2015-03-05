@@ -8,6 +8,7 @@ function Paste(opts) {
 
     Paste.base.call(self, opts);
     self.obuffer = [];
+    self.ediv = null;
 }
 
 inherit(Paste, Command);
@@ -47,11 +48,13 @@ Paste.prototype.next = check_next(do_docopt(function() {
     self.inited = true;
 
     var height = isNaN(+self.docopts['-H']) ? 400 : +self.docopts['-H'],
-        term = self.pterm(),
-        tdiv = term.div;
+        tdiv = self.ediv;
 
+    if (!tdiv) {
+        return self.exit('ediv not available');
+    }
     self.div = $('<div class="pterm-cli pt2"/>');
-    tdiv.prepend(self.div);
+    tdiv.append(self.div);
     var navbar = '<div class="pterm-editor-navbar" style="border-top: 1px solid #ccc; border-right: 1px solid #ccc; border-left: 1px solid #ccc;">' +
         '<button class="pe-button pe-save">Emit</button>' +
         '<button class="pe-button pe-quit">Quit</button>' +

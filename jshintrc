@@ -181,6 +181,9 @@
     "objargs": false,
     "getcsl": false,
     "_lookup_fs": false,
-    "pigshell_baseurl": true
+    "pigshell_baseurl": true,
+    "assert": false,
+    "mergeattr_x": false,
+    "mkediv": false
     }
 }

@@ -9,6 +9,7 @@ function Jframe(opts) {
     Jframe.base.call(self, opts);
     self.olist = [];
     self.context = {};
+    self.ediv = null;
 }
 
 inherit(Jframe, Command);
@@ -16,17 +17,16 @@ inherit(Jframe, Command);
 Jframe.prototype.usage = 'jframe       -- display content in iframe\n\n' +
     'Usage:\n' +
     '    jframe -h | --help\n' +
-    '    jframe [-o <opts>] [-W <width>] [-H <height>] [-a <sopts>] [-g] <template> [<obj>...]\n' +
-    '    jframe [-o <opts>] [-W <width>] [-H <height>] [-a <sopts>] [-g] -s <tstr> [<obj>...]\n\n' +
+    '    jframe [-o <opts>] [-c <css>] [-a <sopts>] [-O] <template> [<obj>...]\n' +
+    '    jframe [-o <opts>] [-c <css>] [-a <sopts>] [-O] -s <tstr> [<obj>...]\n\n' +
     'Options:\n' +
     '    <template>   IFrame file path\n' +
     '    <obj>        Object to display through iframe template\n' +
-    '    -W <width>   Width of iframe in pixels or percentage\n' + 
-    '    -H <height>  Height of iframe in pixels or percentage\n' + 
+    '    -c <css>     JSON string of CSS settings to be applied to iframe\n' +
     '    -s <tstr>    IFrame template string\n' +
     '    -o <opts>    Options to be passed to iframe template\n' +
     '    -a <sopts>   Comma separated list of sandbox options to enabled\n' +
-    '    -g           Gather all objects and deliver to iframe as a list\n' +
+    '    -O           IFrame goes to standard output; ediv is not used\n' +
     '    -h --help    Show this message.\n';
 
 Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
@@ -46,6 +46,13 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
 
         self.inited = true;
         self.cliopts = cliopts;
+
+        if (self.docopts['-O'] && !isatty(opts.term)) {
+            return self.exit('stdout not a term');
+        }
+        if (!self.docopts['-O'] && !self.ediv) {
+            return self.exit('ediv not available');
+        }
 
         if (self.docopts['-a']) {
             var sboxopts = self.docopts['-a'].split(',');
@@ -86,27 +93,30 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
         var iframe = document.createElement('iframe'),
             dwidth = self.pterm().div.width(),
             dheight = $(window).height(),
-            uwidth = self.docopts['-W'],
-            uheight = self.docopts['-H'],
+            css = parse_json(self.docopts['-c']) || {},
             width = dwidth,
-            height = dheight * 2 / 3,
-            term = self.pterm(),
-            tdiv = term.div;
+            height = Math.ceil(dheight * 2 / 3);
 
-        if (uwidth) {
-            width = (uwidth[uwidth.length - 1] === '%') ? +uwidth.slice(0, -1) / 100 * dwidth : +uwidth;
-        }
-        if (uheight) {
-            height = (uheight[uheight.length - 1] === '%') ? +uheight.slice(0, -1) / 100 * dheight : +uheight;
-        }
+        var cssdef = {
+            'width': width.toString() + 'px',
+            'height': height.toString() + 'px',
+            'border': 'none'
+        };
 
-        iframe.setAttribute('style', sprintf("width:%dpx; height:%dpx; border:none;", width, height));
+        css = $.extend({}, cssdef, css);
+        var css_str = Object.keys(css).map(function(c) { return c + ':' + css[c]; }).join('; ');
+
+        iframe.setAttribute('style', css_str);
         iframe.setAttribute('name', 'pigshell_frame:{"ver": "1.0", "msg": "postMessage"}');
         iframe.setAttribute("sandbox", self.sboxopts);
         iframe.onload = function() {
             proc.current(self);
-            sendmsg('config', self.cliopts);
-            return next();
+            sendmsg('config', {opts: self.cliopts, css: css});
+            self.loaded = true;
+            if (self.next_pending) {
+                self.next_pending = false;
+                return next();
+            }
         };
         iframe.onerror = function() {
             proc.current(self);
@@ -120,7 +130,12 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
         } else {
             iframe.setAttribute("src", self.template);
         }
-        tdiv.prepend($(iframe));
+        if (self.docopts['-O']) {
+            return self.output({html: iframe});
+        } else {
+            self.next_pending = true;
+            self.ediv.append(iframe);
+        }
     }
 
     function recv_config(data) {
@@ -170,6 +185,10 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
     }
 
     function next() {
+        if (!self.loaded) {
+            self.next_pending = true;
+            return;
+        }
         return sendmsg('next');
     }
 

@@ -31,6 +31,8 @@ HTML=<<EOH
             font-family: monospace;
             font-size: 14px;
             line-height: 16px;
+            margin: 0;
+            padding: 0;
         }
         div.xitem {
             display: inline-block;
@@ -127,8 +129,10 @@ HTML=<<EOH
         });
     }
 
-    pframe.onconfig = function(c) {
-        var nitems = +c['-n'] || undefined,
+    pframe.onconfig = function(data) {
+        var cliopts = data.opts || {},
+            cssopts = data.css || {},
+            nitems = +c['-n'] || undefined,
             speed = +c['-t'] || undefined,
             expr = c['-e'] || null,
             batch_mode = !c['-c'],

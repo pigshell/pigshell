@@ -1,0 +1,96 @@
+#!pigshell
+
+usage=<<EOH
+lmap         -- Inspect pipeline
+
+Usage:
+    lmap [-c <css>] [-t <tile>]
+    lmap -l
+    lmap -h | --help
+
+Options:
+    -h --help   Show this message.
+    -c <css>    JSON string specifying CSS to be applied to map
+EOH
+
+if ! docopt $usage $*; then
+    exit false
+fi
+
+HTML=<<EOH
+<!DOCTYPE html>
+<html>
+
+<head>
+<link rel="stylesheet" type="text/css" href="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.css" />
+<script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+<script type='text/javascript' src='http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js?2'></script>
+<script src="http://pigshell.com/extra/pframe.v0.js"></script>
+<style>
+body { margin: 0; padding: 0; }
+</style>
+</head>
+
+<body>
+<div id="map"></div>
+
+<script type="text/javascript">
+
+var state = {};
+var map;
+
+function init() {
+    if (init._called) {
+        return;
+    }
+    init._called = true;
+    var defcss = {'height': '400px'},
+        mycss = {'border': '1px solid #aaa', 'box-sizing': 'border-box'},
+        css = $.extend({}, defcss, state.css, mycss);
+
+    $('#map').css(css);
+    map = L.map('map', {
+        center: [20.0, 5.0],
+        zoom: 2
+    });
+    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+}
+init._called = false;
+
+pframe.onnext = function() {
+    next();
+};
+
+function next() {
+    pframe.unext(function(res) {
+        if (res === null) {
+            return pframe.exit(true);
+        }
+        if (res.coords) {
+            var html = res.html || '<p>' + obj.toString() + '</p>';
+            L.marker([res.coords.lat, res.coords.lon])
+                .bindPopup(html)
+                .addTo(map); 
+        }
+        return next();
+    });
+}
+
+pframe.onconfig = function(c) {
+    var cliopts = c.opts || {},
+        css = c.css || {};
+    console.log("GOT CSS", css);
+    state.css = css;
+    init();
+};
+
+</script>
+
+</body>
+
+</html>
+EOH
+
+jframe -o $docopt -c $"c -s $HTML

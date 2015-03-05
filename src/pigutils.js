@@ -1741,6 +1741,25 @@ function _lookup_fs(uri, mountopts, fslist) {
     return null;
 }
 
+/*
+ * edivs ("extra" divs) are added to pterms by Shell as a place where commands
+ * in the middle of a pipeline can dump their iframes, etc. such that those
+ * divs appear in pipeline order. e.g. cmd1 | cmd2; cmd3 | cmd4 | cmd5 will
+ * have divs appearing in the order cmd1, cmd2, cmd3, cmd4, cmd5.
+ * edivs are nested within parent shells' edivs to achieve the above pipeline
+ * order.
+ *
+ * A command must indicate that it would like an ediv by setting self.ediv
+ * to null. If creating a Shell by hand, you need to supply it with an ediv as
+ * well.
+ */
+
+function mkediv(parent_div) {
+    var ediv = $('<div class="pterm-ediv"></div>');
+    parent_div.append(ediv);
+    return ediv;
+}
+
 var ps_topics = {};
 function publish(channel, data) {
     if (ps_topics[channel] === undefined) {

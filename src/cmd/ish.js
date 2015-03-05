@@ -119,6 +119,7 @@ IShell.prototype.run_next = function() {
         p = makepipe(shell, ctext);
 
     
+    shell.ediv = mkediv(term.div);
     icmd.pid = shell.pid;
     self.icmd_fg = icmd;
 

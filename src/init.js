@@ -138,6 +138,7 @@ function run_initshell(opts, cb) {
         stdout = new Stdout({shell: initshell}, term);
 
     term.removable = false;
+    initshell.ediv = mkediv(termdiv);
     if (hashopts.norc) {
         sys.putenv(initshell, 'norc', 1);
     }

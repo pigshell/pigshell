@@ -38,6 +38,12 @@
     line-height: 16px;
 }
 
+.pigshell .pterm-ediv {
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
 .pigshell .pterm-cli {
     clear: both;
 }
