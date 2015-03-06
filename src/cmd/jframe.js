@@ -111,7 +111,7 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
         iframe.setAttribute("sandbox", self.sboxopts);
         iframe.onload = function() {
             proc.current(self);
-            sendmsg('config', {opts: self.cliopts, css: css});
+            sendmsg('config', {opts: self.cliopts});
             self.loaded = true;
             if (self.next_pending) {
                 self.next_pending = false;

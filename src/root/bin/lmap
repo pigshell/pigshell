@@ -1,7 +1,7 @@
 #!pigshell
 
 usage=<<EOH
-lmap         -- Inspect pipeline
+lmap         -- Display map
 
 Usage:
     lmap [-p] [-c <css>] [-t <tilesource>]
@@ -98,10 +98,6 @@ function init() {
 }
 init._called = false;
 
-pframe.onnext = function() {
-    next();
-};
-
 function next() {
     pframe.unext(function(res) {
         if (res === null) {
@@ -128,6 +124,8 @@ function next() {
         return next();
     });
 }
+
+pframe.onnext = next;
 
 pframe.onconfig = function(c) {
     var copts = c.opts || {};

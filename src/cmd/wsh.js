@@ -3,9 +3,6 @@
  * This program is free software - see the file COPYING for license details.
  */
 
-/*
- * TODO kill wsh doesn't kill backend command
- */
 function Wsh(opts) {
     var self = this;
 
@@ -177,6 +174,15 @@ Wsh.prototype.wrecv = function(data) {
         }
         return self.do_output();
     }
+};
+
+Wsh.prototype.kill = function(reason) {
+    var self = this;
+
+    if (self.ws) {
+        self.wclose(1000, "wsh killed");
+    }
+    Wsh.base.prototype.kill.call(self, reason);
 };
 
 Command.register("wsh", Wsh);
