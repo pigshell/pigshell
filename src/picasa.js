@@ -482,7 +482,7 @@ PicasaPhoto.prototype.update = function(meta, opts, cb) {
         '<p class="name">{{name}}</p></div>';
         if (data.georss$where !== undefined) {
             var comps = data.georss$where.gml$Point.gml$pos.$t.split(' ');
-            self.coords = { lat: comps[0], lon: comps[1] };
+            self.geo = { type: 'Point', coordinates: [comps[1], comps[0]] };
         }
     self.readable = true;
     self.raw = data;

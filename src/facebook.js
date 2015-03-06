@@ -204,9 +204,9 @@ FacebookFile.prototype.albumdir_readdir = function(opts, cb) {
                 homeUrl: album.link
             };
             if (typeof album.place !== 'undefined') {
-                newfile.coords = {
-                    lat: album.place.location.latitude,
-                    lon: album.place.location.longitude
+                newfile.geo = {
+                    type: 'Point',
+                    coordinates: [album.place.location.longitude, album.place.location.latitude]
                 };
             }
             var newf = new FacebookFile(newfile);
@@ -263,9 +263,9 @@ FacebookFile.prototype.getuser = function(friend, createSub) {
     var fl = friend.current_location || friend.hometown_location;
     if (fl !== null && fl.latitude !== undefined &&
         fl.longitude !== undefined) {
-        newfile.coords = {
-            lat: fl.latitude,
-            lon: fl.longitude
+        newfile.geo = {
+            type: 'Point',
+            coordinates: [fl.longitude, fl.latitude]
         };
     }
     var nf = new FacebookFile(newfile);
@@ -551,9 +551,9 @@ FacebookFile.prototype.album_readdir = function(opts, cb) {
                 content: photo.source
             };
             if (typeof photo.place !== 'undefined') {
-                newfile.coords = {
-                    lat: photo.place.location.latitude,
-                    lon: photo.place.location.longitude
+                newfile.geo = {
+                    type: 'Point',
+                    coordinates: [photo.place.location.longitude, photo.place.location.latitude]
                 };
             }
             var newf = new FacebookFile(newfile);

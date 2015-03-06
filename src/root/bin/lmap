@@ -110,11 +110,12 @@ function next() {
             }
             return pframe.exit(true);
         }
-        if (res.coords && cliopts.ping) {
-            pinglayer.ping([res.coords.lon, res.coords.lat]);
-        } else if (res.coords) {
+        var geo = res.geo;
+        if (geo && geo.type === 'Point' && cliopts.ping) {
+            pinglayer.ping(geo.coordinates);
+        } else if (geo && geo.type === 'Point') {
             var html = res.html || '<p>' + res.toString() + '</p>',
-                pt = [res.coords.lat, res.coords.lon],
+                pt = [geo.coordinates[1], geo.coordinates[0]],
                 opts = $.extend({icon: icon}, res.name ? {title: res.name} : {});
             L.marker(pt, opts)
                 .bindPopup(html)

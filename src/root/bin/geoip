@@ -1,0 +1,31 @@
+usage='geoip        -- get geographical information of IP addresses\
+\
+Usage:\
+    geoip [<ip>...]\
+    geoip -h | --help\
+\
+Options:\
+    -h --help   Show this message.\
+    <ip>        IPs in dotted quad notation.\
+'
+
+if ! docopt $usage $*; then exit false; fi
+
+if [ $#ip -gt 0 ]; then ndata=${echo -r $ip}; fi
+
+GC=/tmp/geoip.cache
+mkdir $GC 2>/dev/null
+while next $ndata | read IP && [ $#IP -gt 0 ]
+do
+    if [ -f $GC/$IP ]; then
+        cat $GC/$IP | to text | jf 'JSON.parse(x)' | jf 'x.geo = {lat: x.latitude, lon: x.longitude}, x'
+    else
+        ycat http://freegeoip.net/json/$"IP | to text | jf '$$(x).find("p").text()' | read jsonstr
+        if [ $"jsonstr != "" ]; then
+            echo $jsonstr | jf 'JSON.parse(x)' | jf 'x.geo = {type: "Point", coordinates: [x.longitude, x.latitude]}, x' | read pt
+            echo $pt | printf >$GC/$IP
+            echo $pt
+        fi
+    fi
+done
+exit true
