@@ -101,6 +101,11 @@ var pframe = (function() {
         }
     });
 
+    window.onerror = function (message, file, line, col) {
+        console.log("window.onerror: ", message, "file: ", file, "line: ", line, "col: ", col);
+        return exit("Exception: " + message);
+    };
+
     return {
         proto: proto,
         ondata: null,

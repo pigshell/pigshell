@@ -750,7 +750,7 @@ function optstr_parse(str, parsenum) {
             comps = key.split('.'),
             last = comps.pop();
 
-        if (parsenum && !isNaN(+value)) {
+        if (value !== '' && parsenum && !isNaN(+value)) {
             value = +value;
         }
         for (var i = 0; i < comps.length; i++) {

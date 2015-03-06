@@ -49,7 +49,7 @@ Docopt.prototype.next = check_next(function() {
             continue;
         }
         sname = name.replace(/^-{1,2}/, '').replace(/^<(.*)>/, "$1"); 
-        if (varmap[name] === null) {
+        if (varmap[name] === null || varmap[name] === false) {
             sys.putenv(self, sname, []);
             continue;
         }
