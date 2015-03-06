@@ -45,6 +45,11 @@ HTML=<<EOH
 <script src="http://pigshell.com/extra/leaflet-0.7.2/PingLayer.js"></script>
 <style>
 body { margin: 0; padding: 0; }
+circle.ping {
+    stroke: #111;
+    stroke-width: 1px;
+    fill: red;
+}
 </style>
 </head>
 
@@ -55,8 +60,7 @@ body { margin: 0; padding: 0; }
 
 var smallicon = L.Icon.Default.extend({iconSize: [15, 12]});
 
-var map, icon,
-    config_css = {},
+var map, icon, pinglayer,
     cliopts = {},
     markers = [];
 
@@ -84,6 +88,13 @@ function init() {
         popupAnchor: [1, -25],
         shadowSize: [30, 30]
     });
+    if (cliopts.ping) {
+        var popts = {
+            duration: 800
+        };
+        pinglayer = L.pingLayer(popts).addTo(map);
+        pinglayer.radiusScale().range([2, 10])
+    }
 }
 init._called = false;
 
@@ -103,7 +114,9 @@ function next() {
             }
             return pframe.exit(true);
         }
-        if (res.coords) {
+        if (res.coords && cliopts.ping) {
+            pinglayer.ping([res.coords.lon, res.coords.lat]);
+        } else if (res.coords) {
             var html = res.html || '<p>' + res.toString() + '</p>',
                 pt = [res.coords.lat, res.coords.lon],
                 opts = $.extend({icon: icon}, res.name ? {title: res.name} : {});
@@ -119,7 +132,6 @@ function next() {
 pframe.onconfig = function(c) {
     var copts = c.opts || {};
     cliopts = copts;
-    console.log("CLIOPTS", cliopts);
     init();
 };
 

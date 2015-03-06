@@ -11,5 +11,5 @@ chart4=$(ls /facebook/friends/ | grep -f gender female | chart -t pie -o title="
 chart3=$(ls /facebook/friends/ | grep -f gender male | chart -t pie -o title="Relationship Status - Boys",field=relationship_status,height=150)
 template -c chart1,chart4,chart3 -s $t2 </dev/null
 html "<div class='clear'></div>"
-ls /facebook/friends | map -c "height: 200px; width:333px; float: left;margin:20px"
+ls /facebook/friends | map -c '{"height": "200px", "width": "333px"; "float": "left"}'
 ls /facebook/friends/ | jf '(x && x.birthday && x.birthday.year() != 2222) ? {data: x.birthday.format("YYYY")} : {}' | chart -t histogram -o title="Birth Year",xmin=min,height=240 | template -s $t1

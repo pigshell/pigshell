@@ -130,7 +130,7 @@ HTML=<<EOH
     }
 
     pframe.onconfig = function(data) {
-        var cliopts = data.opts || {},
+        var c = data.opts || {},
             cssopts = data.css || {},
             nitems = +c['-n'] || undefined,
             speed = +c['-t'] || undefined,
