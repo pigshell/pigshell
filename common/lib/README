@@ -1,0 +1,22 @@
+common/lib
+==========
+
+This directory holds third party libraries and files which
+
+  * are versioned and immutable (e.g. jquery-1.7.2.js)
+  * require to be accessed by an absolute URL which remains constant across
+    pigshell versions (usually by iframe templates)
+  * must never be deleted
+
+While we could use public CDNs to serve out these files, having them served
+out of here has two purposes:
+
+  * Better guarantee against unavailability and mutability of external sources
+  * Works with local installations even without an Internet connection
+
+TODO
+
+  * Assuming semantic versioning, consider providing higher-level symlinks,
+    a la shared libraries. e.g. jquery-1.7.js -> jquery-1.7.2.js. This
+    enables templates to use a less specific version and get automatic
+    updates. May need more elaborate httpd cache rules.
