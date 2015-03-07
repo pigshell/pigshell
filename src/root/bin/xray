@@ -327,10 +327,11 @@ HTML=<<EOH
 
     $("input[name=selall]").prop("checked", settings.defsel); 
     send_height(get_height());
+/*
     var popupdiv = d3.select("body").append("div")
      .attr("class", "tooltip")
      .style("opacity", 0);
-
+*/
     function obj2html(obj) {
         if (obj.html) {
             return obj.html;
@@ -378,6 +379,7 @@ HTML=<<EOH
         send_height(get_height());
         return pframe.exit(val);
     }
+
     </script>
 
 </body>

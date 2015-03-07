@@ -58,9 +58,10 @@ pframe.onconfig = function(data) {
     }
     return pframe.config({height: $(document.body).outerHeight(true)});
 };
+
 </script>
 </body>
 
 </html>
 EOH
-jframe -o $docopt -s $HTML
+jframe -o $docopt -c '{"width": "20em"}' -s $HTML

@@ -2,22 +2,28 @@
  * Pigshell frame communication protocol. Used for communicating with HTML
  * templates housed in iframes.
  *
- * WARNING: v0 API still in flux
+ * WARNING: 1.0 API still in flux
  */
 
 var pframe = (function() {
     var name = window.name || '',
+        version = '1.0',
         proto = {};
 
     if (name.match(/^pigshell_frame:/)) {
+        var vcomps = version.split('.');
         try {
             proto = JSON.parse(name.slice('pigshell_frame:'.length));
-            if (proto.ver === '1.0' && proto.msg === 'postMessage') {
-                config({'proto': {ver: '1.0', msg: 'postMessage'}});
-            } else {
-                return exit('Unsupported proto');
-            }
         } catch(e) {
+            return {};
+        }
+        var versions = proto.ver,
+            msgs = proto.msg,
+            vcompat = versions
+                .map(function(v) { return v.split('.')[0] === vcomps[0]; })
+                .reduce(function(a, b) { return a || b; }, false);
+        if (!vcompat || msgs.indexOf('postMessage') === -1) {
+            window.parent.postMessage({op: 'exit', data: 'Unsupported proto'}, '*');
             return {};
         }
     } else {
@@ -25,7 +31,7 @@ var pframe = (function() {
             if (window.demo) {
                 window.demo();
             }
-        }
+        };
         return {};
     }
 
@@ -106,6 +112,8 @@ var pframe = (function() {
         return exit("Exception: " + message);
     };
 
+    config({'proto': {ver: version, msg: 'postMessage'}});
+
     return {
         proto: proto,
         ondata: null,
@@ -119,6 +127,7 @@ var pframe = (function() {
         exit: exit,
         next_pending: false,
         unext_pending: false,
-        done: false
-    }
+        done: false,
+        version: version
+    };
 })();

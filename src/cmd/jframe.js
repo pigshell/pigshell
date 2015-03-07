@@ -8,8 +8,9 @@ function Jframe(opts) {
 
     Jframe.base.call(self, opts);
     self.olist = [];
-    self.context = {};
     self.ediv = null;
+    self.proto_supported = ['1.0'];
+    self.msg_supported = ['postMessage'];
 }
 
 inherit(Jframe, Command);
@@ -35,7 +36,8 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
     if (self.inited === undefined) {
         return init();
     } else {
-        return next();
+        self.next_pending = true;
+        return update();
     }
 
     function init() {
@@ -104,25 +106,26 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
         };
 
         css = $.extend({}, cssdef, css);
-        var css_str = Object.keys(css).map(function(c) { return c + ':' + css[c]; }).join('; ');
+        var css_str = Object.keys(css).map(function(c) { return c + ':' + css[c]; }).join('; '),
+            ver_str = 'pigshell_frame:' + JSON.stringify({
+                ver: self.proto_supported,
+                msg: self.msg_supported
+            });
 
         iframe.setAttribute('style', css_str);
-        iframe.setAttribute('name', 'pigshell_frame:{"ver": "1.0", "msg": "postMessage"}');
+        iframe.setAttribute('name', ver_str);
         iframe.setAttribute("sandbox", self.sboxopts);
         iframe.onload = function() {
             proc.current(self);
-            sendmsg('config', {opts: self.cliopts});
             self.loaded = true;
-            if (self.next_pending) {
-                self.next_pending = false;
-                return next();
-            }
+            update();
         };
         iframe.onerror = function() {
             proc.current(self);
             return self.exit("IFrame load error");
         };
         self.iframe = iframe;
+        self.msg_listener = recvmsg;
         window.addEventListener('message', recvmsg);
 
         if (self.mode === 'srcdoc') {
@@ -138,10 +141,34 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
         }
     }
 
+    function update() {
+        if (self.loaded && self.proto && !self.config_sent) {
+            self.config_sent = true;
+            sendmsg('config', {opts: self.cliopts});
+        }
+        if (self.loaded && self.proto && self.next_pending) {
+            self.next_pending = false;
+            return next();
+        }
+    }
+
     function recv_config(data) {
         //console.log("CONFIG", data);
-        if (data && data.height !== undefined && !self.docopts['-H']) {
-            $(self.iframe).height(data.height + 10);
+        if (!data) {
+            return;
+        }
+        if (data.proto) {
+            var proto = data.proto,
+                ver = proto.ver.split('.'),
+                msgproto = proto.msg;
+
+            if (ver[0] !== '1' || proto.msg !== 'postMessage') {
+                return self.exit('Bad proto from iframe');
+            }
+            self.proto = {ver: ver, msg: msgproto};
+            update();
+        } else if (data.height !== undefined && !self.docopts['-H']) {
+            $(self.iframe).height(data.height);
         }
     }
 
@@ -185,10 +212,6 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
     }
 
     function next() {
-        if (!self.loaded) {
-            self.next_pending = true;
-            return;
-        }
         return sendmsg('next');
     }
 
@@ -211,5 +234,27 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
         return cf;
     }
 })));
+
+Jframe.prototype.rm_msg_listener = function() {
+    var self = this;
+
+    if (self.msg_listener) {
+        window.removeEventListener('message', self.msg_listener);
+    }
+};
+
+Jframe.prototype.kill = function(reason) {
+    var self = this;
+
+    self.rm_msg_listener();
+    Jframe.base.prototype.kill.call(self, reason);
+};
+
+Jframe.prototype.exit = function(val) {
+    var self = this;
+
+    self.rm_msg_listener();
+    Jframe.base.prototype.exit.call(self, val);
+};
 
 Command.register("jframe", Jframe);
