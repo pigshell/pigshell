@@ -3,6 +3,9 @@
  * This program is free software - see the file COPYING for license details.
  */
 
+var _pframe_mbox_id = 1;
+window.pframe_mbox = {};
+
 function Jframe(opts) {
     var self = this;
 
@@ -10,7 +13,7 @@ function Jframe(opts) {
     self.olist = [];
     self.ediv = null;
     self.proto_supported = ['1.0'];
-    self.msg_supported = ['postMessage'];
+    self.msg_supported = ['postMessage', 'mbox'];
 }
 
 inherit(Jframe, Command);
@@ -95,9 +98,13 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
         var iframe = document.createElement('iframe'),
             dwidth = self.pterm().div.width(),
             dheight = $(window).height(),
-            css = parse_json(self.docopts['-c']) || {},
             width = dwidth,
             height = Math.ceil(dheight * 2 / 3);
+
+        self.css_opt = parse_json(self.docopts['-c']) || {};
+        self.mbox_id = ++_pframe_mbox_id;
+        self.mbox = {inbox: undefined, outbox: undefined};
+        window.pframe_mbox[self.mbox_id] = self.mbox;
 
         var cssdef = {
             'width': width.toString() + 'px',
@@ -105,11 +112,12 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
             'border': 'none'
         };
 
-        css = $.extend({}, cssdef, css);
-        var css_str = Object.keys(css).map(function(c) { return c + ':' + css[c]; }).join('; '),
+        var css = $.extend({}, cssdef, self.css_opt),
+            css_str = Object.keys(css).map(function(c) { return c + ':' + css[c]; }).join('; '),
             ver_str = 'pigshell_frame:' + JSON.stringify({
                 ver: self.proto_supported,
-                msg: self.msg_supported
+                msg: self.msg_supported,
+                mbox_id: self.mbox_id
             });
 
         iframe.setAttribute('style', css_str);
@@ -144,7 +152,7 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
     function update() {
         if (self.loaded && self.proto && !self.config_sent) {
             self.config_sent = true;
-            sendmsg('config', {opts: self.cliopts});
+            sendmsg('config', {opts: self.cliopts, pigshell_baseurl: pigshell_baseurl});
         }
         if (self.loaded && self.proto && self.next_pending) {
             self.next_pending = false;
@@ -162,18 +170,19 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
                 ver = proto.ver.split('.'),
                 msgproto = proto.msg;
 
-            if (ver[0] !== '1' || proto.msg !== 'postMessage') {
+            if (ver[0] !== '1' ||
+                self.msg_supported.indexOf(msgproto) === -1) {
                 return self.exit('Bad proto from iframe');
             }
             self.proto = {ver: ver, msg: msgproto};
             update();
-        } else if (data.height !== undefined && !self.docopts['-H']) {
+        } else if (data.height !== undefined && !self.css_opt['height']) {
             $(self.iframe).height(data.height);
         }
     }
 
-    function sendmsg(op, data) {
-        self.iframe.contentWindow.postMessage({op: op, data: data}, '*');
+    function sendmsg(op, obj) {
+        self.iframe.contentWindow.postMessage({op: op, data: obj}, '*');
     }
 
     function recvmsg(e) {
@@ -187,12 +196,16 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
         //console.log("JFRAME RECV", op, data);
         if (op === 'next') {
             self.unext({}, cef(self, function(obj) {
-                /*
-                 * XXX Files are the most common objects which can't pass
-                 * the structured-clone barrier due to presence of methods.
-                 * What's the best way to deal with them?
-                 */
-                if (obj instanceof File || (obj && obj._path && obj.fs)) {
+                if (self.proto.msg === 'mbox') {
+                    self.mbox.outbox = obj;
+                    obj = undefined;
+                } else if (obj instanceof File ||
+                    (obj && obj._path && obj.fs)) {
+                    /*
+                     * XXX Files are the most common objects which can't pass
+                     * the structured-clone barrier due to presence of methods.
+                     * What's the best way to deal with them?
+                     */
                     obj = clean_file(obj);
                 }
                 return sendmsg('data', obj);
@@ -200,7 +213,14 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
         } else if (op === 'config') {
             return recv_config(data);
         } else if (op === 'data') {
-            return self.output(data);
+            if (self.proto.msg === 'mbox') {
+                if (self.mbox.inbox === undefined) {
+                    return self.exit('IFrame broke mbox protocol');
+                }
+                return self.output(self.mbox.inbox);
+            } else {
+                return self.output(data);
+            }
         } else if (op === 'errmsg') {
             return self.errmsg(data);
         } else if (op === 'exit') {
@@ -235,9 +255,12 @@ Jframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
     }
 })));
 
-Jframe.prototype.rm_msg_listener = function() {
+Jframe.prototype.cleanup = function() {
     var self = this;
 
+    if (self.mbox_id) {
+        delete window.pframe_mbox[self.mbox_id];
+    }
     if (self.msg_listener) {
         window.removeEventListener('message', self.msg_listener);
     }
@@ -246,14 +269,14 @@ Jframe.prototype.rm_msg_listener = function() {
 Jframe.prototype.kill = function(reason) {
     var self = this;
 
-    self.rm_msg_listener();
+    self.cleanup();
     Jframe.base.prototype.kill.call(self, reason);
 };
 
 Jframe.prototype.exit = function(val) {
     var self = this;
 
-    self.rm_msg_listener();
+    self.cleanup();
     Jframe.base.prototype.exit.call(self, val);
 };
 

@@ -64,4 +64,4 @@ pframe.onconfig = function(data) {
 
 </html>
 EOH
-jframe -o $docopt -c '{"width": "20em"}' -s $HTML
+jframe -o $docopt -a "scripts,same-origin" -c '{"width": "20em"}' -s $HTML

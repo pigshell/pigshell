@@ -11,18 +11,34 @@ var pframe = (function() {
         proto = {};
 
     if (name.match(/^pigshell_frame:/)) {
-        var vcomps = version.split('.');
+        var vcomps = version.split('.'),
+            jframe_proto = {};
         try {
-            proto = JSON.parse(name.slice('pigshell_frame:'.length));
+            jframe_proto = JSON.parse(name.slice('pigshell_frame:'.length));
         } catch(e) {
             return {};
         }
-        var versions = proto.ver,
-            msgs = proto.msg,
+        var versions = jframe_proto.ver,
+            msgs = jframe_proto.msg,
             vcompat = versions
                 .map(function(v) { return v.split('.')[0] === vcomps[0]; })
-                .reduce(function(a, b) { return a || b; }, false);
-        if (!vcompat || msgs.indexOf('postMessage') === -1) {
+                .reduce(function(a, b) { return a || b; }, false),
+            mbox_capable = false;
+        try {
+            mbox_capable = !!window.parent.pigshell;
+        } catch(e) {}
+        if (vcompat && mbox_capable && msgs.indexOf('mbox') !== -1) {
+            proto.ver = version;
+            proto.msg = 'mbox';
+            proto.mbox = window.parent.pframe_mbox[jframe_proto.mbox_id];
+            if (proto.mbox === undefined) {
+                window.parent.postMessage({op: 'exit', data: 'mbox not found'});
+                return {};
+            }
+        } else if (vcompat && msgs.indexOf('postMessage') !== -1) {
+            proto.ver = version;
+            proto.msg = 'postMessage';
+        } else {
             window.parent.postMessage({op: 'exit', data: 'Unsupported proto'}, '*');
             return {};
         }
@@ -45,6 +61,11 @@ var pframe = (function() {
 
     function output(item) {
         pframe.next_pending = false;
+        
+        if (pframe.proto.msg === 'mbox') {
+            pframe.proto.mbox.inbox = item;
+            item = undefined;
+        }
         window.parent.postMessage({op: 'data', data: item}, '*');
     }
 
@@ -93,6 +114,13 @@ var pframe = (function() {
             }
             var cb = pframe.unext_pending;
             pframe.unext_pending = null;
+            if (pframe.proto.msg === 'mbox') {
+                data = pframe.proto.mbox.outbox;
+                pframe.proto.mbox.outbox = undefined;
+                if (data === undefined) {
+                    return exit('jframe broke mbox protocol');
+                }
+            }
             return cb(data);
         } else if (op === 'next') {
             if (pframe.next_pending) {
@@ -112,7 +140,7 @@ var pframe = (function() {
         return exit("Exception: " + message);
     };
 
-    config({'proto': {ver: version, msg: 'postMessage'}});
+    config({proto: proto});
 
     return {
         proto: proto,

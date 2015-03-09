@@ -142,4 +142,4 @@ pframe.onconfig = function(c) {
 EOH
 
 cssopts=$([ -n $"c ] && echo "" "-c" $"c)
-jframe -o tilesrc=$"TILESRC,ping=$"p $cssopts -O -s $HTML
+jframe -a "scripts,same-origin" -o tilesrc=$"TILESRC,ping=$"p $cssopts -O -s $HTML

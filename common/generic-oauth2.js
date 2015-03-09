@@ -57,7 +57,7 @@ OAuth2.recvmsg = function(event) {
     var msg = event.data;
     if (!msg || (msg.hash === undefined || msg.search === undefined ||
         !msg.name)) {
-        console.log("Unknown message: ", msg);
+        //console.log("Unknown message: ", msg);
         return;
     }
     var hp = parseqs(msg.hash.slice(1)),
