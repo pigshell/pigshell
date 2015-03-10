@@ -1,16 +1,16 @@
 #!pigshell
 
 usage=<<EOH
-xray         -- Inspect pipeline
+vgrep         -- Visual pipeline inspector
 
 Usage:
-    xray [-c] [-n <items>] [-t <sec>] [-e <expr>]
-    xray -h | --help
+    vgrep [-q <size>] [-n <items>] [-t <sec>] [-e <expr>]
+    vgrep -h | --help
 
 Options:
     -h --help   Show this message.
-    -c          Flow ("continuous") mode, one item passed every few seconds
-    -t <sec>    Advance one item every <sec> seconds in flow mode [default: 2]
+    -q <size>   Quantum of processing - 'one', 'batch', 'all' items
+    -t <sec>    Process items every <sec> seconds
     -n <items>  Buffer upto <items> objects [default: 5]
     -e <expr>   Javascript expression, e.g. 'x.attr === 10' to select objects
 EOH
@@ -24,7 +24,6 @@ HTML=<<EOH
 <html>
 
 <head>
-    <link href="http://pigshell.com/v/0.6.2/pigshell.css" rel="stylesheet"/>
     <style>
 
         body {
@@ -54,35 +53,38 @@ HTML=<<EOH
         .update {
             border: 1px solid #222;
         }
-
-        div.tooltip {
-            position: absolute;
-            padding: 0.5em;
-            font-size: 10px;
-            color: #222;
-            background: #FFF;
-            border-radius: 2px;
-            pointer-events: none;
-            box-shadow: 0px 0px 2px 0px #a6a6a6;
-            max-width: 30em;
-            max-height: 25em;
+        div.control {
+            padding: 0.25em;
+        }
+        span.rgroup {
+            border: 1px solid #888;
+            padding: 0.25em;
         }
     </style>
 </head>
 
 <body>
-    <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+    <script src="http://pigshell.com/common/lib/jquery-1.7.2/jquery-1.7.2.min.js"></script>
     <script src="http://pigshell.com/extra/pframe.v0.js"></script>
-    <script src="http://pigshell.com/common/d3.v3/d3.v3.min.js"></script>
+    <script src="http://pigshell.com/common/lib/d3-3.4.1/d3.v3.min.js"></script>
 
     <div class="control">
-        <select name="mode">
-            <option value="batch" selected>Batch Mode</option>
-            <option value="flow">Flow Mode</option>
-        </select>
-        <button name="control" class="control">Pass Batch</button>
-        <button name="step" class="control">Pass 1 Item</button>
-        Select All: <input name="selall" type="checkbox"></input>
+        Process 
+        <span class="rgroup">
+            <input type="radio" name="quantum" value="one">one</input>
+            <input type="radio" name="quantum" value="batch">batch</input>
+            <input type="radio" name="quantum" value="all">all</input>
+        </span>&nbsp;items
+        <span class="rgroup">
+            <input type="radio" name="mode" value="manual">manually
+            <input type="radio" name="mode" value="auto">every
+            <input type="textbox" size="4" name="speed">seconds
+        </span>
+        &nbsp;
+        <span class="rgroup">
+        Default <input name="defsel" type="checkbox"></input>
+        </span>
+        &nbsp;<button name="control" class="control">Go</button>
         <button name="quit" class="control">Quit</button>
     </div>
 
@@ -92,23 +94,24 @@ HTML=<<EOH
 
     var defaults = {
         nitems: 5,
+        mode: 'manual',
         speed: 2,
         defsel: true,
-        batch_mode: true,
+        quantum: 'batch',
         expr: null
     };
 
     var items = [],
-        settings = defaults,
         state = {
             next_pending: false,
             unext_pending: false,
             running: false,
             num: 0,
-            last_out: 0,
+            last_update: 0,
             eof: false,
             height: get_height()
         },
+        oldstate = {},
         body = d3.select('body');
 
     pframe.onnext = function() {
@@ -120,7 +123,7 @@ HTML=<<EOH
             if (res === null) {
                 state.eof = true;
             } else {
-                var sel = settings.expr ? settings.expr(res) : settings.defsel;
+                var sel = state.expr ? state.expr(res) : state.defsel;
                 items.push({key: state.num, item: obj2html(res),
                     sel: sel, obj: res, pass: false});
                 state.num++;
@@ -133,94 +136,100 @@ HTML=<<EOH
         var c = data.opts || {},
             cssopts = data.css || {},
             nitems = +c['-n'] || undefined,
-            speed = +c['-t'] || undefined,
+            speed = +c['-t'],
             expr = c['-e'] || null,
-            batch_mode = !c['-c'],
+            quantum = c['-q'] || undefined,
             config = {
                 nitems: nitems,
                 speed: speed,
                 expr: expr,
-                batch_mode: batch_mode
+                quantum: quantum
             };
+        if (isNaN(speed) || speed < 1) {
+            config.speed = undefined;
+        } else {
+            config.mode = 'auto';
+        }
         if (config.expr) {
             config.expr = eval_getexp(config.expr);
         }
-        if (!batch_mode) {
-            $('select[name=mode]').val('flow');
-            $('select[name=mode]').trigger('change');
-        }
-        settings = $.extend({}, settings, config);
+        
+        $.extend(state, defaults, config);
+        state.oldsel = state.defsel;
+
+        update();
     };
 
     function update() {
-        if (!items.length) {
-            if (state.eof && pframe.next_pending) {
-                return exit(true);
-            }
-        } else if ((state.step && update_step()) ||
-                (settings.batch_mode && update_batch()) ||
-                (state.running && update_flow())) {
-            if (pframe.next_pending) {
-                var item = items.shift();
-                state.last_out = Date.now();
-                pframe.output(item.obj);
-            }
+        update_state();
+        if (pframe.next_pending && items.length && items[0].pass) {
+            var item = items.shift();
+            pframe.output(item.obj);
         }
-    
         update_view();
-        if ((settings.batch_mode || state.running) && !pframe.unext_pending
-            && !state.eof && items.length < settings.nitems) {
+        if (!pframe.unext_pending && !state.eof &&
+            items.length < state.nitems) {
             getnext();
         }
     }
 
-    function update_step() {
-        state.step = false;
-        var item = items[0];
-        if (!item.sel) {
-            items.shift();
-            return false;
-        } else {
-            return true;
+    function update_state() {
+        if (state.defsel !== state.oldsel) {
+            items.forEach(function(el) {
+                el.sel = el.pass ? el.sel : state.defsel;
+            });
         }
-    }
-
-    function update_batch() {
-        while (items.length) {
-            var item = items[0];
+        if (!items.length) {
+            if (state.eof && pframe.next_pending) {
+                return exit(true);
+            }
+            return;
+        }
+        if (!state.running) {
+            return;
+        }
+        if (state.mode === 'auto') {
+            var next_update = state.last_update + state.speed * 1000,
+                now = Date.now();
+            if (now < next_update) {
+                if (!state.tid) {
+                    set_timeout(update, next_update - now + 100)
+                }
+                return;
+            }
+            state.last_update = now;
+            set_timeout(update, state.speed * 1000);
+        }
+        for (var i = 0, len = items.length; i < len; i++) {
+            var item = items[i];
             if (!item.pass) {
-                break;
-            }
-            if (!item.sel) {
-                items.shift();
-            } else {
-                return true;
+                item.pass = true;
+                if (state.quantum === 'one') {
+                    break;
+                }
             }
         }
-        return false;
-    }
-
-    function update_flow() {
-        var time = Date.now(),
-            next_out = state.last_out + settings.speed * 1000;
-
-        if (time < next_out) {
-            /* continuous mode, running, but not yet time */
-            set_timeout(update, next_out - time + 100);
-            return false;
+        if (state.quantum !== 'all' && state.mode === 'manual') {
+            state.running = false;
         }
-        var item = items[0];
-        if (!item.sel) {
-            items.shift();
-            set_timeout(update, settings.speed * 1000);
-            return false;
-        }
-        return true;
     }
 
     var bag = d3.select("div.bag");
 
     function update_view() {
+        /* Control update */
+        $('input[name="quantum"]').val([state.quantum])
+            .prop('disabled', state.running);
+        $('input[name="mode"]').val([state.mode])
+            .prop('disabled', state.running || state.quantum === 'all');
+        $('input[name="speed"]').val(state.speed)
+            .prop('disabled', state.running || state.mode !== 'auto'
+                || state.quantum === 'all');
+        $('input[name="defsel"]').prop('checked', state.defsel)
+            .prop('disabled', state.running);
+        $('button[name="control"]').text(state.running ? 'Pause' : 'Go');
+
+        /* Item update */
         function getkey(d) {
             return d && d.key;
         }
@@ -274,64 +283,37 @@ HTML=<<EOH
         }
     }
 
-    $("select[name=mode]").on("change", function() {
-        var val = $(this).val();
-        settings.batch_mode = (val === 'batch') ? true : false;
-
-        if (settings.batch_mode) {
-            $("button[name=control]").text("Pass Batch");
-            if (state.tid) {
-                clearTimeout(state.tid);
-                state.tid = null;
-            }
-        } else {
-            state.running = true;
-            $("button[name=control]").text("Pause");
-            $("button[name=step]").prop("disabled", false);
-            update();
+    $("input[name=quantum]").on("change", function() {
+        state.quantum = $(this).val();
+        update();
+    });
+    $("input[name=mode]").on("change", function() {
+        state.mode = $(this).val();
+        update();
+    });
+    $("input[name=speed]").on("change", function() {
+        var speed = +$(this).val();
+        if (!isNaN(speed) && speed > 0) {
+            state.speed = speed;
         }
+        update();
     });
     $("button[name=control]").on("click", function() {
-        if (settings.batch_mode) {
-            items.forEach(function(el) {
-                el.pass = true;
-            });
-            $("button[name=step]").prop("disabled", false);
-        } else {
-            state.running = !state.running;
-            $(this).text(state.running ? "Pause" : "Run");
-            $("button[name=step]").prop("disabled", !state.running);
-        }
+        state.running = !state.running;
         update();
     });
     $("button[name=quit]").on("click", function() {
         exit();
     });
 
-    $("input[name=selall]").on("change", function() {
-        settings.defsel = !settings.defsel;
-        var el = $(this);
-        el.prop("checked", settings.defsel);
-        items.forEach(function(obj) {
-            if (!obj.pass) {
-                obj.sel = settings.defsel;
-            }
-        });
+    $("input[name=defsel]").on("change", function() {
+        state.oldsel = state.defsel;
+        state.defsel = !state.defsel;
         update();
     });
 
-    $("button[name=step]").on("click", function() {
-        state.step = true;
-        update();
-    });
 
-    $("input[name=selall]").prop("checked", settings.defsel); 
     send_height(get_height());
-/*
-    var popupdiv = d3.select("body").append("div")
-     .attr("class", "tooltip")
-     .style("opacity", 0);
-*/
     function obj2html(obj) {
         if (obj.html) {
             return obj.html;
@@ -355,6 +337,7 @@ HTML=<<EOH
         }
         state.tid = setTimeout(function() {
             state.tid = null;
+            console.log("running timer at", Date.now());
             f();
         }, t);
     }
@@ -387,4 +370,4 @@ HTML=<<EOH
 </html>
 
 EOH
-jframe -o $docopt -s $HTML
+jframe -a "scripts,same-origin" -o $docopt -s $HTML
