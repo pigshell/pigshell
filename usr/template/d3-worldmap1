@@ -28,10 +28,10 @@ dragging.
 
 Examples:
 
-cat http://en.wikipedia.org/wiki/List_of_countries_by_literacy_rate | hgrep -r 0 table.wikitable | table2js country foo bar data | jf 'x.country = x.country.trim(), x.data = +x.data.replace(/%/, ""), x.data < 0 ? undefined : x' | iframe -o title="Adult Literacy (%)" -g /usr/template/d3-worldmap1
+cat http://en.wikipedia.org/wiki/List_of_countries_by_literacy_rate | hgrep -r 0 table.wikitable | table2js country foo bar data | jf 'x.country = x.country.trim(), x.data = +x.data.replace(/%/, ""), x.data < 0 ? undefined : x' | iframe -o title="Adult Literacy (%)" /usr/template/d3-worldmap1
 
 Tests:
-echo '[{"country": 356, "data": 100}, {"country": "Antarctica", "data": 0}]'| jf '$.parseJSON(x)' | iframe -g /usr/template/d3-worldmap1
+echo '[{"country": 356, "data": 100}, {"country": "Antarctica", "data": 0}]'| jf '$.parseJSON(x)' | iframe /usr/template/d3-worldmap1
 -->
 
 <meta charset="utf-8">
@@ -131,13 +131,14 @@ echo '[{"country": 356, "data": 100}, {"country": "Antarctica", "data": 0}]'| jf
         <div class="hint">mousewheel to zoom, drag to rotate</div>
         </div>
     </div>
-<script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
-<script src="http://pigshell.com/common/d3.v3/d3.v3.min.js"></script>
-<script src="http://pigshell.com/common/d3.v3/d3.geo.projection.v0.min.js"></script>
-<script src="http://pigshell.com/common/d3.v3/topojson.v1.min.js"></script>
-<script src="http://pigshell.com/common/d3.v3/colorbrewer.v1.min.js"></script>
-<script src="http://pigshell.com/common/d3.v3/queue.v1.min.js"></script>
-<script src="http://pigshell.com/common/d3.v3/d3.geo.zoom.js"></script>
+<script src="http://pigshell.com/common/lib/jquery-1.7.2/jquery-1.7.2.min.js"></script>
+<script src="http://pigshell.com/common/lib/d3-3.4.1/d3.v3.min.js"></script>
+<script src="http://pigshell.com/common/lib/d3-3.4.1/d3.geo.projection.v0.min.js"></script>
+<script src="http://pigshell.com/common/lib/d3-3.4.1/topojson.v1.min.js"></script>
+<script src="http://pigshell.com/common/lib/d3-3.4.1/colorbrewer.v1.min.js"></script>
+<script src="http://pigshell.com/common/lib/d3-3.4.1/queue.v1.min.js"></script>
+<script src="http://pigshell.com/common/lib/d3-3.4.1/d3.geo.zoom.js"></script>
+<script src="http://pigshell.com/extra/pframe.v0.js"></script>
 <script>
 
 var width = 960,
@@ -156,16 +157,18 @@ var defaults= {
     inverse: ""
 };
 
-window.addEventListener('message', function(e) {
-    var opts = e.data.opts,
-        data = e.data.data;
+var cliopts = {};
 
-    return main(opts, data);
-});
+pframe.onconfig = function(data) {
+    cliopts = data.opts || {};
+};
 
-
-function main(o, data) {
-    var opts = $.extend({}, defaults, o),
+pframe.onnext = function() {
+    pframe.read(main);
+};
+    
+function main(data) {
+    var opts = $.extend({}, defaults, cliopts),
         colorscale = opts.colors,
         field = opts.field;
 
@@ -209,7 +212,9 @@ function main(o, data) {
 
     var tooltip = d3.select("body").append("div")
         .attr("class", "tooltip")
-        .style("opacity", 0);
+        .style("opacity", 0)
+        .style("left", "0px")
+        .style("top", "0px");
 
     svg.append("path")
         .datum(projections[projtype]['outline_datum']) 
@@ -362,8 +367,8 @@ function main(o, data) {
                 svg.selectAll("path").attr("d", path);
             });
         }
-        var myheight = document.documentElement.scrollHeight || document.body.scrollHeight;
-        window.parent.postMessage({height: myheight}, '*');
+        pframe.config({height: $(document.body).outerHeight(true)});
+        pframe.exit(true);
     }
 }
 

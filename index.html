@@ -78,12 +78,11 @@
     <![if gte IE 11]>
     <script src="libs.js"></script>
     <script src="pigshell.js"></script>
-    <script src="https://maps.google.com/maps/api/js?sensor=false"></script>
     <script type="text/javascript">
         var examples = [
-            ['Life expectancy map', 'cat http://pigshell.com/sample/life-expectancy.html | hgrep table.wikitable | table2js foo country data | iframe -g /usr/template/d3-worldmap1'],
+            ['Life expectancy map', 'cat http://pigshell.com/sample/life-expectancy.html | hgrep table.wikitable | table2js foo country data | iframe /usr/template/d3-worldmap1'],
             ['Life expectancy top 10', 'cat http://pigshell.com/sample/life-expectancy.html | table2js foo country data | sort -rnf data | head | printf "%(country)s %(data)s\\n"'],
-            ['GDP (PPP) map', 'cat http://pigshell.com/sample/gdp-ppp.html | hgrep -r 0 table | table2js foo country data | jf \'x.data = x.data / 1000, x\' | iframe -o title="GDP PPP (thousand USD)",proj=orthographic -g /usr/template/d3-worldmap1'],
+            ['GDP (PPP) map', 'cat http://pigshell.com/sample/gdp-ppp.html | hgrep -r 0 table | table2js foo country data | jf \'x.data = x.data / 1000, x\' | iframe -o title="GDP PPP (thousand USD)",proj=orthographic /usr/template/d3-worldmap1'],
             ['Display image from URL', 'cat http://pigshell.com/sample/photos/bchips.jpg'],
             ['Display PDF from URL', 'cat http://pigshell.com/sample/clickingofcuthbert.pdf']
         ];

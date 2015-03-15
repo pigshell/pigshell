@@ -14,7 +14,7 @@ Range of values to distribute among the 6 colors can be supplied as template
 options: minval and maxval, defaulting to 0 and 10.
 
 Example:
-wsh sh -c "git log | grep ^Date" | to -g text | jf '(function(){var lines = x.split("\\n"); return lines.map(function(d) { var m = d.match(/Date:\\s+(\w+.*)/); return m ? {timestamp: m[1]} : null; }).filter(function(d) { return !!d; })})()' | iframe -o minval=0,maxval=10 -g /usr/template/d3-cal-heatmap
+wsh sh -c "git log | grep ^Date" | to -g text | jf '(function(){var lines = x.split("\\n"); return lines.map(function(d) { var m = d.match(/Date:\\s+(\w+.*)/); return m ? {timestamp: m[1]} : null; }).filter(function(d) { return !!d; })})()' | iframe -o minval=0,maxval=10 /usr/template/d3-cal-heatmap
 
 will print a calendar heatmap of git commits.
 -->
@@ -47,8 +47,9 @@ body {
 
 </style>
 <body>
-<script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
-<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://pigshell.com/common/lib/jquery-1.7.2/jquery-1.7.2.min.js"></script>
+<script src="http://pigshell.com/common/lib/d3-3.4.1/d3.v3.min.js"></script>
+<script src="http://pigshell.com/extra/pframe.v0.js"></script>
 <script>
 
 var width = 960,
@@ -65,15 +66,17 @@ var defaults = {
     maxval: 10
 };
 
-window.addEventListener('message', function(e) {
-    var opts = e.data.opts,
-        data = e.data.data;
+var cliopts = {};
+pframe.onconfig = function(data) {
+    cliopts = data.opts || {};
+};
 
-    return main(opts, data);
-});
+pframe.onnext = function() {
+    pframe.read(main);
+};
 
-function main(o, tsdata) {
-    var opts = $.extend(true, {}, defaults, o);
+function main(tsdata) {
+    var opts = $.extend(true, {}, defaults, cliopts);
     var color = d3.scale.quantize()
         .domain([opts.minval, opts.maxval])
         .range(d3.range(6).map(function(d) { return "q" + d + "-6"; }));
@@ -139,8 +142,8 @@ function main(o, tsdata) {
       .select("title")
         .text(function(d) { return d + ": " + data[d]; });
 
-    var myheight = document.documentElement.scrollHeight || document.body.scrollHeight;
-    window.parent.postMessage({height: myheight}, '*');
+    pframe.config({height: $(document.body).outerHeight(true)});
+    pframe.exit(true);
 }
 
 function monthPath(t0) {

@@ -10,7 +10,7 @@ Click on any of the cells to zoom in, click the orange bar to zoom out one
 level.
 
 Example:
-wsh du /Users/foo | to -g text | iframe -g /usr/template/d3-du-treemap
+wsh du /Users/foo | to -g text | iframe /usr/template/d3-du-treemap
 
 You could use a du.out from a previous du or a du from another system. It
 can handle a surprisingly large dump (my home dir weighs in at 120k lines)
@@ -73,9 +73,11 @@ rect.parent,
 </head>
 
 <body>
-<p id="chart"></p>
+<div id="chart"></div>
 
-<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://pigshell.com/common/lib/jquery-1.7.2/jquery-1.7.2.min.js"></script>
+<script src="http://pigshell.com/common/lib/d3-3.4.1/d3.v3.min.js"></script>
+<script src="http://pigshell.com/extra/pframe.v0.js"></script>
 <script>
 
 function readablesize(bytes) {
@@ -128,14 +130,11 @@ grandparent.append("text")
     .attr("y", 6 - margin.top)
     .attr("dy", ".75em");
 
-window.addEventListener('message', function(e) {
-    var opts = e.data.opts,
-        data = e.data.data;
+pframe.onnext = function() {
+    pframe.read(main);
+};
 
-    return main(opts, data);
-});
-
-var main = function(opts, data) {
+var main = function(data) {
     var lines = data[0].split("\n"),
         root = {};
 
@@ -176,8 +175,8 @@ var main = function(opts, data) {
   layout(root);
   display(root);
 
-  var myheight = document.documentElement.scrollHeight || document.body.scrollHeight;
-  window.parent.postMessage({height: myheight}, '*');
+  pframe.config({height: $(document.body).outerHeight(true)});
+  pframe.exit(true);
 
   function initialize(root) {
     root.x = root.y = 0;

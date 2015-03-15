@@ -18,7 +18,7 @@ mkdir $GC 2>/dev/null
 while next $ndata | read IP && [ $#IP -gt 0 ]
 do
     if [ -f $GC/$IP ]; then
-        cat $GC/$IP | to text | jf 'JSON.parse(x)' | jf 'x.geo = {lat: x.latitude, lon: x.longitude}, x'
+        cat $GC/$IP | to text | jf 'JSON.parse(x)'
     else
         ycat http://freegeoip.net/json/$"IP | to text | jf '$$(x).find("p").text()' | read jsonstr
         if [ $"jsonstr != "" ]; then

@@ -1,12 +1,12 @@
 #!pigshell
 
 usage=<<EOH
-lmap         -- Display map
+map         -- Display map
 
 Usage:
-    lmap [-p] [-c <css>] [-t <tilesource>]
-    lmap -l
-    lmap -h | --help
+    map [-p] [-c <css>] [-t <tilesource>]
+    map -l
+    map -h | --help
 
 Options:
     -h --help        Show this message.
