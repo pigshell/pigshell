@@ -8,41 +8,9 @@
 var pframe = (function() {
     var name = window.name || '',
         version = '1.0',
-        proto = {};
+        proto = {debug: 0};
 
-    if (name.match(/^pigshell_frame:/)) {
-        var vcomps = version.split('.'),
-            jframe_proto = {};
-        try {
-            jframe_proto = JSON.parse(name.slice('pigshell_frame:'.length));
-        } catch(e) {
-            return {};
-        }
-        var versions = jframe_proto.ver,
-            msgs = jframe_proto.msg,
-            vcompat = versions
-                .map(function(v) { return v.split('.')[0] === vcomps[0]; })
-                .reduce(function(a, b) { return a || b; }, false),
-            mbox_capable = false;
-        try {
-            mbox_capable = !!window.parent.pigshell;
-        } catch(e) {}
-        if (vcompat && mbox_capable && msgs.indexOf('mbox') !== -1) {
-            proto.ver = version;
-            proto.msg = 'mbox';
-            proto.mbox = window.parent.pframe_mbox[jframe_proto.mbox_id];
-            if (proto.mbox === undefined) {
-                window.parent.postMessage({op: 'exit', data: 'mbox not found'});
-                return {};
-            }
-        } else if (vcompat && msgs.indexOf('postMessage') !== -1) {
-            proto.ver = version;
-            proto.msg = 'postMessage';
-        } else {
-            window.parent.postMessage({op: 'exit', data: 'Unsupported proto'}, '*');
-            return {};
-        }
-    } else {
+    if (!name.match(/^pframe:/)) {
         window.onload = function() {
             if (window.demo) {
                 window.demo();
@@ -51,35 +19,84 @@ var pframe = (function() {
         return {};
     }
 
+    var vcomps = version.split('.'),
+        iframe_proto = {};
+
+    try {
+        iframe_proto = JSON.parse(name.slice('pframe:'.length));
+    } catch(e) {
+        return {};
+    }
+
+    var versions = iframe_proto.ver,
+        msgs = iframe_proto.msg,
+        vcompat = versions
+            .map(function(v) { return v.split('.')[0] === vcomps[0]; })
+            .reduce(function(a, b) { return a || b; }, false),
+        mbox_capable = false;
+
+    try {
+        mbox_capable = !!window.parent.document;
+    } catch(e) {}
+
+    if (!vcompat) {
+        sendmsg('exit', 'Protocol version not compatible');
+        return {};
+    }
+
+    proto.ver = version;
+    proto.cid = iframe_proto.cid || 'pframe_0';
+    proto.origin = iframe_proto.origin;
+    if (mbox_capable && msgs.indexOf('mbox') !== -1) {
+        proto.msg = 'mbox';
+        proto.mbox = window.parent.pframe_mbox[proto.cid];
+        if (proto.mbox === undefined) {
+            sendmsg('exit', 'mbox not found');
+            return {};
+        }
+    } else if (msgs.indexOf('postMessage') !== -1) {
+        proto.msg = 'postMessage';
+    } else {
+        sendmsg('exit', 'Protocol messaging not compatible');
+        return {};
+    }
+
     function unext(cb) {
         if (pframe.unext_pending) {
             return exit("pframe: already waiting for upstream item!");
         }
         pframe.unext_pending = cb;
-        window.parent.postMessage({op: 'next'}, '*');
+        sendmsg('next');
+    }
+
+    function sendmsg(op, data) {
+        var msg = {};
+        msg[proto.cid] = {op: op, data: data};
+        debug(2, "IFrame sending", op, data);
+        window.parent.postMessage(msg, '*');
     }
 
     function output(item) {
         pframe.next_pending = false;
         
-        if (pframe.proto.msg === 'mbox') {
-            pframe.proto.mbox.inbox = item;
+        if (proto.msg === 'mbox') {
+            proto.mbox.inbox = item;
             item = undefined;
         }
-        window.parent.postMessage({op: 'data', data: item}, '*');
+        sendmsg('data', item);
     }
 
     function errmsg(item) {
-        window.parent.postMessage({op: 'errmsg', data: item}, '*');
+        sendmsg('errmsg', item);
     }
 
     function exit(value) {
         pframe.done = true;
-        window.parent.postMessage({op: 'exit', data: value}, '*');
+        sendmsg('exit', value);
     }
 
     function config(obj) {
-        window.parent.postMessage({op: 'config', data: obj}, '*');
+        sendmsg('config', obj);
     }
 
     function read(cb) {
@@ -97,12 +114,24 @@ var pframe = (function() {
         return next();
     }
 
+    function debug() {
+        var args = [].slice.call(arguments, 1);
+        if (proto.debug >= arguments[0]) {
+            console.log(args);
+        }
+    }
+
     window.addEventListener('message', function(e) {
-        var msg = e.data,
-            op = msg.op,
+        debug(3, "IFrame message", e.data);
+        var msg = e.data instanceof Object ? e.data[proto.cid] : undefined;
+        if (e.origin !== proto.origin || msg === undefined) {
+            return;
+        }
+
+        var op = msg.op,
             data = msg.data;
 
-        //console.log("FRAMERECV", op, data);
+        debug(2, "IFrame received", op, msg);
         if (pframe.done) {
             console.log("unexpected message after exit:", op, data);
             return;
@@ -114,11 +143,11 @@ var pframe = (function() {
             }
             var cb = pframe.unext_pending;
             pframe.unext_pending = null;
-            if (pframe.proto.msg === 'mbox') {
-                data = pframe.proto.mbox.outbox;
-                pframe.proto.mbox.outbox = undefined;
+            if (proto.msg === 'mbox') {
+                data = proto.mbox.outbox;
+                proto.mbox.outbox = undefined;
                 if (data === undefined) {
-                    return exit('jframe broke mbox protocol');
+                    return exit('iframe broke mbox protocol');
                 }
             }
             return cb(data);
@@ -140,13 +169,13 @@ var pframe = (function() {
         return exit("Exception: " + message);
     };
 
+    debug(1, "IFrame got proto", proto);
     config({proto: proto});
 
     return {
         proto: proto,
-        ondata: null,
         onnext: function() { return exit("pframe: no onnext handler"); },
-        onconfig: function() { return exit("pframe: no onconfig handler"); },
+        onconfig: function() {/*console.log("pframe: no onconfig handler");*/},
         unext: unext,
         read: read,
         output: output,
@@ -155,7 +184,6 @@ var pframe = (function() {
         exit: exit,
         next_pending: false,
         unext_pending: false,
-        done: false,
-        version: version
+        done: false
     };
 })();
