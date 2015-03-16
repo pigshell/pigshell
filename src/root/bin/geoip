@@ -20,7 +20,7 @@ do
     if [ -f $GC/$IP ]; then
         cat $GC/$IP | to text | jf 'JSON.parse(x)'
     else
-        ycat http://freegeoip.net/json/$"IP | to text | jf '$$(x).find("p").text()' | read jsonstr
+        ycat http://freegeoip.net/json/$"IP | hgrep -t body | read jsonstr
         if [ $"jsonstr != "" ]; then
             echo $jsonstr | jf 'JSON.parse(x)' | jf 'x.geo = {type: "Point", coordinates: [x.longitude, x.latitude]}, x' | read pt
             echo $pt | printf >$GC/$IP

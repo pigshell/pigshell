@@ -90,7 +90,7 @@ Examples
 4.  Visualization: Local disk usage visualized in an interactive zoomable
     treemap
 
-        pig> wsh du /Users/foo | to -g text | iframe -g /templates/d3-du-treemap
+        pig> wsh du /Users/foo | to -g text | iframe /templates/d3-du-treemap
 
 ![du-treemap](../../images/screenshots/du-treemap.png)
 

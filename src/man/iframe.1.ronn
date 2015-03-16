@@ -3,45 +3,33 @@ iframe(1) -- display content in iframe
 
 ## SYNOPSIS
 
-`iframe` [-o <opts>] [-W <width>] [-H <height>] [-a <sopts>] [-g] <template> [<obj>...]<br>
-`iframe` [-o <opts>] [-W <width>] [-H <height>] [-a <sopts>] [-g] -s <tstr> [<obj>...]
+`iframe` [-o <opts>] [-c <css>] [-a <sopts>] [-zO] <template> [<obj>...]<br>
+`iframe` [-o <opts>] [-c <css>] [-a <sopts>] [-zO] -s <tstr> [<obj>...]
 
 ## DESCRIPTION
 
-**iframe** displays HTML content in a sandboxed iframe and passes it objects
-from its arguments or from standard input. In the first form, if <template> is
-a path, **iframe** sets the `srcdoc` property of the iframe to the contents of
+**iframe** filters objects through a sandboxed iframe. The HTML/Javascript of
+the iframe typically presents a GUI to enable users to visualize, select or
+transform objects passing through them. In the first form, if <template> is a
+path, **iframe** sets the `srcdoc` property of the iframe to the contents of
 <template>. If <template> is a URL, then the URL is directly set as the `src`
-of the iframe. In the second form, the supplied string is used as the `srcdoc`
+of the iframe.  In the second form, the supplied string is used as the `srcdoc`
 of the iframe.
 
 Communication between the **iframe** utility and the child iframe follows the
-following convention:
-
-  * After the `onload` event of the child iframe fires, **iframe** calls
-    `window.postMessage()` on the iframe as many times as there are input
-    objects.
-  * Each message consists of a single Javascript object containing two
-    properties: `opts` and `data`. `opts` contains a Javascript object
-    obtained by parsing <opts>, specified in the options(7) format.
-    `data` contains the input object.
-  * The child iframe may issue a `postMessage` consisting of a single
-    Javascript object to the parent. The only supported property in the
-    "returned" object is `height`, which is used to communicate its height to
-    the parent. On receipt of this message, **iframe** adjusts the height
-    of the iframe element appropriately to avoid scrollbars.
+pframe(7) protocol. Multiple **iframe** commands may chained into a pipeline,
+allowing creation of cascading visual filters.
 
 The following options are available:
 
   * `-o ` <opts>:
     Options in the options(7) format which are passed to the child iframe.
   
-  * `-W ` <width>:
-    Width of the iframe, in pixels or as a percentage.
-
-  * `-H ` <height>:
-    Height of the iframe, in pixels or as a percentage. If specified, the
-    height is not readjusted on receipt of a message from the child iframe.
+  * `-c ` <css>:
+    CSS to be applied to the iframe, specified as a JSON string. This can
+    be used for setting the dimensions of the iframe. If the height is
+    specified, then it is not readjusted on receipt of config messages from the
+    child iframe.
 
   * `-a ` <sopts>:
     Comma separated list of sandbox options. These can be one or more of
@@ -52,9 +40,14 @@ The following options are available:
     `-a same-origin,scripts` must be specified in case both "allow-same-origin"
     and "allow-scripts" attributes are desired.
 
-  * `-g`:
-    All input objects are gathered into an array which is passed in to the
-    child iframe. Only one message is sent in this case.
+  * `-z`:
+    Minimal, "dumb" mode protocol, described as protocol version 0 in
+    pframe(7). Used for quick and dirty adaptation of arbitrary HTML/JS
+    to receive objects from **iframe**. `-z` implies `-O`.
+
+  * `-O`:
+    Child iframes are usually created in per-command "extra div"s. Using this
+    option emits the iframe to standard output instead.
 
 ## DIAGNOSTICS
 
@@ -63,9 +56,14 @@ occurs.
 
 ## EXAMPLES
 
+Plot the geographical location of websites. `probe`, `counter` and `map` use
+**iframe** internally.
+
+    $ echo -r www.google.com www.bbc.co.uk www.nytimes.com | probe -q one -m auto -p | counter "IPs processed" | geoip | map
+
 Plot countrywise life expectancy statistics to a world map template.
 
-    $ cat http://pigshell.com/sample/life-expectancy.html | hgrep -r 0 table.wikitable | table2js foo country data | iframe -g /usr/template/d3-worldmap1
+    $ cat http://pigshell.com/sample/life-expectancy.html | hgrep -r 0 table.wikitable | table2js foo country data | iframe /usr/template/d3-worldmap1
 
 Display a D3 example (no input data).
 
@@ -73,7 +71,7 @@ Display a D3 example (no input data).
 
 Subvert D3 example above to display our own data.
 
-    $ echo "date,close\n1-May-08,10\n1-May-10,40\n1-Jun-12,100\n1-May-13,70" | csv2js | iframe -gs $(cat http://bl.ocks.org/mbostock/raw/3883245/ | to text | jf 'x.replace(/d3.tsv.*{/, "window.addEventListener(\'message\', function(e) { var data = e.data.data;")')
+    $ echo "date,close\n1-May-08,10\n1-May-10,40\n1-Jun-12,100\n1-May-13,70" | csv2js | iframe -zs $(cat http://bl.ocks.org/mbostock/raw/3883245/ | to text | jf 'x.replace(/d3.tsv.*{/, "window.addEventListener(\'message\', function(e) { var data = e.data.data;")')
 
 ## SECURITY
 
@@ -84,4 +82,4 @@ accessing all content mounted within _pigshell_.
 
 ## SEE ALSO
 
-template(1)
+pframe(7), template(1)

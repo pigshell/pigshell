@@ -1,17 +1,20 @@
 #!pigshell
 
 usage=<<EOH
-vgrep         -- Visual pipeline inspector
+probe        -- Visual pipeline inspector
 
 Usage:
-    vgrep [-q <size>] [-n <items>] [-t <sec>] [-e <expr>]
-    vgrep -h | --help
+    probe [-m <mode>] [-q <size>] [-n <items>] [-t <sec>] [-s <defsel>] [-p] [-e <expr>]
+    probe -h | --help
 
 Options:
     -h --help   Show this message.
-    -q <size>   Quantum of processing - 'one', 'batch', 'all' items
-    -t <sec>    Process items every <sec> seconds
+    -q <size>   Quantum of processing: one, batch, all items [default: batch]
+    -m <mode>   auto or manual [default: manual]
+    -t <sec>    Process items every <sec> seconds in auto mode
     -n <items>  Buffer upto <items> objects [default: 5]
+    -s <defsel> Default selection of items, true or false [default: true]
+    -p          Run probe immediately
     -e <expr>   Javascript expression, e.g. 'x.attr === 10' to select objects
 EOH
 
@@ -111,7 +114,6 @@ HTML=<<EOH
             eof: false,
             height: get_height()
         },
-        oldstate = {},
         body = d3.select('body');
 
     pframe.onnext = function() {
@@ -138,11 +140,17 @@ HTML=<<EOH
             speed = +c['-t'],
             expr = c['-e'] || null,
             quantum = c['-q'] || undefined,
+            mode = c['-m'] || undefined,
+            defsel = (c['-s'] !== 'true') ? false : true,
+            running = !!c['-p'],
             config = {
                 nitems: nitems,
                 speed: speed,
                 expr: expr,
-                quantum: quantum
+                quantum: quantum,
+                mode: mode,
+                defsel: defsel,
+                running: running
             };
         if (isNaN(speed) || speed < 1) {
             config.speed = undefined;
@@ -369,4 +377,4 @@ HTML=<<EOH
 </html>
 
 EOH
-jframe -a "scripts,same-origin" -o $docopt -s $HTML
+iframe -a "scripts,same-origin" -o $docopt -s $HTML
