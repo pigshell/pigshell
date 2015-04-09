@@ -22,7 +22,7 @@ do
     else
         ycat http://freegeoip.net/json/$"IP | hgrep -t body | read jsonstr
         if [ $"jsonstr != "" ]; then
-            echo $jsonstr | jf 'JSON.parse(x)' | jf 'x.geo = {type: "Point", coordinates: [x.longitude, x.latitude]}, x' | read pt
+            echo $jsonstr | jf 'JSON.parse(x)' | jf 'x.geo = {type: "Point", coordinates: [x.longitude, x.latitude], html: "<p>"'$"IP'"</p>"}, x' | read pt
             echo $pt | printf >$GC/$IP
             echo $pt
         fi
