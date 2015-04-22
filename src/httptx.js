@@ -27,20 +27,21 @@ var HttpTX = function(opts) {
 };
 
 HttpTX.dict = {'direct': new HttpTX({}),
-    'proxy': new HttpTX({proxy_url: 'http://localhost:50937/'})
+    'proxy': new HttpTX({proxy_url: 'http://localhost:50937/'}),
+    'fallthrough': new HttpTX({proxy_url: 'http://localhost:50937/', fallthrough: true})
 };
 
 HttpTX.lookup = function(name) {
     return HttpTX.dict[name];
 };
 
-HttpTX.prototype.do_xhr = function(op, url, data, opts, cb) {
+HttpTX.prototype.do_xhr = function(op, url, data, opts, cb, use_proxy) {
     var self = this,
         xhr = new XMLHttpRequest(),
         headers = opts.headers || {},
         rt = opts.responseType || "",
         params = opts.params ? $.param(opts.params) : '',
-        proxy_url = (opts.tx && opts.tx === 'direct') ? '' : self.proxy_url,
+        proxy_url = (self.opts.fallthrough && !use_proxy) ? '' : self.proxy_url,
         u = params ? proxy_url + url + '?' + params : proxy_url + url,
         context = (opts.context && opts.context._abortable) ? opts.context : null;
 
@@ -73,6 +74,9 @@ HttpTX.prototype.do_xhr = function(op, url, data, opts, cb) {
         }
         if (xhr.status === 0) {
             removeself();
+            if (self.opts.fallthrough && !use_proxy) {
+                return self.do_xhr(op, url, data, opts, cb, true);
+            }
             return catcher({code: xhr.status, msg: "Cross-origin request denied (check if psty is running)"}, xhr);
         }
         if (xhr.status >= 400) {
