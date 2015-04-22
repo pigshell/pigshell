@@ -106,7 +106,7 @@ GDriveFS.lookup_fs = function(uri, opts, cb) {
     }
 
     if (mountopts.tx === undefined) {
-        mountopts.tx = 'direct';
+        mountopts.tx = 'fallthrough';
     }
     if (opts.mount) {
         return create_fs(mountopts, uri);

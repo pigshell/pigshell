@@ -107,30 +107,30 @@ function gdrivefs_doc_test {
     mkdir $TMP1 $TMP2 2>/dev/null
 
     # Upload docs to GDrive with conversion
-    rm $DSTDIR/sampledocs/* 2>/dev/null
+    rm $DSTDIR/docs/* 2>/dev/null
     cp -vr -o gdrive.convert $SRCDIR $DSTDIR 2>$RESDIR/cp.gdoc.1
     dcheck $? true cp.gdoc.1
 
     # Download docs back
-    rm $TMP1/sampledocs/* 2>/dev/null
-    cp -vr $DSTDIR/sampledocs $TMP1 2>$RESDIR/cp.gdoc.2
+    rm $TMP1/docs/* 2>/dev/null
+    cp -vr $DSTDIR/docs $TMP1 2>$RESDIR/cp.gdoc.2
     dcheck $? true cp.gdoc.2
     # Verify manually
 
     # With -c, we should get nothing
-    cp -vrc $DSTDIR/sampledocs $TMP1 2>$RESDIR/cp.gdoc.3
+    cp -vrc $DSTDIR/docs $TMP1 2>$RESDIR/cp.gdoc.3
     dcheck $? true cp.gdoc.3
 
     # Download as pdf
     rm $TMP2/* 2>/dev/null
-    cp -vr -o gdrive.fmt=pdf $DSTDIR/sampledocs $TMP2 2>$RESDIR/cp.gdoc.4
+    cp -vr -o gdrive.fmt=pdf $DSTDIR/docs $TMP2 2>$RESDIR/cp.gdoc.4
     dcheck $? true cp.gdoc.4
     # Verify manually
 
     # Copy docs straight from one user to another
     if ! [ -d $"DSTDIR2 ]; then echo "GDRIVEUSER2 not available; skipping"; return; fi
     rm $DSTDIR2/sampledocs/* 2>/dev/null
-    cp -vr -o gdrive.convert $DSTDIR/sampledocs $DSTDIR2 2>$RESDIR/cp.gdoc.5
+    cp -vr -o gdrive.convert $DSTDIR/docs $DSTDIR2 2>$RESDIR/cp.gdoc.5
     dcheck $? true cp.gdoc.5
     # Verify manually
 

@@ -124,6 +124,8 @@ will be stored as-is. In the former case, you will be able to edit them with
 Google Docs, but in the latter case, they will appear as zip files, since docx
 et al use zip as a container format.
 
+Note that conversion semantics [have changed](#14042015).
+
 By default, _pigshell_ satisfies a `read()` on a document by retrieving its
 representation in the appropriate OOXML format (docx/pptx/xlsx) and a `read()`
 on a file with its binary contents. When copying a file into Drive, _pigshell_
@@ -248,9 +250,35 @@ Copying files is straightforward:
 
     cp /gdrive/username1@gmail.com/baya.jpg /gdrive/username2@gmail.com/photos
 
+## Updates ##
+
+<a name="14042015"></a>
+### 14 Apr 2015 ###
+
+  * The behaviour of the `convert` option has changed.  A file uploaded with
+    the `convert` flag now remains a file in the sense defined above. Its MIME
+    type is set to 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' or similar. You can open such files using Google Docs, at which
+    point a document of the same name is created. Now there are two entities -
+    the document, and the original file, which remains unaffected by editing
+    of the document.
+
+    This means, for instance, that you cannot expect document behaviour like
+    exporting to PDF, text, etc. from a freshly 'converted' file. Only the copy
+    created by opening it under Google Docs can be subjected to
+    `cat -o gdrive.fmt=pdf` and so on.
+
+  * [Bug](http://stackoverflow.com/questions/28337204/cors-on-exportlinks-for-google-docs-spreadsheets-not-working) with CORS support, affecting some
+    spreadsheets. Bottom line is that you need to be running [psty](psty.md)
+    if you want to copy all sheets. [Reported to Google](https://code.google.com/a/google.com/p/apps-api-issues/issues/detail?id=3737), but don't hold your
+    breath.
+
 ## Bugs and Gotchas ##
 
-Probably quite a few. Don't use in production.
+Probably quite a few, only some of which are due to _pigshell_. Google APIs
+appear to be insufficiently tested, with simple bugs remaining unfixed for
+months, and change behaviour without updates to documentation.
+
+Don't use in production.
 
 -   The "Shared With Me" folder is read-only.
 -   Drive has weird ideas of timestamps. _createdDate_, _modifiedDate_,
