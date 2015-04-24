@@ -291,4 +291,4 @@ Don't use in production.
 -   The "Logout" button doesn't really log you out of Google, just inhibits
     auto-mounting of Drive within _pigshell_.  Most people run _pigshell_ in
     the same browser as their personal GMail, company GMail etc accounts and
-    getting logging out of all these is painful.
+    getting logged out of all these is painful.

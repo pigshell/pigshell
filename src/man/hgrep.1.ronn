@@ -71,9 +71,9 @@ Output HTML for first data row of the table:
 
     $ cat $url | hgrep -r 1 "table.wikitable tr"
 
-Display rows which were updated in 2015:
+Display rows containing the word "Island"
 
-    $ cat $url | hgrep "table.wikitable tr" "td:contains(2015)"
+    $ cat $url | hgrep "table.wikitable tr" "td:contains(Island)" | html
 
 Print text contents of 2nd column of each row, one line per row
 
