@@ -112,6 +112,11 @@ mounted filesystems.
 
 ## Facebook ##
 
+**NOTE (May 2015)**: The Facebook API no longer supplies the entire friends
+list, only those who have used and approved the _pigshell_ app. This breaks
+a lot of the functionality described in the Facebook section and will be
+modified in later revisions of this document.
+
 Everything is a file. Friends are files too. After attaching your Facebook
 account,
 

@@ -16,6 +16,7 @@ if ! docopt $usage $*; then
     exit false
 fi
 
+html "<em>NOTE: Facebook API no longer supplies entire friends list; this command is mostly useless.</em>"
 if T $n -ge 52; then n=52; fi
 if T $n -lt 1; then n=1; fi
 

@@ -1,4 +1,5 @@
 # script to generate Facebook statistics for logged in user
+html "<em>NOTE: Facebook API no longer supplies entire friends list; this command is mostly useless.</em>"
 if ! T -d /facebook/me; then echo Connect Facebook first; exit 1; fi
 html "<h1>Facebook Friend Stats</h1>"
 
@@ -11,4 +12,4 @@ chart3=$(ls /facebook/friends/ | grep -f gender male | chart -t pie -o title="Re
 template -c chart1,chart4,chart3 -s $t2 </dev/null
 html "<div class='clear'></div>"
 ls /facebook/friends | map -c "height: 200px; width:333px; float: left;margin:20px"
-ls /facebook/friends/ | jf 'x.birthday && x.birthday.year() != 2222 ? {data: x.birthday.format("YYYY")} : {}' | chart -t histogram -o title="Birth Year",xmin=min,height=240 | template -s $t1
+ls /facebook/friends/ | jf '(x && x.birthday && x.birthday.year() != 2222) ? {data: x.birthday.format("YYYY")} : {}' | chart -t histogram -o title="Birth Year",xmin=min,height=240 | template -s $t1
