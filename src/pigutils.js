@@ -7,39 +7,6 @@
  * You can't write two lines of Javascript without making your own framework
  */
 
-if (!Array.prototype.indexOf) {
-    Array.prototype.indexOf = function (searchElement /*, fromIndex */ ) {
-        "use strict";
-        if (this === null) {
-            throw new TypeError();
-        }
-        var t = Object(this);
-        var len = t.length >>> 0;
-        if (len === 0) {
-            return -1;
-        }
-        var n = 0;
-        if (arguments.length > 0) {
-            n = Number(arguments[1]);
-            if (n != n) { // shortcut for verifying if it's NaN
-                n = 0;
-            } else if (n !== 0 && n != Infinity && n != -Infinity) {
-                n = (n > 0 || -1) * Math.floor(Math.abs(n));
-            }
-        }
-        if (n >= len) {
-            return -1;
-        }
-        var k = n >= 0 ? n : Math.max(len - Math.abs(n), 0);
-        for (; k < len; k++) {
-            if (k in t && t[k] === searchElement) {
-                return k;
-            }
-        }
-        return -1;
-    };
-}
-
 function isstring(obj) {
     return obj instanceof String || typeof obj === 'string';
 }
@@ -100,6 +67,10 @@ function mixin(a, b) {
     return ab;
 }
 
+/*
+ * Copy the attributes specified in `attrlist` from `b` to `a`
+ */
+
 function mergeattr(a, b, attrlist) {
     attrlist.forEach(function(attr) {
         if (b[attr] !== undefined) {
@@ -108,6 +79,10 @@ function mergeattr(a, b, attrlist) {
     });
     return a;
 }
+
+/*
+ * Copy all attributes from `b` to `a` other than those specified in `attrlist`
+ */
 
 function mergeattr_x(a, b, attrlist) {
     for (var x in b) {

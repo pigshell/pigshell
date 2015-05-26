@@ -4,7 +4,7 @@
  */
 
 var DropboxFS = function(opts, uri) {
-    DropboxFS.base.apply(this, [opts, uri]);
+    DropboxFS.base.call(this, opts, uri);
     this.metauri = 'https://api.dropbox.com/1/metadata/dropbox';
     this.opts.cachedir = true; /* Cache dir contents unless explicitly invalidated */
 };

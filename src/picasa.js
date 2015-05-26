@@ -4,7 +4,7 @@
  */
 
 var PicasaFS = function(opts, uri) {
-    PicasaFS.base.apply(this, [opts, uri]);
+    PicasaFS.base.call(this, opts, uri);
 };
 
 inherit(PicasaFS, HttpFS);

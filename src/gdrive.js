@@ -4,7 +4,7 @@
  */
 
 var GDriveFS = function(opts, uri) {
-    GDriveFS.base.apply(this, [opts, uri]);
+    GDriveFS.base.call(this, opts, uri);
     this.baseuri = "https://www.googleapis.com/drive/v2/files";
     this.rootraw = null;
 };
@@ -12,9 +12,8 @@ var GDriveFS = function(opts, uri) {
 inherit(GDriveFS, HttpFS);
 
 GDriveFS.fsname = 'GDriveFS';
-GDriveFS.defaults = { 'tx': 'fallthrough' };
 
-GDriveFS.prototype.defaults = { 'tx': 'direct' };
+GDriveFS.prototype.defaults = { 'tx': 'fallthrough' };
 GDriveFS.prototype.dirmime = 'application/vnd.google-apps.folder';
 GDriveFS.prototype.docmimes = [
     'application/vnd.google-apps.document',
