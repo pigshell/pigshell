@@ -10,9 +10,13 @@ var PicasaFS = function(opts, uri) {
 inherit(PicasaFS, HttpFS);
 
 PicasaFS.fsname = 'PicasaFS';
+PicasaFS.defaults = { 'tx': 'direct' };
+Sys.fs.PicasaFS = {
+    "defaults": PicasaFS.defaults
+};
+
 PicasaFS.lookup_uri = HttpFS.lookup_uri;
 
-PicasaFS.prototype.defaults = { 'tx': 'direct' };
 
 PicasaFS.prototype.access_token = function() {
     var auth = GoogleOAuth2.authdata.tokens[this.opts.user];

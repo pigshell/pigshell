@@ -21,27 +21,32 @@ var HttpFS = function(opts, uri) {
         Uri = URI.parse(uri),
         host = Uri.host();
 
-    HttpFS.base.call(this, opts);
+    HttpFS.base.call(this, {});
     self.uri = uri;
     self.Uri = Uri;
-    self.opts = $.extend(true, {}, self.defaults, HttpFS.hosts[host], opts);
+    self.opts = $.extend(true, {}, self.constructor.defaults,
+        HttpFS.hosts[host], opts);
     self.tx = HttpTX.lookup(self.opts.tx);
 };
 
 inherit(HttpFS, Filesystem);
 
-HttpFS.fsname = 'HttpFS';
-HttpFS.prototype.defaults = { 'tx': 'proxy' };
-
+HttpFS.fsname = "HttpFS";
+HttpFS.defaults = { "tx": "proxy" };
 HttpFS.hosts = {
-    'localhost': {'tx': 'direct'},
-    '127.0.0.1': {'tx': 'direct'},
-    'pigshell.com': {'tx': 'direct'},
-    'pig.sh': {'tx': 'direct'},
-    'query.yahooapis.com': {'tx': 'direct'},
-    'www.quandl.com': {'tx': 'direct'},
-    'rawgit.com': {'tx': 'direct'},
-    'cdn.rawgit.com': {'tx': 'direct'},
+    "localhost": {"tx": "direct"},
+    "127.0.0.1": {"tx": "direct"},
+    "pigshell.com": {"tx": "direct"},
+    "pig.sh": {"tx": "direct"},
+    "query.yahooapis.com": {"tx": "direct"},
+    "www.quandl.com": {"tx": "direct"},
+    "rawgit.com": {"tx": "direct"},
+    "cdn.rawgit.com": {"tx": "direct"}
+};
+
+Sys.fs.HttpFS = {
+    "defaults": HttpFS.defaults,
+    "hosts": HttpFS.hosts
 };
 
 HttpFS.lookup_uri = function(uri, opts, cb) {

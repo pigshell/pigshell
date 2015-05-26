@@ -2,7 +2,7 @@ usage="ps           -- pipeline status"
 
 format="%-6s %-8s %s\n"
 printf -s $format PID STATE CMD
-cd /proc
+cd /sys/proc
 for i in *; do
     printf -s $format $i $(cat $i/status) $(cat $i/cmdline)
 done

@@ -1,16 +1,17 @@
-usage="kill         -- kill pipeline\
-\
-Usage:\
-    kill <pid>...\
-    kill -h | --help\
-\
-Options:\
-    -h --help   Show this message.\
-    <pid>       Pipeline id, obtained from ps\
-"
+usage=<<EOH
+kill         -- kill pipeline
+
+Usage:
+    kill <pid>...
+    kill -h | --help
+
+Options:
+    -h --help   Show this message.
+    <pid>       Pipeline id, obtained from ps
+EOH
 
 if ! docopt $usage $*; then
     exit false
 fi
 
-for i in /proc/$pid/ctl; do echo 'kill' >$i; done
+for i in /sys/proc/$pid/ctl; do echo 'kill' >$i; done

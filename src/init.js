@@ -73,7 +73,7 @@ function init(opts, cb) {
     }
 
     function mountrest(opts, cb) {
-        var procfs = new JsonFS(proc.proc, {cache: false}),
+        var sysfs = new JsonFS(Sys, {cache: false}),
             authfs = new JsonFS(Auth.authlist, {rootident: '/auth', cache: false}),
             lstorfs = new LstorFS(),
             devfs = new DevFS(),
@@ -83,7 +83,7 @@ function init(opts, cb) {
         uploadfs = new UploadFS();
 
         ns.mount('/local', lstorfs.root, {}, function(){});
-        ns.mount('/proc', procfs.root, {}, function(){});
+        ns.mount('/sys', sysfs.root, {}, function(){});
         ns.mount('/auth', authfs.root, {}, function(){});
         ns.mount('/pterm', termfs.root, {}, function(){});
         ns.mount('/downloads', downloadfs.root, {}, function(){});

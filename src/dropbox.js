@@ -6,14 +6,19 @@
 var DropboxFS = function(opts, uri) {
     DropboxFS.base.call(this, opts, uri);
     this.metauri = 'https://api.dropbox.com/1/metadata/dropbox';
-    this.opts.cachedir = true; /* Cache dir contents unless explicitly invalidated */
 };
 
 inherit(DropboxFS, HttpFS);
 
-DropboxFS.fsname = 'DropboxFS';
+DropboxFS.fsname = "DropboxFS";
+DropboxFS.defaults = {
+    "tx": "direct",
+    "cachedir": "true" /* Cache dir contents unless explicitly invalidated */
+};
+Sys.fs.DropboxFS = {
+    "defaults": DropboxFS.defaults
+};
 
-DropboxFS.prototype.defaults = { 'tx': 'direct' };
 DropboxFS.prototype.access_token = function() {
     var auth = DropboxOAuth2.authdata.tokens[this.opts.user];
 

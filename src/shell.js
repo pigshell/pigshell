@@ -31,6 +31,15 @@ Proc.prototype.current = function(cmd) {
 
 var proc = new Proc(); // Global process address space
 
+var Sys = {
+    "fs": {},
+    "media": {
+        "handler": {},
+        "ui": {}
+     },
+     "proc": proc.proc
+};
+
 function Command(opts) {
     var shell = opts ? opts.shell : null;
 

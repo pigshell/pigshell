@@ -184,6 +184,9 @@
     "pigshell_baseurl": true,
     "assert": false,
     "mergeattr_x": false,
-    "mkediv": false
+    "mkediv": false,
+    "HttpLink": true,
+    "Sys": true,
+    "PstyDir": true
     }
 }

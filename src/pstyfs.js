@@ -17,6 +17,11 @@ var PstyFS = function() {
 inherit(PstyFS, HttpFS);
 
 PstyFS.fsname = 'PstyFS';
+PstyFS.defaults = {};
+Sys.fs.PstyFS = {
+    "defaults": PstyFS.defaults
+};
+
 PstyFS.lookup_uri = HttpFS.lookup_uri;
 
 PstyFS.prototype.dirmime = 'application/vnd.pigshell.dir+json';

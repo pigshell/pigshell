@@ -6,3 +6,5 @@ for t in $TESTS; do
     ./$t
     echo
 done
+
+echo "All done"

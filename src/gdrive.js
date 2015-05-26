@@ -12,8 +12,11 @@ var GDriveFS = function(opts, uri) {
 inherit(GDriveFS, HttpFS);
 
 GDriveFS.fsname = 'GDriveFS';
+GDriveFS.defaults = { 'tx': 'fallthrough' };
+Sys.fs.GDriveFS = {
+    "defaults": GDriveFS.defaults
+};
 
-GDriveFS.prototype.defaults = { 'tx': 'fallthrough' };
 GDriveFS.prototype.dirmime = 'application/vnd.google-apps.folder';
 GDriveFS.prototype.docmimes = [
     'application/vnd.google-apps.document',
