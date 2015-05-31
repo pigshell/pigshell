@@ -27,6 +27,7 @@ CHECK_SOURCES = src/mimeMap.js\
     src/pigutils.js\
     src/cache.js\
     src/vfs.js\
+    src/jsonfs.js\
     src/uploads.js\
     src/downloads.js\
     src/shell.js\

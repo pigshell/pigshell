@@ -73,8 +73,8 @@ function init(opts, cb) {
     }
 
     function mountrest(opts, cb) {
-        var sysfs = new JsonFS(Sys, {cache: false}),
-            authfs = new JsonFS(Auth.authlist, {rootident: '/auth', cache: false}),
+        var sysfs = new JsonFS(Sys, {}),
+            authfs = new JsonFS(Auth.authlist, {rootident: '/auth'}),
             lstorfs = new LstorFS(),
             devfs = new DevFS(),
             downloadfs = new DownloadFS();

@@ -194,20 +194,17 @@ File.prototype.generic_lookup = function(name, opts, cb) {
         return cb(E('ENOTDIR'));
     }
     if (!self.populated) {
-        self.readdir(opts, function(err) {retblock(err);});
+        self.readdir(opts, ef(cb, retblock));
     } else {
-        retblock(null);
+        retblock(self.files);
     }
 
-    function retblock(err) {
-        if (err) {
-            return cb(err);
-        }
+    function retblock(files) {
         if (name === '') { // '.', aka current directory
             return cb(null, fstack_top(self));
         }
-        if (self.files[name]) {
-            return cb(null, fstack_top(self.files[name]));
+        if (files[name]) {
+            return cb(null, fstack_top(files[name]));
         } else {
             return cb(E('ENOENT'), null);
         }
@@ -221,16 +218,16 @@ File.prototype.lookup = function(name, opts, cb) {
 File.prototype.search = function(name, opts, cb) {
     var self = this;
 
-    function retblock() {
+    function retblock(files) {
         var re = minimatch.makeRe(name);
-        var res = Object.keys(self.files).filter(function(f) { return !!f.match(re);}).map(function(i) { return [i, fstack_top(self.files[i])];});
+        var res = Object.keys(files).filter(function(f) { return !!f.match(re);}).map(function(i) { return [i, fstack_top(files[i])];});
         return cb(null, res);
     }
 
     if (!self.populated) {
         self.readdir(opts, ef(cb, retblock));
     } else {
-        retblock();
+        retblock(self.files);
    }
 };
 
@@ -442,219 +439,6 @@ Namespace.prototype.umount = function(mntpt, cb) {
 
 Namespace.prototype.mountlist = function() {
     return this.mounts;
-};
-
-var JsonFile = function() {
-    this.ctime = this.mtime = Date.now();
-    JsonFile.base.apply(this, arguments);
-    if (this.mime === 'directory') {
-        this.readdir = this.generic_readdir;
-    }
-};
-
-inherit(JsonFile, File);
-
-/*
- * Add a directory entry
- */
-
-JsonFile.prototype.addfile = function(obj, name) {
-    var self = this,
-        newfile = {
-            name: name,
-            ident: pathjoin(self.ident, name),
-            pident: self.ident,
-            readable: true,
-            writable: true,
-            fs: self.fs,
-            html: '<div class="pfile">' + name + '</div>',
-            size: 0
-        };
-    if (obj.__lookupGetter__(name) || obj.__lookupSetter__(name)) {
-        newfile.mime = 'text/plain';
-    } else if (obj[name] === null || obj[name] === undefined) {
-        newfile.mime = 'text/plain';
-        newfile.size = 0;
-    } else if (obj[name].constructor === Object || obj[name]._jfs) {
-        newfile.mime = 'directory';
-        newfile.html = '<div class="pfolder">' + name + '</div>';
-    } else if (isstring(obj[name])) {
-        newfile.mime = 'text/plain';
-        newfile.size = obj[name].length;
-    } else {
-        newfile.mime = 'unknown/unknown';
-    }
-
-    if (newfile.mime === 'directory') {
-        newfile.files = {};
-        newfile.populated = false;
-    } else if (obj[name] === undefined || obj[name] === null) {
-        newfile.data = {data: ''};
-    } else {
-        newfile.data = {data: obj[name]};
-    }
-    var newf = new JsonFile(newfile);
-    self.files[name] = newf;
-    self.updatesize();
-};
-
-JsonFile.prototype.generic_readdir = function(opts, cb) {
-    var self = this;
-    if (self.fs.opts.cache && self.populated) {
-        return cb(null, self.files);
-    }
-    var obj = self.fs.iread(self.ident);
-    self.files = {};
-    if (obj._jfs !== undefined) {
-        for (var i = 0; i < obj._jfs.length; i++) {
-            self.addfile(obj, obj._jfs[i]);
-        }
-    } else {
-        for (var f in obj) {
-            self.addfile(obj, f);
-        } 
-    }
-    if (self.fs.opts.cache) {
-        self.populated = true;
-    }
-    return cb(null, self.files);
-};
-
-
-JsonFile.prototype.read = function(opts, cb) {
-    var self = this;
-
-    if (isdir(self)) {
-        return cb(E('EISDIR'), self.name);
-    } else if (self.name == 'coral') {
-        /*$.get('http://query.yahooapis.com/v1/public/yql', {q: 'select * from html where url="http://reddit.com"', format: 'xml', callback:'?'}, function(data) {
-            return cb(null, data);
-        });*/
-        /*
-         $.getJSON("https://query.yahooapis.com/v1/public/yql?"+ "q=select%20*%20from%20html%20where%20url%3D%22"+ encodeURIComponent('http://reddit.com')+ "%22&format=xml'&callback=?", function(data){
-            return cb(null, data.results[0]);
-         });
-         */
-        $.get("http://www.html5rocks.com/en/", function(data){
-            return cb(null, data);
-        });
-    } else if (self.data.data !== undefined) {
-        if (self.data.data === null) {
-            return cb(null, '');
-        } else {
-            return cb(null, self.data.data);
-        }
-    } else {
-        return cb({code: 'EINVAL', msg: 'unknown data format'}, null);
-    }
-};
-
-JsonFile.prototype.append = function(item, opts, cb) {
-    var self = this;
-
-    if (self.mime !== 'text/plain') {
-        return cb(E('EINVALFILE'), null);
-    }
-    if (!isstring(item)) {
-        return cb(E('EINVAL'), null);
-    }
-    var pobj = self.fs.iread(self.pident);
-    pobj[self.name] = pobj[self.name] + item;
-    self.data.data = pobj[self.name];
-    return cb(null, null);
-};
-
-
-JsonFile.prototype.putdir = function(name, dlist, opts, cb) {
-    var self = this;
-
-    if (dlist.length === 0) {
-        return cb(null, null);
-    }
-    var obj = self.fs.iread(self.ident);
-
-    if (self.files[name] && isdir(self.files[name])) {
-        return cb(E('EISDIR'), null);
-    }
-    if (isstring(dlist[0])) {
-        obj[name] = dlist.join('');
-    } else {
-        obj[name] = dlist[0];
-    }
-    self.addfile(obj, name);
-    return cb(null, null);
-};
-
-JsonFile.prototype.mkdir = function(name, opts, cb) {
-    var self = this,
-        obj = self.fs.iread(self.ident);
-
-    if (obj[name] !== undefined) {
-        return cb(E('EEXIST'), null);
-    }
-    obj[name] = {};
-    self.addfile(obj, name);
-
-    return cb(null, null);
-};
-
-JsonFile.prototype.rm = function(name, opts, cb) {
-    var self = this,
-        obj = self.fs.iread(self.ident);
-
-    var rmf = self.files[name];
-    if (rmf === undefined) {
-        return cb(E('ENOENT'), null);
-    }
-    if (isdir(rmf)) {
-        if (Object.keys(obj[name]).length) {
-            return cb(E('ENOTEMPTY'), null);
-        }
-    }
-    delete obj[name];
-    delete self.files[name];
-    self.updatesize();
-    return cb(null, null);
-};
-
-JsonFile.prototype.stat = function(opts, cb) {
-    return cb(null, this);
-};
-
-var JsonFS = function(obj, opts) {
-    JsonFS.base.call(this);
-    this.obj = obj; // Object we are shadowing
-    this.opts = $.extend({'cache': true}, opts);
-    var rootfile = {
-        name: '/',
-        ident: opts.rootident || '/',
-        pident: '/',
-        readable: true,
-        writable: true,
-        fs: this,
-        mime: 'directory',
-        htmlClass: 'pfolder',
-        files: {},
-        populated: false
-    };
-    this.root = new JsonFile(rootfile);
-};
-
-inherit(JsonFS, Filesystem);
-JsonFS.fsname = "JsonFS";
-
-JsonFS.prototype.iread = function(ident) {
-    var rootident = this.root.ident,
-        cident = ident.slice(rootident.length),
-        comps = cident.split('/');
-    var obj = this.obj;
-    for (var i = 0; i < comps.length; i++) { 
-        if (comps[i] === '') {
-            continue;
-        }
-        obj = obj[comps[i]];
-    }
-    return obj;
 };
 
 /*
