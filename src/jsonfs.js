@@ -46,9 +46,9 @@ JsonFile.prototype.mkfile = function(obj, name) {
 
 JsonFile.prototype.generic_readdir = function(opts, cb) {
     var self = this,
-        obj = self.fs.iread(self.ident),
+        res = self.fs.iread(self.ident),
+        obj = res[0],
         files = {};
-
 
     if (obj._jfs !== undefined) {
         for (var i = 0; i < obj._jfs.length; i++) {
@@ -56,7 +56,9 @@ JsonFile.prototype.generic_readdir = function(opts, cb) {
         }
     } else {
         for (var f in obj) {
-            files[f] = self.mkfile(obj, f);
+            if (f.indexOf('_jfs') !== 0) {
+                files[f] = self.mkfile(obj, f);
+            }
         } 
     }
     return cb(null, files);
@@ -64,7 +66,8 @@ JsonFile.prototype.generic_readdir = function(opts, cb) {
 
 JsonFile.prototype.read = function(opts, cb) {
     var self = this,
-        pobj = self.fs.iread(self.pident);
+        res = self.fs.iread(self.pident),
+        pobj = res[0];
 
     var val = pobj[self.name];
     if (val && _jfs_isdir(val)) {
@@ -83,13 +86,15 @@ JsonFile.prototype.read = function(opts, cb) {
 
 JsonFile.prototype.append = function(item, opts, cb) {
     var self = this,
-        pobj = self.fs.iread(self.pident);
+        res = self.fs.iread(self.pident),
+        pobj = res[0];
 
     if (isstring(pobj[self.name])) {
         pobj[self.name] = pobj[self.name] + item;
     } else if (pobj[self.name] instanceof Blob) {
         pobj[self.name] = new Blob([pobj[self.name], item]);
     }
+    self.notify(res[1], self.name, 'append');
     return cb(null, null);
 };
 
@@ -100,7 +105,8 @@ JsonFile.prototype.putdir = function(name, dlist, opts, cb) {
     if (dlist.length === 0) {
         return cb(null, null);
     }
-    var obj = self.fs.iread(self.ident);
+    var res = self.fs.iread(self.ident),
+        obj = res[0];
 
     if (obj[name] && _jfs_isdir(obj[name])) {
         return cb(E('EISDIR'), null);
@@ -112,36 +118,52 @@ JsonFile.prototype.putdir = function(name, dlist, opts, cb) {
     } else {
         obj[name] = new Blob(dlist);
     }
+    self.notify(res[1], name, 'putdir');
     return cb(null, null);
 };
 
 JsonFile.prototype.mkdir = function(name, opts, cb) {
     var self = this,
-        obj = self.fs.iread(self.ident);
+        res = self.fs.iread(self.ident),
+        obj = res[0];
 
     if (obj[name] !== undefined) {
         return cb(E('EEXIST'), null);
     }
     obj[name] = {};
+    self.notify(res[1], name, 'mkdir');
     return cb(null, null);
 };
 
 JsonFile.prototype.rm = function(name, opts, cb) {
     var self = this,
-        obj = self.fs.iread(self.ident);
+        res = self.fs.iread(self.ident),
+        obj = res[0];
 
     if (obj[name] === undefined) {
         return cb(E('ENOENT'), null);
     }
-    if (Object.keys(obj[name]).length) {
+    if (obj._jfs) {
+        return cb(E('EPERM'));
+    }
+    if (obj[name].constructor === Object && Object.keys(obj[name]).length) {
         return cb(E('ENOTEMPTY'), null);
     }
     delete obj[name];
+    self.notify(res[1], name, 'rm');
     return cb(null, null);
 };
 
 JsonFile.prototype.stat = function(opts, cb) {
     return cb(null, this);
+};
+
+JsonFile.prototype.notify = function(nlist, name, op) {
+    var self = this;
+
+    nlist.forEach(function(el) {
+        el[0]._jfs_notify(name ? el[1] + '/' + name : el[1], op);
+    });
 };
 
 var JsonFS = function(obj, opts) {
@@ -167,15 +189,22 @@ JsonFS.fsname = "JsonFS";
 JsonFS.prototype.iread = function(ident) {
     var rootident = this.root.ident,
         cident = ident.slice(rootident.length),
-        comps = cident.split('/');
+        comps = cident.split('/'),
+        notify = [];
     var obj = this.obj;
-    for (var i = 0; i < comps.length; i++) { 
+    if (obj._jfs_notify) {
+        notify.push([obj, comps.join('/')]);
+    }
+    for (var i = 0, len = comps.length; i < len; i++) { 
         if (comps[i] === '') {
             continue;
         }
         obj = obj[comps[i]];
+        if (obj._jfs_notify) {
+            notify.push([obj, comps.slice(i + 1).join('/')]);
+        }
     }
-    return obj;
+    return [obj, notify];
 };
 
 function _jfs_isdir(obj) {
