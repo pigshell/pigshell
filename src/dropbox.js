@@ -10,7 +10,7 @@ var DropboxFS = function(opts, uri) {
 
 inherit(DropboxFS, HttpFS);
 
-DropboxFS.fsname = "DropboxFS";
+DropboxFS.hname = "DropboxFS";
 DropboxFS.defaults = {
     "tx": "direct",
     "cachedir": "true" /* Cache dir contents unless explicitly invalidated */

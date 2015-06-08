@@ -16,7 +16,7 @@ var PstyFS = function() {
 
 inherit(PstyFS, HttpFS);
 
-PstyFS.fsname = 'PstyFS';
+PstyFS.hname = 'PstyFS';
 PstyFS.defaults = {};
 Sys.fs.PstyFS = {
     "defaults": PstyFS.defaults

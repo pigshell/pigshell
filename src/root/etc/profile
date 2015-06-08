@@ -35,3 +35,11 @@ function sjoin {
 function json2js {
     to -g text | jf 'JSON.parse(x)'
 }
+
+function encuri {
+    jf 'enc_uri("'$1'")' 1
+}
+
+function decuri {
+    jf 'dec_uri("'$1'")' 1
+}

@@ -11,7 +11,7 @@ var GDriveFS = function(opts, uri) {
 
 inherit(GDriveFS, HttpFS);
 
-GDriveFS.fsname = 'GDriveFS';
+GDriveFS.hname = 'GDriveFS';
 GDriveFS.defaults = { 'tx': 'fallthrough' };
 Sys.fs.GDriveFS = {
     "defaults": GDriveFS.defaults

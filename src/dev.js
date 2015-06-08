@@ -64,4 +64,4 @@ var DevFS = function() {
 
 inherit(DevFS, Filesystem);
 
-DevFS.fsname = "DevFS";
+DevFS.hname = "DevFS";

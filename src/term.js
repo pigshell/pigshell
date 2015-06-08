@@ -254,7 +254,7 @@ var PtermFS = function(opts) {
 
 inherit(PtermFS, Filesystem);
 
-PtermFS.fsname = 'PtermFS';
+PtermFS.hname = 'PtermFS';
 
 PtermFS.prototype.newtid = function() {
     return this.tid++;

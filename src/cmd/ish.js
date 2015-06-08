@@ -89,7 +89,7 @@ IShell.prototype.cli_input = function(cmd) {
 
 IShell.prototype.run_next = function() {
     var self = this,
-        pwd = self.shell.cwd.comps[self.shell.cwd.comps.length - 1].name;
+        pwd = dec_uri(self.shell.cwd.comps[self.shell.cwd.comps.length - 1].name);
 
     if (self.icmd_fg) {
         return;

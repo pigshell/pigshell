@@ -778,6 +778,26 @@ function optstr_make(opts) {
     return list.join(',');
 }
 
+/*
+ * Strict encoding of URI component
+ */
+
+function enc_uri(str) {
+    return encodeURIComponent(str).replace(/[!'()*]/g, function(c) {
+        return '%' + c.charCodeAt(0).toString(16);
+    });
+}
+
+function dec_uri(str) {
+    var ret;
+    try {
+        ret = decodeURIComponent(str);
+    } catch (e) {
+        ret = str;
+    }
+    return ret;
+}
+
 function xhr_getmime(headers) {
     var rt = headers["content-type"] || '';
     rt = rt.split(';')[0];

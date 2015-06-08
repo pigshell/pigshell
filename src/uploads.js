@@ -136,4 +136,4 @@ var UploadFS = function() {
 
 inherit(UploadFS, Filesystem);
 
-UploadFS.fsname = "UploadFS";
+UploadFS.hname = "UploadFS";

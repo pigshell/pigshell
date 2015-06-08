@@ -3,18 +3,33 @@
  * This program is free software - see the file COPYING for license details.
  */
 
+var Sys = {
+    "fs": {},
+    "media": {}
+};
+
 var VFS = {
     uri_handler_list: [],
     media_handler_list: [],
     media_ui_list: [],
+    handler: {},
+    uri_handler: {
+        _jfs_notify: function() {
+            VFS.uri_handler_list = recompute_handler(VFS.uri_handler);
+        }
+    },
 
     init: function() {
     },
 
     register_uri_handler: function(pattern, handler, opts, pri) {
-        var self = this;
+        var self = this,
+            ep = enc_uri(pattern);
 
-        self.uri_handler_list = register_handler(self.uri_handler_list, pattern, handler, opts, pri);
+        self.handler[handler.hname] = handler;
+        self.uri_handler[ep] = self.uri_handler[ep] || {};
+        self.uri_handler[ep][handler.hname] = {opts: opts, pri: pri};
+        self.uri_handler._jfs_notify();
     },
 
     unregister_uri_handler: function(pattern, handler) {
@@ -22,6 +37,10 @@ var VFS = {
 
         self.uri_handler_list = unregister_handler(self.uri_handler_list,
             pattern, handler);
+        try {
+            delete self.uri_handler[enc_uri(pattern)][handler.hname];
+        } catch (e) {}
+        self.uri_handler._jfs_notify();
     },
 
     register_media_handler: function(pattern, handler, opts, pri) {
@@ -58,15 +77,9 @@ var VFS = {
     },
 
     lookup_handler: function(name) {
-        var self = this,
-            list = self.uri_handler_list;
+        var self = this;
 
-        for (var i = 0, max = list.length; i < max; i++) {
-            if (list[i].handler.fsname === name) {
-                return list[i];
-            }
-        }
-        return null;
+        return self.handler[name] || null;
     },
 
     lookup_media_handler: function(media_type) {
@@ -107,6 +120,8 @@ var VFS = {
     }
 };
 
+Sys.uri = VFS.uri_handler;
+
 function register_handler(plist, pattern, handler, opts, pri) {
     var qlist = plist.slice(0);
 
@@ -127,6 +142,35 @@ function unregister_handler(plist, pattern, handler) {
     var qlist = plist.slice(0);
 
     qlist = qlist.filter(function(a) { return a.pattern !== pattern && a.handler !== handler;});
+    return qlist;
+}
+
+function recompute_handler(pdict) {
+    var qlist = [];
+    for (var p in pdict) {
+        if (p === '_jfs_notify') {
+            continue;
+        }
+        var entry = pdict[p];
+        for (var h in entry) {
+            var opts = entry[h].opts || {},
+                pri = +entry[h].pri,
+                handler = VFS.handler[h];
+
+            if (!isNaN(pri) && handler) {
+                qlist.push({pattern: dec_uri(p), handler: handler, opts: opts, pri: pri});
+            }
+        }
+    }
+    qlist = qlist.sort(function(a, b) {
+        if (a.pattern > b.pattern) {
+            return -1;
+        } else if (a.pattern < b.pattern) {
+            return 1;
+        } else {
+            return (a.priority > b.priority) ? -1 : ((a.priority < b.priority) ? 1 : 0);
+        }
+    });
     return qlist;
 }
 

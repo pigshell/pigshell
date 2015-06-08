@@ -31,7 +31,7 @@ var HttpFS = function(opts, uri) {
 
 inherit(HttpFS, Filesystem);
 
-HttpFS.fsname = "HttpFS";
+HttpFS.hname = "HttpFS";
 HttpFS.defaults = { "tx": "proxy" };
 HttpFS.hosts = {
     "localhost": {"tx": "direct"},

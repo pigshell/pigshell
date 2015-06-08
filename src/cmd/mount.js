@@ -39,7 +39,7 @@ Mount.prototype.next = check_next(do_docopt(function() {
         list = Object.keys(mounts).map(function(m) {
             var root = mounts[m].dir,
                 optstr = optstr_make(mounts[m].opts),
-                brstr = root.fs.constructor.fsname;
+                brstr = root.fs.constructor.hname;
                 
             brstr += optstr ? ',' + optstr : '';
             return sprintf("%s on %s (%s)", root.ident, m, brstr);

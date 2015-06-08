@@ -258,11 +258,12 @@ Ls.prototype.next = check_next(do_docopt(function(opts, cb) {
         if (entry.spacer) {
             return self.is_tty ? entry.spacer : null;
         }
-        var c = $.extend({}, entry.file);
+        var c = $.extend({}, entry.file),
+            uname = dec_uri(basenamedir(entry.path));
         if (c._mounted !== undefined || c.html === undefined) {
-            c.html = '<div class="pfolder">' + basenamedir(entry.path) + '</div>';
+            c.html = '<div class="pfolder">' + uname + '</div>';
         } else {
-            c.html = c.html.replace(/\{\{\s*name\s*\}\}/g, basenamedir(entry.path));
+            c.html = c.html.replace(/\{\{\s*name\s*\}\}/g, uname);
         }
         c.html = '<div class="ls-item">' + c.html + '</div>';
         c._path = entry.path;

@@ -40,5 +40,5 @@ var DownloadFS = function() {
 
 inherit(DownloadFS, Filesystem);
 
-DownloadFS.fsname = "DownloadFS";
+DownloadFS.hname = "DownloadFS";
 DownloadFS.fileclass = DownloadFile;

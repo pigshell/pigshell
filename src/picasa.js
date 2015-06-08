@@ -9,7 +9,7 @@ var PicasaFS = function(opts, uri) {
 
 inherit(PicasaFS, HttpFS);
 
-PicasaFS.fsname = 'PicasaFS';
+PicasaFS.hname = 'PicasaFS';
 PicasaFS.defaults = { 'tx': 'direct' };
 Sys.fs.PicasaFS = {
     "defaults": PicasaFS.defaults

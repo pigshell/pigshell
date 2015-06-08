@@ -187,6 +187,8 @@
     "mkediv": false,
     "HttpLink": true,
     "Sys": true,
-    "PstyDir": true
+    "PstyDir": true,
+    "enc_uri": false,
+    "dec_uri": false
     }
 }

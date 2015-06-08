@@ -21,7 +21,7 @@ JsonFile.prototype.mkfile = function(obj, name) {
             readable: true,
             writable: true,
             fs: self.fs,
-            html: '<div class="pfile">' + name + '</div>',
+            html: '<div class="pfile">{{name}}</div>',
             size: 0
         };
     if (obj.__lookupGetter__(name) || obj.__lookupSetter__(name)) {
@@ -33,7 +33,7 @@ JsonFile.prototype.mkfile = function(obj, name) {
         newfile.mime = 'directory';
         newfile.count = obj[name]._jfs ? obj[name]._jfs.length :
             Object.keys(obj[name]).length;
-        newfile.html = '<div class="pfolder">' + name + '</div>';
+        newfile.html = '<div class="pfolder">{{name}}</div>';
     } else if (isstring(obj[name])) {
         newfile.mime = 'text/plain';
         newfile.size = obj[name].length;
@@ -184,7 +184,7 @@ var JsonFS = function(obj, opts) {
 };
 
 inherit(JsonFS, Filesystem);
-JsonFS.fsname = "JsonFS";
+JsonFS.hname = "JsonFS";
 
 JsonFS.prototype.iread = function(ident) {
     var rootident = this.root.ident,

@@ -33,7 +33,7 @@ var RamFS = function(opts, uri) {
 
 inherit(RamFS, Filesystem);
 
-RamFS.fsname = 'RamFS';
+RamFS.hname = 'RamFS';
 RamFS.filesystems = [];
 
 RamFS.prototype.dirmime = 'application/vnd.pigshell.dir+json';
