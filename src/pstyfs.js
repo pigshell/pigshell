@@ -16,7 +16,6 @@ var PstyFS = function() {
 
 inherit(PstyFS, HttpFS);
 
-PstyFS.hname = 'PstyFS';
 PstyFS.defaults = {};
 Sys.fs.PstyFS = {
     "defaults": PstyFS.defaults
@@ -526,7 +525,10 @@ PstyBundle.prototype.read = PstyBundle.prototype.getdata;
     PstyBundle.prototype[op] = fstack_invaldir_wrap(op);
 });
 
-VFS.register_uri_handler('http://localhost:50937', PstyFS, {}, 0);
-VFS.register_media_handler('application/vnd.pigshell.dir+json', PstyDir, {}, 100);
-VFS.register_media_handler('application/vnd.pigshell.link+json', HttpLink, {}, 100);
-VFS.register_media_handler('application/vnd.pigshell.bundle+json', PstyBundle, {}, 100);
+VFS.register_handler("PstyFS", PstyFS);
+VFS.register_handler("PstyDir", PstyDir);
+VFS.register_handler("PstyBundle", PstyBundle);
+VFS.register_uri_handler("http://localhost:50937", "PstyFS", {}, 0);
+VFS.register_media_handler("application/vnd.pigshell.dir+json", "PstyDir", {}, 100);
+VFS.register_media_handler("application/vnd.pigshell.link+json", "HttpLink", {}, 100);
+VFS.register_media_handler("application/vnd.pigshell.bundle+json", "PstyBundle", {}, 100);

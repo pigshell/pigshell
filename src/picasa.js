@@ -9,7 +9,6 @@ var PicasaFS = function(opts, uri) {
 
 inherit(PicasaFS, HttpFS);
 
-PicasaFS.hname = 'PicasaFS';
 PicasaFS.defaults = { 'tx': 'direct' };
 Sys.fs.PicasaFS = {
     "defaults": PicasaFS.defaults
@@ -475,7 +474,11 @@ function picasa_getmime(raw) {
     return known[raw.category[0].term] || null;
 }
 
-VFS.register_uri_handler('https://picasaweb.google.com/data/', PicasaFS, {}, 0);
-VFS.register_media_handler('application/vnd.pigshell.picasa.user+json', PicasaUser, {}, 100);
-VFS.register_media_handler('application/vnd.pigshell.picasa.album+json', PicasaAlbum, {}, 100);
-VFS.register_media_handler('application/vnd.pigshell.picasa.photo+json', PicasaPhoto, {}, 100);
+VFS.register_handler("PicasaFS", PicasaFS);
+VFS.register_handler("PicasaAlbum", PicasaAlbum);
+VFS.register_handler("PicasaPhoto", PicasaPhoto);
+
+VFS.register_uri_handler("https://picasaweb.google.com/data/", "PicasaFS", {}, 0);
+VFS.register_media_handler("application/vnd.pigshell.picasa.user+json", "PicasaUser", {}, 100);
+VFS.register_media_handler("application/vnd.pigshell.picasa.album+json", "PicasaAlbum", {}, 100);
+VFS.register_media_handler("application/vnd.pigshell.picasa.photo+json", "PicasaPhoto", {}, 100);

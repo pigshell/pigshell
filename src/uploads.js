@@ -136,4 +136,4 @@ var UploadFS = function() {
 
 inherit(UploadFS, Filesystem);
 
-UploadFS.hname = "UploadFS";
+VFS.register_handler("UploadFS", UploadFS);

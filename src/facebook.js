@@ -1159,4 +1159,4 @@ var FacebookFS = function(myname) {
 
 inherit(FacebookFS, Filesystem);
 
-FacebookFS.hname = "FacebookFS";
+VFS.register_handler("FacebookFS", FacebookFS);

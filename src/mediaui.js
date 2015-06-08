@@ -89,10 +89,16 @@ var PdfUI = {
     }
 };
 
-VFS.register_media_ui('text/html', TextHtmlUI, {}, 100);
+VFS.register_handler("TextHtmlUI", TextHtmlUI);
+VFS.register_handler("TextPlainUI", TextPlainUI);
+VFS.register_handler("ImageUI", ImageUI);
+VFS.register_handler("OctetStreamUI", OctetStreamUI);
+VFS.register_handler("PdfUI", PdfUI);
+
+VFS.register_media_ui_handler("text/html", "TextHtmlUI", {}, 100);
 TextHtmlUI.init();
-VFS.register_media_ui('text/plain', TextPlainUI, {}, 100);
-VFS.register_media_ui('image', ImageUI, {}, 100);
-VFS.register_media_ui('application/octet-stream', OctetStreamUI, {}, 100);
-VFS.register_media_ui('application/pdf', PdfUI, {}, 100);
+VFS.register_media_ui_handler("text/plain", "TextPlainUI", {}, 100);
+VFS.register_media_ui_handler("image", "ImageUI", {}, 100);
+VFS.register_media_ui_handler("application/octet-stream", "OctetStreamUI", {}, 100);
+VFS.register_media_ui_handler("application/pdf", "PdfUI", {}, 100);
 PdfUI.init();

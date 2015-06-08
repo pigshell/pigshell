@@ -10,7 +10,6 @@ var DropboxFS = function(opts, uri) {
 
 inherit(DropboxFS, HttpFS);
 
-DropboxFS.hname = "DropboxFS";
 DropboxFS.defaults = {
     "tx": "direct",
     "cachedir": "true" /* Cache dir contents unless explicitly invalidated */
@@ -231,4 +230,6 @@ DropboxFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
     });
 };
 
-VFS.register_uri_handler('https://api.dropbox.com/1/metadata/dropbox', DropboxFS, {}, 0);
+
+VFS.register_handler("DropboxFS", DropboxFS);
+VFS.register_uri_handler("https://api.dropbox.com/1/metadata/dropbox", "DropboxFS", {}, 0);

@@ -15,60 +15,49 @@ var VFS = {
     handler: {},
     uri_handler: {
         _jfs_notify: function() {
-            VFS.uri_handler_list = recompute_handler(VFS.uri_handler);
+            VFS.uri_handler_list = make_handler_list(VFS.uri_handler);
+        }
+    },
+    media_handler: {
+        _jfs_notify: function() {
+            VFS.media_handler_list = make_handler_list(VFS.media_handler);
+        }
+    },
+    media_ui_handler: {
+        _jfs_notify: function() {
+            VFS.media_ui_list = make_handler_list(VFS.media_ui_handler);
         }
     },
 
     init: function() {
     },
 
-    register_uri_handler: function(pattern, handler, opts, pri) {
-        var self = this,
-            ep = enc_uri(pattern);
+    register_handler: function(name, klass) {
+        VFS.handler[name] = klass;
+    },
 
-        self.handler[handler.hname] = handler;
-        self.uri_handler[ep] = self.uri_handler[ep] || {};
-        self.uri_handler[ep][handler.hname] = {opts: opts, pri: pri};
-        self.uri_handler._jfs_notify();
+    register_uri_handler: function(pattern, handler, opts, pri) {
+        register_handler('uri_handler', pattern, handler, opts, pri);
     },
 
     unregister_uri_handler: function(pattern, handler) {
-        var self = this;
-
-        self.uri_handler_list = unregister_handler(self.uri_handler_list,
-            pattern, handler);
-        try {
-            delete self.uri_handler[enc_uri(pattern)][handler.hname];
-        } catch (e) {}
-        self.uri_handler._jfs_notify();
+        unregister_handler('uri_handler', pattern, handler);
     },
 
     register_media_handler: function(pattern, handler, opts, pri) {
-        var self = this;
-
-        self.media_handler_list = register_handler(self.media_handler_list,
-            pattern, handler, opts, pri);
+        register_handler('media_handler', pattern, handler, opts, pri);
     },
 
     unregister_media_handler: function(pattern, handler) {
-        var self = this;
-
-        self.media_handler_list = unregister_handler(self.media_handler_list,
-            pattern, handler);
+        unregister_handler('media_handler', pattern, handler);
     },
 
-    register_media_ui: function(pattern, handler, opts, pri) {
-        var self = this;
-
-        self.media_ui_list = register_handler(self.media_ui_list,
-            pattern, handler, opts, pri);
+    register_media_ui_handler: function(pattern, handler, opts, pri) {
+        register_handler('media_ui_handler', pattern, handler, opts, pri);
     },
 
-    unregister_media_ui: function(pattern, handler) {
-        var self = this;
-
-        self.media_ui_list = unregister_handler(self.media_ui_list,
-            pattern, handler);
+    unregister_media_ui_handler: function(pattern, handler) {
+        unregister_handler('media_ui_handler', pattern, handler);
     },
 
     lookup_uri_handler: function(uri) {
@@ -87,7 +76,7 @@ var VFS = {
         return _lookup_handler(self.media_handler_list, media_type);
     },
 
-    lookup_media_ui: function(media_type) {
+    lookup_media_ui_handler: function(media_type) {
         var self = this;
         return _lookup_handler(self.media_ui_list, media_type);
     },
@@ -122,30 +111,22 @@ var VFS = {
 
 Sys.uri = VFS.uri_handler;
 
-function register_handler(plist, pattern, handler, opts, pri) {
-    var qlist = plist.slice(0);
+function register_handler(dir, pattern, handler, opts, pri) {
+    var ep = enc_uri(pattern);
 
-    qlist.push({pattern: pattern, handler: handler, opts: opts, priority: pri});
-    qlist = qlist.sort(function(a, b) {
-        if (a.pattern > b.pattern) {
-            return -1;
-        } else if (a.pattern < b.pattern) {
-            return 1;
-        } else {
-            return (a.priority > b.priority) ? -1 : ((a.priority < b.priority) ? 1 : 0);
-        }
-    });
-    return qlist;
+    VFS[dir][ep] = VFS[dir][ep] || {};
+    VFS[dir][ep][handler] = {opts: opts, pri: pri};
+    VFS[dir]._jfs_notify();
 }
 
-function unregister_handler(plist, pattern, handler) {
-    var qlist = plist.slice(0);
-
-    qlist = qlist.filter(function(a) { return a.pattern !== pattern && a.handler !== handler;});
-    return qlist;
+function unregister_handler(dir, pattern, handler) {
+    try {
+        delete VFS[dir][enc_uri(pattern)][handler];
+    } catch (e) {}
+    VFS[dir]._jfs_notify();
 }
 
-function recompute_handler(pdict) {
+function make_handler_list(pdict) {
     var qlist = [];
     for (var p in pdict) {
         if (p === '_jfs_notify') {

@@ -33,7 +33,6 @@ var RamFS = function(opts, uri) {
 
 inherit(RamFS, Filesystem);
 
-RamFS.hname = 'RamFS';
 RamFS.filesystems = [];
 
 RamFS.prototype.dirmime = 'application/vnd.pigshell.dir+json';
@@ -262,5 +261,6 @@ RamFile.prototype.mkdir = function(filename, opts, cb) {
     }));
 };
 
-VFS.register_uri_handler('ramfs://', RamFS, {}, 0);
-URI.register_uri_parser('ramfs', HttpURI);
+VFS.register_handler("RamFS", RamFS);
+VFS.register_uri_handler("ramfs://", "RamFS", {}, 0);
+URI.register_uri_parser("ramfs", HttpURI);

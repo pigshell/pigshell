@@ -31,7 +31,6 @@ var HttpFS = function(opts, uri) {
 
 inherit(HttpFS, Filesystem);
 
-HttpFS.hname = "HttpFS";
 HttpFS.defaults = { "tx": "proxy" };
 HttpFS.hosts = {
     "localhost": {"tx": "direct"},
@@ -476,9 +475,14 @@ HttpLink.prototype.update = function(meta, opts, cb) {
 
 pigshell.HttpFS = HttpFS;
 
-VFS.register_uri_handler('http', HttpFS, {}, 1);
-VFS.register_uri_handler('https', HttpFS, {}, 0);
+VFS.register_handler("HttpFS", HttpFS);
+VFS.register_handler("MediaHandler", MediaHandler);
+VFS.register_handler("TextHtml", TextHtml);
+VFS.register_handler("HttpLink", HttpLink);
 
-VFS.register_media_handler('text/html', TextHtml, {}, 10);
-VFS.register_media_handler('text/vnd.pigshell.html+dir', TextHtml, {}, 10);
-VFS.register_media_handler('application/octet-stream', MediaHandler, {}, 10);
+VFS.register_uri_handler("http", "HttpFS", {}, 1);
+VFS.register_uri_handler("https", "HttpFS", {}, 0);
+
+VFS.register_media_handler("text/html", "TextHtml", {}, 10);
+VFS.register_media_handler("text/vnd.pigshell.html+dir", "TextHtml", {}, 10);
+VFS.register_media_handler("application/octet-stream", "MediaHandler", {}, 10);

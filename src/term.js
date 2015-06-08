@@ -147,7 +147,8 @@ PtermBase.prototype.append = function(item, opts, cb) {
     }
 
     function blobdisplay(blob, type) {
-        var dh = VFS.lookup_media_ui(type) || VFS.lookup_media_ui('application/octet-stream');
+        var dh = VFS.lookup_media_ui_handler(type) ||
+            VFS.lookup_media_ui_handler('application/octet-stream');
         if (dh && dh.handler.display) {
             dh.handler.display(item, self, function(err, res) {
                 if (!err) {
@@ -253,8 +254,6 @@ var PtermFS = function(opts) {
 };
 
 inherit(PtermFS, Filesystem);
-
-PtermFS.hname = 'PtermFS';
 
 PtermFS.prototype.newtid = function() {
     return this.tid++;
@@ -443,3 +442,5 @@ CodeMirror.commands.close = function(cm) {
         cm.onClose();
     }
 };
+
+VFS.register_handler("PtermFS", PtermFS);

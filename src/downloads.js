@@ -40,5 +40,5 @@ var DownloadFS = function() {
 
 inherit(DownloadFS, Filesystem);
 
-DownloadFS.hname = "DownloadFS";
+VFS.register_handler("DownloadFS", DownloadFS);
 DownloadFS.fileclass = DownloadFile;

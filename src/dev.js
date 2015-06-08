@@ -64,4 +64,4 @@ var DevFS = function() {
 
 inherit(DevFS, Filesystem);
 
-DevFS.hname = "DevFS";
+VFS.register_handler("DevFS", DevFS);
