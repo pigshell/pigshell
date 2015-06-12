@@ -16,8 +16,6 @@ var PstyFS = function() {
 
 inherit(PstyFS, HttpFS);
 
-PstyFS.defaults = {};
-
 PstyFS.lookup_uri = HttpFS.lookup_uri;
 
 PstyFS.prototype.dirmime = 'application/vnd.pigshell.dir+json';
@@ -525,7 +523,7 @@ PstyBundle.prototype.read = PstyBundle.prototype.getdata;
 VFS.register_handler("PstyFS", PstyFS);
 VFS.register_handler("PstyDir", PstyDir);
 VFS.register_handler("PstyBundle", PstyBundle);
-VFS.register_uri_handler("http://localhost:50937", "PstyFS", {});
+VFS.register_uri_handler("http://localhost:50937", "PstyFS", {"tx": "direct"});
 VFS.register_media_handler("application/vnd.pigshell.dir+json", "PstyDir", {});
 VFS.register_media_handler("application/vnd.pigshell.link+json", "HttpLink", {});
 VFS.register_media_handler("application/vnd.pigshell.bundle+json", "PstyBundle", {});

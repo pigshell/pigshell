@@ -43,3 +43,12 @@ function encuri {
 function decuri {
     jf 'dec_uri("'$1'")' 1
 }
+
+DIRECTURLS=(http://pig.sh https://pig.sh http://query.yahooapis.com http://www.quandl.com https://rawgit.com https://cdn.rawgit.com)
+for h in $DIRECTURLS; do
+    dir=/sys/uri/$(encuri $h)
+    mkdir $dir
+    mkdir $dir/opts
+    echo -n 'HttpFS' >$dir/handler
+    echo -n 'direct' >$dir/opts/tx
+done

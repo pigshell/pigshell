@@ -24,23 +24,13 @@ var HttpFS = function(opts, uri) {
     HttpFS.base.call(this, {});
     self.uri = uri;
     self.Uri = Uri;
-    self.opts = $.extend(true, {}, HttpFS.hosts[host], opts);
+    self.opts = opts;
     self.tx = HttpTX.lookup(self.opts.tx);
 };
 
 inherit(HttpFS, Filesystem);
 
 HttpFS.defaults = { "tx": "proxy" };
-HttpFS.hosts = {
-    "localhost": {"tx": "direct"},
-    "127.0.0.1": {"tx": "direct"},
-    "pigshell.com": {"tx": "direct"},
-    "pig.sh": {"tx": "direct"},
-    "query.yahooapis.com": {"tx": "direct"},
-    "www.quandl.com": {"tx": "direct"},
-    "rawgit.com": {"tx": "direct"},
-    "cdn.rawgit.com": {"tx": "direct"}
-};
 
 HttpFS.lookup_uri = function(uri, opts, cb) {
     var self = this,
@@ -454,7 +444,9 @@ VFS.register_handler("HttpLink", HttpLink);
 
 VFS.register_uri_handler("http", "HttpFS", {});
 VFS.register_uri_handler("https", "HttpFS", {});
-VFS.register_uri_handler("http", "HttpFS", {});
+
+VFS.register_uri_handler("http://pigshell.com", "HttpFS", {"tx": "direct"});
+VFS.register_uri_handler("https://pigshell.com", "HttpFS", {"tx": "direct"});
 
 VFS.register_media_handler("text/html", "TextHtml", {});
 VFS.register_media_handler("text/vnd.pigshell.html+dir", "TextHtml", {});
