@@ -9,11 +9,7 @@ var PicasaFS = function(opts, uri) {
 
 inherit(PicasaFS, HttpFS);
 
-PicasaFS.defaults = { 'tx': 'direct' };
-Sys.fs.PicasaFS = {
-    "defaults": PicasaFS.defaults
-};
-
+PicasaFS.defaults = { "tx": "direct" };
 PicasaFS.lookup_uri = HttpFS.lookup_uri;
 
 

@@ -184,7 +184,6 @@ var JsonFS = function(obj, opts) {
 };
 
 inherit(JsonFS, Filesystem);
-JsonFS.hname = "JsonFS";
 
 JsonFS.prototype.iread = function(ident) {
     var rootident = this.root.ident,
@@ -210,3 +209,5 @@ JsonFS.prototype.iread = function(ident) {
 function _jfs_isdir(obj) {
     return obj.constructor === Object || obj._jfs;
 }
+
+VFS.register_handler("JsonFS", JsonFS);

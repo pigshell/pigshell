@@ -125,4 +125,4 @@ var LstorFS = function(obj, opts) {
 
 inherit(LstorFS, Filesystem);
 
-LstorFS.hname = 'LstorFS';
+VFS.register_handler("LstorFS", LstorFS);

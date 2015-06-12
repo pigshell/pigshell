@@ -4,81 +4,29 @@
  */
 
 var Sys = {
-    "fs": {},
-    "media": {}
 };
 
 var VFS = {
-    uri_handler_list: [],
-    media_handler_list: [],
-    media_ui_list: [],
     handler: {},
-    uri_handler: {
-        _jfs_notify: function() {
-            VFS.uri_handler_list = make_handler_list(VFS.uri_handler);
-        }
-    },
-    media_handler: {
-        _jfs_notify: function() {
-            VFS.media_handler_list = make_handler_list(VFS.media_handler);
-        }
-    },
-    media_ui_handler: {
-        _jfs_notify: function() {
-            VFS.media_ui_list = make_handler_list(VFS.media_ui_handler);
-        }
-    },
 
     init: function() {
     },
 
     register_handler: function(name, klass) {
         VFS.handler[name] = klass;
+        klass.defaults = klass.defaults || {};
+        klass._jfs = klass._jfs || ["defaults"];
     },
 
-    register_uri_handler: function(pattern, handler, opts, pri) {
-        register_handler('uri_handler', pattern, handler, opts, pri);
-    },
-
-    unregister_uri_handler: function(pattern, handler) {
-        unregister_handler('uri_handler', pattern, handler);
-    },
-
-    register_media_handler: function(pattern, handler, opts, pri) {
-        register_handler('media_handler', pattern, handler, opts, pri);
-    },
-
-    unregister_media_handler: function(pattern, handler) {
-        unregister_handler('media_handler', pattern, handler);
-    },
-
-    register_media_ui_handler: function(pattern, handler, opts, pri) {
-        register_handler('media_ui_handler', pattern, handler, opts, pri);
-    },
-
-    unregister_media_ui_handler: function(pattern, handler) {
-        unregister_handler('media_ui_handler', pattern, handler);
-    },
-
-    lookup_uri_handler: function(uri) {
-        var self = this;
-        return _lookup_handler(self.uri_handler_list, uri);
-    },
-
-    lookup_handler: function(name) {
+    lookup_handler_name: function(handler) {
         var self = this;
 
-        return self.handler[name] || null;
-    },
-
-    lookup_media_handler: function(media_type) {
-        var self = this;
-        return _lookup_handler(self.media_handler_list, media_type);
-    },
-
-    lookup_media_ui_handler: function(media_type) {
-        var self = this;
-        return _lookup_handler(self.media_ui_list, media_type);
+        for (var name in VFS.handler) {
+            if (VFS.handler[name] === handler) {
+                return name;
+            }
+        }
+        return null;
     },
 
     /*
@@ -96,34 +44,61 @@ var VFS = {
             fragopts = frag ? optstr_parse(frag) : {},
             url = u.setFragment('').toString(),
             mountopts = $.extend(true, {}, opts.mountopts, fragopts),
-            entry = mountopts.fs ? self.lookup_handler(mountopts.fs) : self.lookup_uri_handler(url),
-            handler = entry ? entry.handler : null,
-            opts2 = $.extend({}, opts, {mountopts: mountopts});
+            entry, handler;
 
+        if (mountopts.fs) {
+            handler = VFS.handler[mountopts.fs];
+            entry = {};
+            delete mountopts['fs'];
+        } else {
+            entry = self.lookup_uri_handler(url);
+            handler = entry ? entry.handler: null;
+        }
         if (!handler) {
             return cb(E('EPROTONOSUPPORT'));
         }
-        delete mountopts['fs'];
-        
+        mountopts = $.extend(true, {}, handler.defaults, entry.opts, mountopts);
+        var opts2 = $.extend({}, opts, {mountopts: mountopts});
+
         return handler.lookup_uri(url, opts2, cb);
     }
 };
 
-Sys.uri = VFS.uri_handler;
+["uri", "media", "media_ui"].forEach(function(x) {
+    var dict = x + "_handler",
+        lst = x + "_handler_list";
+
+    VFS[lst] = [];
+    VFS[dict] = {
+        _jfs_notify: function() {
+            VFS[lst] = make_handler_list(VFS[dict]);
+        }
+    };
+    VFS["register_" + dict] = function(pattern, handler, opts, pri) {
+        return register_handler(VFS[dict], pattern, handler, opts, pri);
+    };
+    VFS["unregister_" + dict] = function(pattern, handler) {
+        return unregister_handler(VFS[dict], pattern, handler);
+    };
+    VFS["lookup_" + dict] = function(pattern) {
+        return lookup_handler(VFS[lst], pattern);
+    };
+    Sys[x] = VFS[dict];
+});
 
 function register_handler(dir, pattern, handler, opts, pri) {
     var ep = enc_uri(pattern);
 
-    VFS[dir][ep] = VFS[dir][ep] || {};
-    VFS[dir][ep][handler] = {opts: opts, pri: pri};
-    VFS[dir]._jfs_notify();
+    dir[ep] = dir[ep] || {};
+    dir[ep][handler] = {opts: opts, pri: pri};
+    dir._jfs_notify();
 }
 
 function unregister_handler(dir, pattern, handler) {
     try {
-        delete VFS[dir][enc_uri(pattern)][handler];
+        delete dir[enc_uri(pattern)][handler];
     } catch (e) {}
-    VFS[dir]._jfs_notify();
+    dir._jfs_notify();
 }
 
 function make_handler_list(pdict) {
@@ -155,7 +130,7 @@ function make_handler_list(pdict) {
     return qlist;
 }
 
-function _lookup_handler(list, pattern) {
+function lookup_handler(list, pattern) {
     for (var i = 0, max = list.length; i < max; i++) {
         if (pattern.indexOf(list[i].pattern) === 0) {
             return list[i];
@@ -295,6 +270,28 @@ File.prototype.enosys = function() {
     } else {
         return E('ENOSYS');
     }
+};
+
+var MediaHandler = function(meta) {
+    this.mtime = -1;
+    this.size = 0;
+    this.readable = true;
+
+    MediaHandler.base.call(this, mergeattr({}, meta, ["name", "ident", "fs", "mime"]));
+
+    this.html = sprintf('<div class="pfile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
+    assert("MediaHandler.1", this.ident !== undefined && this.name !== undefined && this.fs !== undefined && this.mime, this, meta);
+};
+
+inherit(MediaHandler, File);
+
+MediaHandler.prototype.append = fstack_passthrough("append");
+
+MediaHandler.prototype.update = function(meta, opts, cb) {
+    var self = this;
+
+    mergeattr_x(self, meta, ["name", "ident", "fs", "mime"]);
+    return File.prototype.update.call(self, meta, opts, cb);
 };
 
 Namespace = function(root) {

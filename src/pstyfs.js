@@ -17,9 +17,6 @@ var PstyFS = function() {
 inherit(PstyFS, HttpFS);
 
 PstyFS.defaults = {};
-Sys.fs.PstyFS = {
-    "defaults": PstyFS.defaults
-};
 
 PstyFS.lookup_uri = HttpFS.lookup_uri;
 

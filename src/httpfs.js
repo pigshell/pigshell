@@ -24,8 +24,7 @@ var HttpFS = function(opts, uri) {
     HttpFS.base.call(this, {});
     self.uri = uri;
     self.Uri = Uri;
-    self.opts = $.extend(true, {}, self.constructor.defaults,
-        HttpFS.hosts[host], opts);
+    self.opts = $.extend(true, {}, HttpFS.hosts[host], opts);
     self.tx = HttpTX.lookup(self.opts.tx);
 };
 
@@ -41,11 +40,6 @@ HttpFS.hosts = {
     "www.quandl.com": {"tx": "direct"},
     "rawgit.com": {"tx": "direct"},
     "cdn.rawgit.com": {"tx": "direct"}
-};
-
-Sys.fs.HttpFS = {
-    "defaults": HttpFS.defaults,
-    "hosts": HttpFS.hosts
 };
 
 HttpFS.lookup_uri = function(uri, opts, cb) {
@@ -243,34 +237,12 @@ HttpFile.prototype._process_headers = function(xhr_headers) {
     return data;
 };
 
-var MediaHandler = function(meta) {
-    this.mtime = -1;
-    this.size = 0;
-    this.readable = true;
-
-    MediaHandler.base.call(this, mergeattr({}, meta, ["name", "ident", "fs", "mime"]));
-
-    this.html = sprintf('<div class="pfile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
-    assert("MediaHandler.1", this.ident !== undefined && this.name !== undefined && this.fs !== undefined && this.mime, this, meta);
-};
-
-inherit(MediaHandler, File);
-
-MediaHandler.prototype.append = fstack_passthrough("append");
-
-MediaHandler.prototype.update = function(meta, opts, cb) {
-    var self = this;
-
-    mergeattr_x(self, meta, ["name", "ident", "fs", "mime"]);
-    return File.prototype.update.call(self, meta, opts, cb);
-};
-
 /*
  * Options taken from base FS:
  * * html_nodir: will treat text/html as plain file
  */
 
-var TextHtml = function(meta) {
+var TextHtml = function(meta, opts) {
     this.mime = meta.mime || "text/html";
     TextHtml.base.call(this, meta);
     this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
