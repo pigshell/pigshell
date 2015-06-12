@@ -431,8 +431,8 @@ GDriveFile.prototype.putdir = mkblob(function(filename, blob, opts, cb) {
 VFS.register_handler("GDriveFS", GDriveFS);
 VFS.register_handler("GDriveDoc", GDriveDoc);
 
-VFS.register_uri_handler("https://www.googleapis.com/drive/v2", "GDriveFS", {}, 0);
-VFS.register_media_handler("application/vnd.google-apps.folder", "PstyDir", {}, 100);
-VFS.register_media_handler("application/vnd.google-apps.presentation", "GDriveDoc", {}, 100);
-VFS.register_media_handler("application/vnd.google-apps.spreadsheet", "GDriveDoc", {}, 100);
-VFS.register_media_handler("application/vnd.google-apps.document", "GDriveDoc", {}, 100);
+VFS.register_uri_handler("https://www.googleapis.com/drive/v2", "GDriveFS", {});
+VFS.register_media_handler("application/vnd.google-apps.folder", "PstyDir", {});
+VFS.register_media_handler("application/vnd.google-apps.presentation", "GDriveDoc", {});
+VFS.register_media_handler("application/vnd.google-apps.spreadsheet", "GDriveDoc", {});
+VFS.register_media_handler("application/vnd.google-apps.document", "GDriveDoc", {});

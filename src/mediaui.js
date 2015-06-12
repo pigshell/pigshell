@@ -95,10 +95,10 @@ VFS.register_handler("ImageUI", ImageUI);
 VFS.register_handler("OctetStreamUI", OctetStreamUI);
 VFS.register_handler("PdfUI", PdfUI);
 
-VFS.register_media_ui_handler("text/html", "TextHtmlUI", {}, 100);
+VFS.register_media_ui_handler("text/html", "TextHtmlUI", {});
 TextHtmlUI.init();
-VFS.register_media_ui_handler("text/plain", "TextPlainUI", {}, 100);
-VFS.register_media_ui_handler("image", "ImageUI", {}, 100);
-VFS.register_media_ui_handler("application/octet-stream", "OctetStreamUI", {}, 100);
-VFS.register_media_ui_handler("application/pdf", "PdfUI", {}, 100);
+VFS.register_media_ui_handler("text/plain", "TextPlainUI", {});
+VFS.register_media_ui_handler("image", "ImageUI", {});
+VFS.register_media_ui_handler("application/octet-stream", "OctetStreamUI", {});
+VFS.register_media_ui_handler("application/pdf", "PdfUI", {});
 PdfUI.init();

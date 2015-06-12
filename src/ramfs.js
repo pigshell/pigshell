@@ -262,5 +262,5 @@ RamFile.prototype.mkdir = function(filename, opts, cb) {
 };
 
 VFS.register_handler("RamFS", RamFS);
-VFS.register_uri_handler("ramfs://", "RamFS", {}, 0);
+VFS.register_uri_handler("ramfs://", "RamFS", {});
 URI.register_uri_parser("ramfs", HttpURI);

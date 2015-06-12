@@ -74,8 +74,8 @@ var VFS = {
             VFS[lst] = make_handler_list(VFS[dict]);
         }
     };
-    VFS["register_" + dict] = function(pattern, handler, opts, pri) {
-        return register_handler(VFS[dict], pattern, handler, opts, pri);
+    VFS["register_" + dict] = function(pattern, handler, opts) {
+        return register_handler(VFS[dict], pattern, handler, opts);
     };
     VFS["unregister_" + dict] = function(pattern, handler) {
         return unregister_handler(VFS[dict], pattern, handler);
@@ -86,19 +86,17 @@ var VFS = {
     Sys[x] = VFS[dict];
 });
 
-function register_handler(dir, pattern, handler, opts, pri) {
+Sys.handler = VFS.handler;
+
+function register_handler(dir, pattern, handler, opts) {
     var ep = enc_uri(pattern);
 
-    dir[ep] = dir[ep] || {};
-    dir[ep][handler] = {opts: opts, pri: pri};
+    dir[ep] = {handler: handler, opts: opts};
     dir._jfs_notify();
 }
 
-function unregister_handler(dir, pattern, handler) {
-    try {
-        delete dir[enc_uri(pattern)][handler];
-    } catch (e) {}
-    dir._jfs_notify();
+function unregister_handler(dir, pattern) {
+    throw "unregister_handler not implemented";
 }
 
 function make_handler_list(pdict) {
@@ -107,25 +105,17 @@ function make_handler_list(pdict) {
         if (p === '_jfs_notify') {
             continue;
         }
-        var entry = pdict[p];
-        for (var h in entry) {
-            var opts = entry[h].opts || {},
-                pri = +entry[h].pri,
-                handler = VFS.handler[h];
+        var entry = pdict[p],
+            hname = entry.handler || 'unknown',
+            opts = entry.opts || {},
+            handler = VFS.handler[hname];
 
-            if (!isNaN(pri) && handler) {
-                qlist.push({pattern: dec_uri(p), handler: handler, opts: opts, pri: pri});
-            }
+        if (handler) {
+            qlist.push({pattern: dec_uri(p), handler: handler, opts: opts});
         }
     }
     qlist = qlist.sort(function(a, b) {
-        if (a.pattern > b.pattern) {
-            return -1;
-        } else if (a.pattern < b.pattern) {
-            return 1;
-        } else {
-            return (a.priority > b.priority) ? -1 : ((a.priority < b.priority) ? 1 : 0);
-        }
+        return (a.pattern > b.pattern) ? -1 : (a.pattern < b.pattern) ? 1 : 0;
     });
     return qlist;
 }
