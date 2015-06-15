@@ -48,7 +48,6 @@ DIRECTURLS=(http://pig.sh https://pig.sh http://query.yahooapis.com http://www.q
 for h in $DIRECTURLS; do
     dir=/sys/uri/$(encuri $h)
     mkdir $dir
-    mkdir $dir/opts
     echo -n 'HttpFS' >$dir/handler
-    echo -n 'direct' >$dir/opts/tx
+    echo -n 'direct' >$dir/tx
 done

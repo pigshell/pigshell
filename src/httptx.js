@@ -5,27 +5,31 @@
 
 /*
  * HttpTX is the http transport layer. Uses XHR2 to get stuff
- * First get direct stuff working, then implement Proxies, YQL etc.
  *
  * opts is an object containing:
  * headers: object containing headers
  * responseType: string with "", "arraybuffer", "blob", "json", "document",
  * or "text"
- * withCredentials:
- *
  */
 
-var HttpTX = function(opts) {
-    var self = this;
+var HttpTX = function(o) {
+    var self = this,
+        opts = $.extend({}, HttpTX.defaults, o);
 
-    self.opts = opts;
-    self.proxy_url = (opts && opts.proxy_url) ? opts.proxy_url : '';
+    self.uri = opts.uri;
+    self.fallthrough = opts.fallthrough;
 
-    if (self.proxy_url && self.proxy_url[self.proxy_url.length - 1] != '/') {
-            self.proxy_url += '/';
+    if (self.uri && self.uri[self.uri.length - 1] != "/") {
+        self.uri += "/";
     }
 };
 
+HttpTX.defaults = {
+    "uri": "",
+    "fallthrough": false
+};
+
+/*
 HttpTX.dict = {'direct': new HttpTX({}),
     'proxy': new HttpTX({proxy_url: 'http://localhost:50937/'}),
     'fallthrough': new HttpTX({proxy_url: 'http://localhost:50937/', fallthrough: true})
@@ -34,6 +38,7 @@ HttpTX.dict = {'direct': new HttpTX({}),
 HttpTX.lookup = function(name) {
     return HttpTX.dict[name];
 };
+*/
 
 HttpTX.prototype.do_xhr = function(op, url, data, opts, cb, use_proxy) {
     var self = this,
@@ -41,7 +46,7 @@ HttpTX.prototype.do_xhr = function(op, url, data, opts, cb, use_proxy) {
         headers = opts.headers || {},
         rt = opts.responseType || "",
         params = opts.params ? $.param(opts.params) : '',
-        proxy_url = (self.opts.fallthrough && !use_proxy) ? '' : self.proxy_url,
+        proxy_url = (self.fallthrough && !use_proxy) ? '' : self.uri,
         u = params ? proxy_url + url + '?' + params : proxy_url + url,
         context = (opts.context && opts.context._abortable) ? opts.context : null;
 
@@ -74,7 +79,7 @@ HttpTX.prototype.do_xhr = function(op, url, data, opts, cb, use_proxy) {
         }
         if (xhr.status === 0) {
             removeself();
-            if (self.opts.fallthrough && !use_proxy) {
+            if (self.fallthrough && !use_proxy) {
                 return self.do_xhr(op, url, data, opts, cb, true);
             }
             return catcher({code: xhr.status, msg: "Cross-origin request denied (check if psty is running)"}, xhr);
@@ -117,3 +122,8 @@ HttpTX.prototype.PUT = function(url, data, opts, cb) {
 HttpTX.prototype.DELETE = function(url, opts, cb) {
     return this.do_xhr('DELETE', url, null, opts, cb);
 };
+
+VFS.register_handler("HttpTX", HttpTX);
+VFS.register_tx_handler("direct", "HttpTX", {"uri": ""});
+VFS.register_tx_handler("proxy", "HttpTX", {"uri": "http://localhost:50937/"});
+VFS.register_tx_handler("fallthrough", "HttpTX", {"uri": "http://localhost:50937/", "fallthrough": true});

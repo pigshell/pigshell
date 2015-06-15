@@ -25,7 +25,7 @@ var HttpFS = function(opts, uri) {
     self.uri = uri;
     self.Uri = Uri;
     self.opts = opts;
-    self.tx = HttpTX.lookup(self.opts.tx);
+    self.tx = VFS.lookup_tx(self.opts.tx);
 };
 
 inherit(HttpFS, Filesystem);

@@ -282,7 +282,7 @@ GDriveFile.prototype.mkdir = function(filename, opts, cb) {
             "mimeType": self.fs.dirmime
         });
 
-        var tx = HttpTX.lookup('proxy'),
+        var tx = VFS.lookup_tx('proxy'),
             uri = self.fs.baseuri;
         self.fs.tx.POST(uri, data, bopts, function(err, res) {
             self.populated = false;

@@ -61,10 +61,17 @@ var VFS = {
         var opts2 = $.extend({}, opts, {mountopts: mountopts});
 
         return handler.lookup_uri(url, opts2, cb);
+    },
+
+    lookup_tx: function(tx) {
+        var self = this,
+            entry = self.lookup_tx_handler(tx);
+
+        return (entry && entry.handler) ? new entry.handler(entry.opts) : null;
     }
 };
 
-["uri", "media", "media_ui"].forEach(function(x) {
+["uri", "media", "media_ui", "tx"].forEach(function(x) {
     var dict = x + "_handler",
         lst = x + "_handler_list";
 
@@ -91,7 +98,7 @@ Sys.handler = VFS.handler;
 function register_handler(dir, pattern, handler, opts) {
     var ep = enc_uri(pattern);
 
-    dir[ep] = {handler: handler, opts: opts};
+    dir[ep] = $.extend({}, opts, {handler: handler});
     dir._jfs_notify();
 }
 
@@ -107,11 +114,12 @@ function make_handler_list(pdict) {
             continue;
         }
         var entry = pdict[p],
-            hname = entry.handler || 'unknown',
-            opts = entry.opts || {},
+            hname = entry.handler || "unknown",
+            opts = $.extend({}, entry),
             handler = VFS.handler[hname];
 
         if (handler) {
+            delete opts["handler"];
             qlist.push({pattern: dec_uri(p), handler: handler, opts: opts});
         }
     }
