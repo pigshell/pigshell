@@ -769,15 +769,6 @@ function optstr_parse(str, parsenum) {
     return opts;
 }
 
-function optstr_make(opts) {
-    var list = Object.keys(opts)
-        .filter(function(o) {return o !== "mount";})
-        .map(function(o) {
-        return (opts[o] === true) ? o : [o, opts[o]].join('=');
-    });
-    return list.join(',');
-}
-
 /*
  * Strict encoding of URI component
  */
@@ -1626,7 +1617,7 @@ function script_add(url, cb) {
 
 function mount_uri(uri, dir, mountopts, shell, cb) {
     var self = this;
-    VFS.lookup_uri(uri, {'mount': true, 'mountopts': mountopts},
+    VFS.lookup_uri(uri, {'mountopts': mountopts},
         wrap_cb(self, ef(cb, function(res) {
         return shell.ns.mount(dir, res, mountopts, cb);
         })));

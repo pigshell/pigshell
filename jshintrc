@@ -101,7 +101,6 @@
     "URI": true,
     "urisplit": false,
     "optstr_parse": false,
-    "optstr_make": false,
     "_": false,
     "HttpTX": true,
     "basenamedir": false,

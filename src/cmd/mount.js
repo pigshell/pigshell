@@ -37,10 +37,10 @@ Mount.prototype.next = check_next(do_docopt(function() {
             list = [];
         list = Object.keys(mounts).map(function(m) {
             var root = mounts[m].dir,
-                optstr = optstr_make(mounts[m].opts),
+                optstr = JSON.stringify(mounts[m].opts),
                 brstr = VFS.lookup_handler_name(root.fs.constructor) || 'unknown';
                 
-            brstr += optstr ? ',' + optstr : '';
+            brstr += (optstr !== "{}") ? "," + optstr : "";
             return sprintf("%s on %s (%s)", root.ident, m, brstr);
         });
         self.done = true;
