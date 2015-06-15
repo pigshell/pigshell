@@ -153,10 +153,24 @@ Ls.prototype.next = check_next(do_docopt(function(opts, cb) {
                 self.visited[entry.file.ident] = true; /* Avoid cycles */
                 sys.readdir(self, entry.file, {}, function(err, files) {
                     if (err) {
+                        if (err.code === 'ESTACKMOD') {
+                            return self.output(format(entry));
+                        }
                         self.retval = false;
                         self.errmsg(err, entry.path);
                         return self.output(format(entry));
                     }
+
+                    /*
+                     * Need to recheck, in case we hit a Link, and the file
+                     * stack got modified
+                     */
+
+                    entry.file = fstack_top(entry.file);
+                    if (!self.docopts['-D'] && self.curdepth > 0 && entry.file._nodescend) {
+                        return self.output(format(entry));
+                    }
+
                     var paths = Object.keys(files).map(function(i) {
                         return isurl ? files[i].ident :
                             pathjoin(entry.path, i);
@@ -237,7 +251,7 @@ Ls.prototype.next = check_next(do_docopt(function(opts, cb) {
             if (file.count !== undefined) {
                 count = file.count;
             } else {
-                count = (d === 'd') ? Object.keys(file.files).length: 1;
+                count = (d === 'd' && file.files) ? Object.keys(file.files).length: 1;
             }
             out = sprintf('%1s%1s%1s %4d %-18s %8s %12s %s\n', d, r, w, count, owner.slice(0,18), size, datestr, name);
             return out;

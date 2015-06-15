@@ -115,7 +115,7 @@ HttpFile.prototype.update = function(meta, opts, cb) {
         var mh = VFS.lookup_media_handler(mime) ||
             VFS.lookup_media_handler('application/octet-stream'),
             mf = new mh.handler({name: self.name, ident: self.ident,
-                fs: self.fs, mime: mime});
+                fs: self.fs, mime: mime}, mh.opts);
         fstack_addtop(self, mf);
         return mf.update(meta, opts, cb);
     }
@@ -217,7 +217,6 @@ HttpFile.prototype._process_headers = function(xhr_headers) {
     }
     if (mime !== null) {
         data.mime = mime;
-        data._mime_valid = true;
     }
     if (headers['content-length']) {
         data.size = parseInt(headers['content-length'], 10);
@@ -236,18 +235,22 @@ var TextHtml = function(meta, opts) {
     this.mime = meta.mime || "text/html";
     TextHtml.base.call(this, meta);
     this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
-    // YYY revisit options
-    if (!this.fs.opts.html_nodir) {
+    this.opts = $.extend({}, this.constructor.defaults, opts,
+        this.fs.opts[this.mime]);
+    if (this.opts.dir) {
         this.files = {};
         this.populated = false;
         this.readdir = this._readdir;
-        if (meta.mime !== 'text/vnd.pigshell.html+dir') {
-            this._nodescend = true;
-        }
+        this._nodescend = this.opts.nodescend;
     }
 };
 
 inherit(TextHtml, MediaHandler);
+
+TextHtml.defaults = {
+    dir: "a, img",
+    nodescend: true
+};
 
 TextHtml.prototype._readdir = function(opts, cb) {
     var self = this;
@@ -259,7 +262,7 @@ TextHtml.prototype._readdir = function(opts, cb) {
         /* Magic formula to prevent images loading by mere act of parsing */
         var str2 = str.replace(/(<img[^>]+)src=([^>]+>)/ig, '$1href=$2'),
             dom = $(str2),
-            filter = self.fs.opts.html_filter || "a, img",
+            filter = self.opts.dir,
             alist = $(filter, dom),
             flist = [],
             base = URI.parse(self.redirect_url || self.ident),
@@ -397,7 +400,7 @@ var HttpLink = function(file) {
     this.readable = true;
 
     HttpLink.base.apply(this, arguments);
-    this.html = sprintf('<div class="nativeFile"><a href="%s" target="_blank">{{name}}', this.ident, this.ident);
+    this.html = sprintf('<div class="pfile"><a href="%s" target="_blank">{{name}}', this.ident, this.ident);
     assert("HttpLink.1", this.ident !== undefined && this.name !== undefined &&
         this.fs !== undefined, this);
 };
@@ -428,9 +431,8 @@ HttpLink.prototype.update = function(meta, opts, cb) {
         // YYY hack re href/ident - fix!
         return VFS.lookup_uri(uri, opts2, ef(cb, function(res) {
             fstack_addtop(self, fstack_base(res));
-            //return cb(E('ESTACKMOD'));
             var tfile = fstack_top(self);
-            return tfile[op].apply(tfile, args);
+            return tfile[op] ? tfile[op].apply(tfile, args) : cb(E('ESTACKMOD'));
         }));
     };
 });
@@ -449,5 +451,5 @@ VFS.register_uri_handler("http://pigshell.com", "HttpFS", {"tx": "direct"});
 VFS.register_uri_handler("https://pigshell.com", "HttpFS", {"tx": "direct"});
 
 VFS.register_media_handler("text/html", "TextHtml", {});
-VFS.register_media_handler("text/vnd.pigshell.html+dir", "TextHtml", {});
+VFS.register_media_handler("text/vnd.pigshell.html+dir", "TextHtml", {"nodescend": false});
 VFS.register_media_handler("application/octet-stream", "MediaHandler", {});

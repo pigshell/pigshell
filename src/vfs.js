@@ -96,7 +96,8 @@ function register_handler(dir, pattern, handler, opts) {
 }
 
 function unregister_handler(dir, pattern) {
-    throw "unregister_handler not implemented";
+    delete dir[enc_uri(pattern)];
+    dir._jfs_notify();
 }
 
 function make_handler_list(pdict) {
@@ -476,13 +477,7 @@ var sys = {
         var opts2 = $.extend({}, opts, {context: cmd}),
             base = fstack_base(file);
 
-        return file.read(opts2, check_live(function(err, res) {
-            if (err && err.code === 'ESTACKMOD') {
-                return fstack_top(base).read(opts2, check_live(cb).bind(cmd));
-            } else {
-                return cb(err, res);
-            }
-        }).bind(cmd));
+        return file.read(opts2, check_live(cb).bind(cmd));
     },
 
     bundle: function(cmd, file, opts, cb) {
@@ -525,13 +520,7 @@ var sys = {
         var opts2 = $.extend({}, opts, {context: cmd}),
             base = fstack_base(dir);
 
-        return dir.readdir(opts2, check_live(function(err, res) {
-            if (err && err.code === 'ESTACKMOD') {
-                return fstack_top(base).readdir(opts2, check_live(cb).bind(cmd));
-            } else {
-                return cb(err, res);
-            }
-        }).bind(cmd));
+        return dir.readdir(opts2, check_live(cb).bind(cmd));
     },
 
     rm: function(cmd, dir, name, opts, cb) {
@@ -673,7 +662,8 @@ function unique_names(list, options) {
         } else {
             var f = item[opts.field].toString().slice(0, opts.maxlen).trim();
             f = f.replace(/\/+$/, '');
-            f = f.replace(/[\/\n]/g, '-');
+            f = f.replace(/\//g, '%2F');
+            f = f.replace(/\n/g, '-');
             item[opts.namefield] = (f === '') ? opts.prefix : f;
         }
         return item;

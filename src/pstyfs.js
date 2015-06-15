@@ -373,7 +373,7 @@ PstyDir.prototype.rm = function(filename, opts, cb) {
 
         if (l1 && l2 && l1.mime === self.fs.dirmime &&
             l2.mime === self.fs.bdlmime) {
-            if (isdir(file) && !file._nodescend) {
+            if (isrealdir(file)) {
                 var opts2 = $.extend({}, opts);
                 opts2.readdir = { noupdate: true };
                 file.readdir(opts2, ef(cb, function(files) {

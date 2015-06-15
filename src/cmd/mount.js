@@ -28,10 +28,9 @@ Mount.prototype.usage = 'mount        -- mount filesystem\n\n' +
 Mount.prototype.next = check_next(do_docopt(function() {
     var self = this,
         dir = self.docopts['<dir>'],
-        optstring = self.docopts['-o'],
+        optstring = self.docopts['-o'] || "",
         uri = self.docopts['<uri>'],
-        optlist = optstring ? optstring.split(',') : [],
-        opts = {};
+        opts = optstr_parse(optstring);
 
     if (!uri) {
         var mounts = self.shell.ns.mountlist(),
@@ -46,16 +45,6 @@ Mount.prototype.next = check_next(do_docopt(function() {
         });
         self.done = true;
         return self.output(list.join('\n') + '\n');
-    }
-
-    for (var i = 0; i < optlist.length; i++) {
-        var opt = optlist[i],
-            eqlist = opt.split('=');
-        if (eqlist.length > 1) {
-            opts[eqlist[0]] = eqlist.slice(1).join('=');
-        } else {
-            opts[eqlist[0]] = true;
-        }
     }
 
     mount_uri.call(self, uri, dir, opts, self.shell, function(err, res) {

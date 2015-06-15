@@ -37,11 +37,11 @@ function json2js {
 }
 
 function encuri {
-    jf 'enc_uri("'$1'")' 1
+    jf 'enc_uri(\''$1'\')' 1
 }
 
 function decuri {
-    jf 'dec_uri("'$1'")' 1
+    jf 'dec_uri(\''$1'\')' 1
 }
 
 DIRECTURLS=(http://pig.sh https://pig.sh http://query.yahooapis.com http://www.quandl.com https://rawgit.com https://cdn.rawgit.com)
