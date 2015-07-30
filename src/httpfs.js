@@ -398,6 +398,8 @@ var HttpLink = function(file) {
     this.mtime = -1;
     this.files = {};
     this.readable = true;
+    this.mime = "text/vnd.pigshell.html+link";
+
 
     HttpLink.base.apply(this, arguments);
     this.html = sprintf('<div class="pfile"><a href="%s" target="_blank">{{name}}', this.ident, this.ident);

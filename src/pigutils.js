@@ -1332,6 +1332,7 @@ function lookup_files(opts, plist, cb) {
                 return soguard(self, acb.bind(this, null));
             });
         } else {
+            // YYY Scheduled for demolition
             var opts2 = $.extend({}, opts, {query: true});
             sys.search(self, p, opts2, function(err, f) {
                 if (err) {

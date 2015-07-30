@@ -46,6 +46,7 @@ CHECK_SOURCES = src/mimeMap.js\
     src/httptx.js\
     src/uri.js\
     src/pstyfs.js\
+    src/genmedia.js\
     src/ramfs.js\
     src/picasa.js\
     src/gdrive.js\

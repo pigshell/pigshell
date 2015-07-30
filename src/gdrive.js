@@ -432,7 +432,7 @@ VFS.register_handler("GDriveFS", GDriveFS);
 VFS.register_handler("GDriveDoc", GDriveDoc);
 
 VFS.register_uri_handler("https://www.googleapis.com/drive/v2", "GDriveFS", {});
-VFS.register_media_handler("application/vnd.google-apps.folder", "PstyDir", {});
+VFS.register_media_handler("application/vnd.google-apps.folder", "Dir", {});
 VFS.register_media_handler("application/vnd.google-apps.presentation", "GDriveDoc", {});
 VFS.register_media_handler("application/vnd.google-apps.spreadsheet", "GDriveDoc", {});
 VFS.register_media_handler("application/vnd.google-apps.document", "GDriveDoc", {});
