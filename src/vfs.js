@@ -241,7 +241,7 @@ File.prototype.bundle = function(opts, cb) {
  * of a file stack
  */
 
-["mkdir", "putdir", "rm", "getmeta", "getdata", "read", "append", "stat",
+["mkdir", "putdir", "rm", "getmeta", "read", "append", "stat",
     "unbundle"].forEach(function(op) {
     File.prototype[op] = function() {
         return this._lfile ? this._lfile[op].apply(this._lfile, arguments) :

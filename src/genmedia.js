@@ -331,7 +331,7 @@ Bundle.prototype.readdir = function(opts, cb) {
     }
 };
 
-Bundle.prototype.getdata = function(opts, cb) {
+Bundle.prototype.read = function(opts, cb) {
     var self = this,
         data = self.dotmeta.data,
         mime = self._ufile ? self._ufile.mime : 'application/octet-stream',
@@ -341,7 +341,7 @@ Bundle.prototype.getdata = function(opts, cb) {
         return cb(E('ENODATA'));
     }
     if (data.type === 'file') {
-        return data.value.getdata(opts, cb);
+        return data.value.read(opts, cb);
     }
 
     if (data.type === 'direct') {
@@ -359,8 +359,6 @@ Bundle.prototype.getdata = function(opts, cb) {
         return cb(null, blob);
     }
 };
-
-Bundle.prototype.read = Bundle.prototype.getdata;
 
 ["mkdir", "rm", "putdir", "link", "unbundle"].forEach(function(op) {
     Bundle.prototype[op] = fstack_invaldir_wrap(op);

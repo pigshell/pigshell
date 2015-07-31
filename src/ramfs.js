@@ -130,7 +130,7 @@ RamFile.prototype.getmeta = function(opts, cb) {
     }));
 };
 
-RamFile.prototype.getdata = function(opts, cb) {
+RamFile.prototype.read = function(opts, cb) {
     var self = this,
         u = URI.parse(self.ident);
 

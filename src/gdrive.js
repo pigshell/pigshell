@@ -164,7 +164,7 @@ GDriveFile.prototype._synthraw = function(uri) {
     return raw;
 };
 
-GDriveFile.prototype.getdata = function(opts, cb) {
+GDriveFile.prototype.read = function(opts, cb) {
     var self = this,
         headers = {'Authorization': 'Bearer ' + self.fs.access_token()},
         bopts = $.extend({}, opts, {headers: headers}),
@@ -191,7 +191,7 @@ GDriveFile.prototype.getdata = function(opts, cb) {
             return cb(E('ENODATA'));
         }
         bopts.uri = links[0];
-        return GDriveFile.base.prototype.getdata.call(self, bopts, cb);
+        return GDriveFile.base.prototype.read.call(self, bopts, cb);
     } else if (mime === self.fs.dirmime) {
         var query = self._is_synthuri(self.ident) ?
             self.fs.synthdirs[self.ident].q :
@@ -230,7 +230,7 @@ GDriveFile.prototype.getdata = function(opts, cb) {
             return cb(E('ENODATA'));
         }
         bopts.uri = link;
-        return GDriveFile.base.prototype.getdata.call(self, bopts, cb);
+        return GDriveFile.base.prototype.read.call(self, bopts, cb);
     }
 };
 

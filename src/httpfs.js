@@ -152,7 +152,7 @@ HttpFile.prototype.stat = function(opts, cb) {
  * honoured.
  */
 
-HttpFile.prototype.getdata = function(opts, cb) {
+HttpFile.prototype.read = function(opts, cb) {
     var self = this,
         gopts = $.extend({}, opts),
         range = gopts.range,
@@ -189,16 +189,6 @@ HttpFile.prototype.getdata = function(opts, cb) {
         }
         return cb(null, data, range);
     }));
-};
-
-/*
- * Retrieve file's 'data', but ensure that its mime-type is correct and stable
- * before doing so by forcing a stat() if necessary.
- */
-
-HttpFile.prototype.read = function(opts, cb) {
-    var self = this;
-    return self.getdata(opts, cb);
 };
 
 /* Only generic, well-known attributes are returned. */

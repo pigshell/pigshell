@@ -61,7 +61,7 @@ PicasaFile.prototype.getmeta = function(opts, cb) {
     }));
 };
 
-PicasaFile.prototype.getdata = function(opts, cb) {
+PicasaFile.prototype.read = function(opts, cb) {
     var self = this,
         bopts = $.extend({}, opts),
         params = {'alt': 'json', 'access_token': self.fs.access_token()},
@@ -74,7 +74,7 @@ PicasaFile.prototype.getdata = function(opts, cb) {
 
     if (mime === 'application/vnd.pigshell.picasa.photo+json') {
         bopts.uri = ufile.raw.media$group.media$content[0].url;
-        return PicasaFile.base.prototype.getdata.call(self, bopts, cb);
+        return PicasaFile.base.prototype.read.call(self, bopts, cb);
     } else if (mime === 'application/vnd.pigshell.picasa.album+json') {
         params['imgmax'] = 'd';
     }
@@ -86,7 +86,7 @@ PicasaFile.prototype.getdata = function(opts, cb) {
     if (!bopts.uri) {
         return cb("No feed URI in metadata");
     }
-    return PicasaFile.base.prototype.getdata.call(self, bopts, cb);
+    return PicasaFile.base.prototype.read.call(self, bopts, cb);
 };
 
 PicasaFile.prototype.mkdir = function(filename, opts, cb) {

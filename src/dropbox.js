@@ -79,7 +79,7 @@ DropboxFile.prototype._raw2meta = function(raw) {
     return meta;
 };
 
-DropboxFile.prototype.getdata = function(opts, cb) {
+DropboxFile.prototype.read = function(opts, cb) {
     var self = this,
         headers = {'Authorization': 'Bearer ' + self.fs.access_token()},
         bopts = $.extend({}, opts, {headers: headers}),
@@ -92,7 +92,7 @@ DropboxFile.prototype.getdata = function(opts, cb) {
     }
 
     if (mime === self.fs.dirmime) {
-        DropboxFile.base.prototype.getdata.call(self, bopts, ef(cb, function(res) {
+        DropboxFile.base.prototype.read.call(self, bopts, ef(cb, function(res) {
             to('text', res, {}, ef(cb, function(txt) {
                 var data = parse_json(txt);
                 if (!data || !data.contents) {
@@ -111,7 +111,7 @@ DropboxFile.prototype.getdata = function(opts, cb) {
         }));
     } else {
         bopts.uri = uri + self.raw.path;
-        return DropboxFile.base.prototype.getdata.call(self, bopts, cb);
+        return DropboxFile.base.prototype.read.call(self, bopts, cb);
     }
 };
 
