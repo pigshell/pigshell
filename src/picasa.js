@@ -185,10 +185,10 @@ PicasaFile.prototype.putdir = mkblob(function(filename, blob, opts, cb) {
 });
 
 var PicasaUser = function(file) {
+    this.mime = 'application/vnd.pigshell.picasa.user+json';
     PicasaUser.base.apply(this, arguments);
     this.files = {};
     this.populated = false;
-    this.mime = 'application/vnd.pigshell.picasa.user+json';
     this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
 };
 
@@ -367,8 +367,8 @@ function picasa_bundle(opts, cb) {
 }
 
 var PicasaAlbum = function(file) {
-    PicasaAlbum.base.apply(this, arguments);
     this.mime = 'application/vnd.pigshell.picasa.album+json';
+    PicasaAlbum.base.apply(this, arguments);
     this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">%s</a></div>', file.ident, file.name);
 };
 
@@ -408,8 +408,8 @@ PicasaAlbum.prototype.update = function(meta, opts, cb) {
 PicasaAlbum.prototype.bundle = picasa_bundle;
 
 var PicasaPhoto = function(file) {
-    PicasaPhoto.base.apply(this, arguments);
     this.mime = 'application/vnd.pigshell.picasa.photo+json';
+    PicasaPhoto.base.apply(this, arguments);
     this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">{{name}}</a></div>', file.ident);
 };
 

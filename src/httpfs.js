@@ -54,7 +54,11 @@ HttpFS.lookup_uri = function(uri, opts, cb) {
 };
 
 var HttpFile = function(meta) {
-    HttpFile.base.call(this, mergeattr({}, meta, ["name", "ident", "fs"]));
+    HttpFile.base.call(this);
+
+    this.name = meta.name;
+    this.ident = meta.ident;
+    this.fs = meta.fs;
 
     this.mtime = -1;
     this.size = 0;

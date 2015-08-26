@@ -149,9 +149,11 @@ Ls.prototype.next = check_next(do_docopt(function(opts, cb) {
                 (self.docopts['-D'] || self.curdepth === 0 ||
                 !entry.file._nodescend)) {
                 var isfeed = entry.file.feed,
-                    isurl = URI.parse(entry.path).isAbsolute();
+                    isurl = URI.parse(entry.path).isAbsolute(),
+                    ropts = {reload: self.reload, nitems: self.maxentries};
                 self.visited[entry.file.ident] = true; /* Avoid cycles */
-                sys.readdir(self, entry.file, {}, function(err, files) {
+                sys.readdir(self, entry.file, {readdir: ropts},
+                    function(err, files) {
                     if (err) {
                         if (err.code === 'ESTACKMOD') {
                             return self.output(format(entry));
@@ -207,7 +209,7 @@ Ls.prototype.next = check_next(do_docopt(function(opts, cb) {
                             }
                         }
                     });
-                }, {'oldest': self.since, 'limit': self.maxentries, 'reload': self.reload});
+                });
                 return;
             } else {
                 return self.output(format(entry));

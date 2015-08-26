@@ -12,7 +12,9 @@ inherit(DropboxFS, HttpFS);
 
 DropboxFS.defaults = {
     "tx": "direct",
-    "cachedir": "true" /* Cache dir contents unless explicitly invalidated */
+    "application/vnd.pigshell.dir+json": {
+        "cache_time": 60 * 1000
+    }
 };
 
 DropboxFS.prototype.access_token = function() {

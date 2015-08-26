@@ -272,11 +272,16 @@ File.prototype.enosys = function() {
 };
 
 var MediaHandler = function(meta) {
+    MediaHandler.base.call(this);
+
+    this.name = meta.name;
+    this.ident = meta.ident;
+    this.fs = meta.fs;
+    this.mime = this.mime || meta.mime;
+
     this.mtime = -1;
     this.size = 0;
     this.readable = true;
-
-    MediaHandler.base.call(this, mergeattr({}, meta, ["name", "ident", "fs", "mime"]));
 
     this.html = sprintf('<div class="pfile"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
     assert("MediaHandler.1", this.ident !== undefined && this.name !== undefined && this.fs !== undefined && this.mime, this, meta);
