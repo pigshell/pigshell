@@ -789,6 +789,17 @@ function dec_uri(str) {
     return ret;
 }
 
+/*
+ * URL encode only those characters which cause trouble when used as
+ * pathname components. Currently, only /
+ */
+
+function enc_uri_path(str) {
+    return str.replace(/[\/%]/g, function(c) {
+        return "%" + c.charCodeAt(0).toString(16);
+    });
+}
+
 function xhr_getmime(headers) {
     var rt = headers["content-type"] || '';
     rt = rt.split(';')[0];
@@ -987,7 +998,7 @@ function restoretree(obj, opts, cb) {
                 if (!err || err.code === 'EEXIST') {
                     self.lookup(fname, opts, ef(acb, function(dir) {
                         var pd = fstack_base(dir);
-                        while (pd && pd.mime !== self.fs.dirmime) {
+                        while (pd && pd.mime !== self.mime) {
                             pd = pd._ufile;
                         }
                         restoretree.call(pd, data, opts, acb);

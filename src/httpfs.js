@@ -371,14 +371,12 @@ TextHtml.prototype.bundle = function(opts, cb) {
         }, function(err) {
             if (Object.keys(rsrc).length) {
                 data['.rsrc'] = rsrc;
-                dotmeta['data'] = { 'type': 'file',
-                    'value': self.name
-                };
-                data['.meta'] = JSON.stringify(dotmeta, null, "  ");
-                data[self.name] = $.html();
-            } else {
-                data = str;
             }
+            dotmeta['data'] = { 'type': 'file',
+                'value': self.name
+            };
+            data['.meta'] = JSON.stringify(dotmeta, null, "  ");
+            data[self.name] = $.html();
             return cb(null, data);
         });
     }

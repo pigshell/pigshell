@@ -96,14 +96,14 @@ var VFS = {
 Sys.handler = VFS.handler;
 
 function register_handler(dir, pattern, handler, opts) {
-    var ep = enc_uri(pattern);
+    var ep = enc_uri_path(pattern);
 
     dir[ep] = $.extend({}, opts, {handler: handler});
     dir._jfs_notify();
 }
 
 function unregister_handler(dir, pattern) {
-    delete dir[enc_uri(pattern)];
+    delete dir[enc_uri_path(pattern)];
     dir._jfs_notify();
 }
 

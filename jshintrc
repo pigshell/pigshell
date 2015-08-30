@@ -188,6 +188,7 @@
     "Sys": true,
     "PstyDir": true,
     "enc_uri": false,
-    "dec_uri": false
+    "dec_uri": false,
+    "enc_uri_path": false
     }
 }

@@ -27,7 +27,6 @@ DropboxFS.prototype.access_token = function() {
 DropboxFS.lookup_uri = HttpFS.lookup_uri;
 
 DropboxFS.prototype.dirmime = 'application/vnd.pigshell.dir+json';
-DropboxFS.prototype.bdlmime = 'application/vnd.pigshell.bundle+json';
 
 var DropboxFile = function() {
     DropboxFile.base.apply(this, arguments);

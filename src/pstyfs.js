@@ -18,9 +18,6 @@ inherit(PstyFS, HttpFS);
 
 PstyFS.lookup_uri = HttpFS.lookup_uri;
 
-PstyFS.prototype.dirmime = 'application/vnd.pigshell.dir+json';
-PstyFS.prototype.bdlmime = 'application/vnd.pigshell.bundle+json';
-
 var PstyFile = function() {
     PstyFile.base.apply(this, arguments);
     this.mime = 'application/vnd.pigshell.pstyfile';

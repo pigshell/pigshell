@@ -36,7 +36,6 @@ inherit(RamFS, Filesystem);
 RamFS.filesystems = [];
 
 RamFS.prototype.dirmime = 'application/vnd.pigshell.dir+json';
-RamFS.prototype.bdlmime = 'application/vnd.pigshell.bundle+json';
 
 RamFS.lookup_uri = HttpFS.lookup_uri;
 
