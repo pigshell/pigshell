@@ -247,7 +247,7 @@ PicasaFile.prototype.readdir = function(opts, cb) {
                 mime = picasa_getmime(al),
                 klass = self.fs.constructor.fileclass,
                 file = new klass({ident: ident, name: al.name, fs: self.fs}),
-                meta = {raw: al, mime: mime, _mime_valid: true};
+                meta = {raw: al, mime: mime};
         
             file.update(meta, opts, function(err, res) {
                 self.files[al.name] = file;
@@ -471,6 +471,7 @@ function picasa_getmime(raw) {
 }
 
 VFS.register_handler("PicasaFS", PicasaFS);
+VFS.register_handler("PicasaUser", PicasaUser);
 VFS.register_handler("PicasaAlbum", PicasaAlbum);
 VFS.register_handler("PicasaPhoto", PicasaPhoto);
 

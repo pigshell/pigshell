@@ -19,10 +19,8 @@ var Dir = function(meta, opts) {
     
     this.opts = $.extend({}, this.constructor.defaults, opts,
         this.fs.opts[this.mime]);
-    this.opts.bdl_re = new RegExp("(.*)\\." + this.opts.bdlext + "$", "i");
-    var bdlmatch = this.name.match(this.opts.bdl_re),
-        name = bdlmatch ? bdlmatch[1] : this.name;
-    this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">%s</a></div>', this.ident, name);
+    this.bdl_re = this.opts.bdl_mime ? new RegExp("(.*)\\." + this.opts.bdl_ext + "$", "i") : null;
+    this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
     this.cookie = -1;
     this._update_time = 0;
 };
@@ -56,7 +54,7 @@ Dir.prototype.readdir = function(opts, cb) {
             /* Bdls win any aliasing contest */
             data.files.forEach(function(el) {
                 var bdlmatch = (el.mime === self.mime) ?
-                    el.name.match(self.opts.bdl_re) : null;
+                    el.name.match(self.bdl_re) : null;
                 if (bdlmatch) {
                     bdlseen[bdlmatch[1]] = true;
                     bdls.push(el);
@@ -74,7 +72,7 @@ Dir.prototype.readdir = function(opts, cb) {
             var uri = URI.parse(el.ident),
                 ident = base.resolve(uri),
                 bdlmatch = (bdlmime && el.mime === self.mime) ?
-                    el.name.match(self.opts.bdl_re) : null,
+                    el.name.match(self.bdl_re) : null,
                 entryname = bdlmatch ? bdlmatch[1] : el.name,
                 bfile = bfiles[entryname];
 
@@ -120,24 +118,16 @@ Dir.prototype.readdir = function(opts, cb) {
             if (!data) {
                 return cb("JSON parsing error at " + self.ident);
             }
-            if (!ropts.noupdate) {
-                self.update(data, opts, ef(cb, function(res) {
-                    self._update_time = Date.now();
-                    return makefiles(data);
-                }));
-            } else {
-                self._update(data, opts);
-                self._update_time = Date.now();
-                return makefiles(data);
-            }
+            self._update(data, opts);
+            return makefiles(data);
         }));
     }));
 };
 
 Dir.prototype.update = function(meta, opts, cb) {
     var self = this,
-        bdlmatch = self.name.match(self.opts.bdl_re),
-        bdlmime = self.opts.bdl_mime;
+        bdlmime = self.opts.bdl_mime,
+        bdlmatch = bdlmime ? self.name.match(self.bdl_re) : false;
 
     if (!self._update(meta, opts)) {
         /* Short-circuit update of the stack here */
@@ -145,11 +135,12 @@ Dir.prototype.update = function(meta, opts, cb) {
     }
     self.populated = false;
     if (bdlmime && bdlmatch) {
-
         assert("Dir.update.1", !self._ufile || self._ufile.mime === bdlmime, self);
         if (!self._ufile) {
+            var meta2 = {ident: self.ident, name: self.name, fs: self.fs,
+                mime: bdlmime};
             var mh = VFS.lookup_media_handler(bdlmime),
-                mf = mh ? new mh.handler(self) : null;
+                mf = mh ? new mh.handler(meta2, mh.opts) : null;
             if (!mh) {
                 return cb(null, self);
             }
@@ -171,6 +162,7 @@ Dir.prototype._update = function(meta, opts) {
         changed = true;
     }
     
+    self._update_time = Date.now();
     mergeattr_x(self, meta, ["name", "ident", "fs", "mime", "populated",
         "files", "opts", "_update_time", "html"]);
     return changed;
@@ -202,9 +194,10 @@ Dir.prototype.lookup = function(name, opts, cb) {
 
 Dir.prototype.unbundle = function(filename, data, opts, cb) {
     var self = this,
-        obj = {};
+        obj = {},
+        bdlname = filename + "." + self.opts.bdl_ext;
 
-    self.mkdir(filename + "." + self.opts.bdl_ext, opts, function(err, dir) {
+    self.mkdir(bdlname, opts, function(err, dir) {
         if (!err || err.code === 'EEXIST') {
             self.lookup(filename, opts, ef(cb, function(dir) {
                 var pd = fstack_top(dir),
@@ -213,7 +206,13 @@ Dir.prototype.unbundle = function(filename, data, opts, cb) {
                     pd = pd._lfile;
                 }
                 restoretree.call(pd, data, opts, ef(cb, function() {
-                    return cb(null, pb);
+                    /*
+                     * Do a stat() to force the bundle to stack
+                     * itself properly
+                     */
+                    fstack_top(pb).stat(opts, ef(cb, function() {
+                        return cb(null, pb);
+                    }));
                 }));
             }));
         } else {
@@ -226,9 +225,7 @@ Dir.prototype.rm = function(filename, opts, cb) {
     var self = this;
 
     function rmbundle(file) {
-        var opts2 = $.extend({}, opts);
-        opts2.readdir = { noupdate: true };
-        rmtree(file, opts2, ef(cb, function() {
+        rmtree(file, opts, ef(cb, function() {
             self._lfile.rm(filename + "." + self.opts.bdl_ext, opts,
                 ef(cb, function(res) {
                     self.populated = false;
@@ -244,9 +241,7 @@ Dir.prototype.rm = function(filename, opts, cb) {
         if (l1 && l2 && l1.mime === self.mime &&
             l2.mime === self.opts.bdl_mime) {
             if (isrealdir(file)) {
-                var opts2 = $.extend({}, opts);
-                opts2.readdir = { noupdate: true };
-                file.readdir(opts2, ef(cb, function(files) {
+                file.readdir(opts, ef(cb, function(files) {
                     if (Object.keys(files).length) {
                         return cb(E('ENOTEMPTY'));
                     }
@@ -264,8 +259,8 @@ Dir.prototype.rm = function(filename, opts, cb) {
     }));
 };
 
-var Bundle = function(file) {
-    this.mime = this.fs.bdlmime || 'application/vnd.pigshell.bundle+json';
+var Bundle = function(meta, opts) {
+    this.mime = meta.mime || 'application/vnd.pigshell.bundle+json';
     Bundle.base.apply(this, arguments);
     this.populated = false;
     this.files = {};
@@ -275,8 +270,7 @@ inherit(Bundle, MediaHandler);
 
 Bundle.prototype.update = function(meta, opts, cb) {
     var self = this,
-        bdldir = self._lfile,
-        opts2 = $.extend({}, opts);
+        bdldir = self._lfile;
 
     /*
      * Hidden assumption: If update gets called, there must have been a change.
@@ -293,8 +287,7 @@ Bundle.prototype.update = function(meta, opts, cb) {
     self.files = {};
     self.populated = false;
 
-    opts2.readdir = { noupdate: true };
-    bdldir.readdir(opts2, function(err, bdlfiles) {
+    bdldir.readdir(opts, function(err, bdlfiles) {
         if (err) {
             return ret(err);
         }
