@@ -12,7 +12,7 @@ inherit(DropboxFS, HttpFS);
 
 DropboxFS.defaults = {
     "tx": "direct",
-    "application/vnd.pigshell.dir+json": {
+    "application/vnd.pigshell.dir": {
         "cache_time": 60 * 1000
     }
 };
@@ -26,7 +26,7 @@ DropboxFS.prototype.access_token = function() {
 
 DropboxFS.lookup_uri = HttpFS.lookup_uri;
 
-DropboxFS.prototype.dirmime = 'application/vnd.pigshell.dir+json';
+DropboxFS.prototype.dirmime = 'application/vnd.pigshell.dir';
 
 var DropboxFile = function() {
     DropboxFile.base.apply(this, arguments);

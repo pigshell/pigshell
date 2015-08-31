@@ -12,7 +12,7 @@
  */
 
 var Dir = function(meta, opts) {
-    this.mime = meta.mime || 'application/vnd.pigshell.dir+json';
+    this.mime = meta.mime || 'application/vnd.pigshell.dir';
     Dir.base.apply(this, arguments);
     this.files = {};
     this.populated = false;
@@ -34,7 +34,7 @@ inherit(Dir, MediaHandler);
 Dir.defaults = {
     cache_time: 0, /* Cache for x milliseconds */
     bdl_ext: "bdl", /* Bundle directory extension */
-    bdl_mime: "application/vnd.pigshell.bundle+json"
+    bdl_mime: "application/vnd.pigshell.bundle"
 };
 
 Dir.prototype.readdir = function(opts, cb) {
@@ -260,7 +260,7 @@ Dir.prototype.rm = function(filename, opts, cb) {
 };
 
 var Bundle = function(meta, opts) {
-    this.mime = meta.mime || 'application/vnd.pigshell.bundle+json';
+    this.mime = meta.mime || 'application/vnd.pigshell.bundle';
     Bundle.base.apply(this, arguments);
     this.populated = false;
     this.files = {};
@@ -386,5 +386,5 @@ Bundle.prototype.read = function(opts, cb) {
 
 VFS.register_handler("Dir", Dir);
 VFS.register_handler("Bundle", Bundle);
-VFS.register_media_handler("application/vnd.pigshell.dir+json", "Dir", {});
-VFS.register_media_handler("application/vnd.pigshell.bundle+json", "Bundle", {});
+VFS.register_media_handler("application/vnd.pigshell.dir", "Dir", {});
+VFS.register_media_handler("application/vnd.pigshell.bundle", "Bundle", {});

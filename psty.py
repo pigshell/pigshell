@@ -80,9 +80,9 @@ PROXY_CORS_HEADER = "Access-Control-Allow-Origin: %s\r\n" + \
                     "X-Psty-Location: %s\r\n" + \
                     "Access-Control-Expose-Headers: Content-Length, Content-Range, X-Psty-Location\r\n"
 
-DIRMIME = 'application/vnd.pigshell.dir+json'
-FILEMIME = 'application/vnd.pigshell.file+json'
-LINKMIME = 'application/vnd.pigshell.link+json'
+DIRMIME = 'application/vnd.pigshell.dir'
+FILEMIME = 'application/vnd.pigshell.pstyfile'
+LINKMIME = 'application/vnd.pigshell.link'
 
 
 class PException(Exception):

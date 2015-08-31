@@ -164,4 +164,4 @@ PstyFile.prototype.mkdir = function(file, opts, cb) {
 
 VFS.register_handler("PstyFS", PstyFS);
 VFS.register_uri_handler("http://localhost:50937", "PstyFS", {"tx": "direct"});
-VFS.register_media_handler("application/vnd.pigshell.link+json", "HttpLink", {});
+VFS.register_media_handler("application/vnd.pigshell.link", "HttpLink", {});

@@ -72,10 +72,10 @@ PicasaFile.prototype.read = function(opts, cb) {
         return cb(E('ENOSYS'));
     }
 
-    if (mime === 'application/vnd.pigshell.picasa.photo+json') {
+    if (mime === 'application/vnd.pigshell.picasa.photo') {
         bopts.uri = ufile.raw.media$group.media$content[0].url;
         return PicasaFile.base.prototype.read.call(self, bopts, cb);
-    } else if (mime === 'application/vnd.pigshell.picasa.album+json') {
+    } else if (mime === 'application/vnd.pigshell.picasa.album') {
         params['imgmax'] = 'd';
     }
 
@@ -98,7 +98,7 @@ PicasaFile.prototype.mkdir = function(filename, opts, cb) {
         ufile = self._ufile,
         mime = ufile ? ufile.mime : null;
 
-    if (mime !== 'application/vnd.pigshell.picasa.user+json') {
+    if (mime !== 'application/vnd.pigshell.picasa.user') {
         return cb(E('ENOSYS'));
     }
 
@@ -140,8 +140,8 @@ PicasaFile.prototype.rm = function(filename, opts, cb) {
     }
 
     ufile.lookup(filename, opts, ef(cb, function(file) {
-        if (file.mime === 'application/vnd.pigshell.picasa.album+json' ||
-            file.mime === 'application/vnd.pigshell.picasa.photo+json') {
+        if (file.mime === 'application/vnd.pigshell.picasa.album' ||
+            file.mime === 'application/vnd.pigshell.picasa.photo') {
             tx.DELETE(file.ident, bopts, function(err, res) {
                 if (!err) {
                     self.populated = false;
@@ -165,7 +165,7 @@ PicasaFile.prototype.putdir = mkblob(function(filename, blob, opts, cb) {
         ufile = self._ufile,
         mime = ufile ? ufile.mime : null;
 
-    if (!mime || mime !== 'application/vnd.pigshell.picasa.album+json') {
+    if (!mime || mime !== 'application/vnd.pigshell.picasa.album') {
         return cb(E('ENOSYS'));
     }
     Magic.probe(blob, function(err, res) {
@@ -185,7 +185,7 @@ PicasaFile.prototype.putdir = mkblob(function(filename, blob, opts, cb) {
 });
 
 var PicasaUser = function(file) {
-    this.mime = 'application/vnd.pigshell.picasa.user+json';
+    this.mime = 'application/vnd.pigshell.picasa.user';
     PicasaUser.base.apply(this, arguments);
     this.files = {};
     this.populated = false;
@@ -356,7 +356,7 @@ function picasa_bundle(opts, cb) {
     }
 
     getthumb(function() {
-        if (self.mime === 'application/vnd.pigshell.picasa.photo+json') {
+        if (self.mime === 'application/vnd.pigshell.picasa.photo') {
             getmedia(function() {
                 return do_dump();
             });
@@ -367,7 +367,7 @@ function picasa_bundle(opts, cb) {
 }
 
 var PicasaAlbum = function(file) {
-    this.mime = 'application/vnd.pigshell.picasa.album+json';
+    this.mime = 'application/vnd.pigshell.picasa.album';
     PicasaAlbum.base.apply(this, arguments);
     this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">%s</a></div>', file.ident, file.name);
 };
@@ -408,7 +408,7 @@ PicasaAlbum.prototype.update = function(meta, opts, cb) {
 PicasaAlbum.prototype.bundle = picasa_bundle;
 
 var PicasaPhoto = function(file) {
-    this.mime = 'application/vnd.pigshell.picasa.photo+json';
+    this.mime = 'application/vnd.pigshell.picasa.photo';
     PicasaPhoto.base.apply(this, arguments);
     this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">{{name}}</a></div>', file.ident);
 };
@@ -461,11 +461,11 @@ function picasa_getlink(raw, rel) {
 function picasa_getmime(raw) {
     var known = {
             "http://schemas.google.com/photos/2007#album":
-                "application/vnd.pigshell.picasa.album+json",
+                "application/vnd.pigshell.picasa.album",
             "http://schemas.google.com/photos/2007#user":
-                "application/vnd.pigshell.picasa.user+json",
+                "application/vnd.pigshell.picasa.user",
             "http://schemas.google.com/photos/2007#photo":
-                "application/vnd.pigshell.picasa.photo+json"
+                "application/vnd.pigshell.picasa.photo"
         };
     return known[raw.category[0].term] || null;
 }
@@ -476,6 +476,6 @@ VFS.register_handler("PicasaAlbum", PicasaAlbum);
 VFS.register_handler("PicasaPhoto", PicasaPhoto);
 
 VFS.register_uri_handler("https://picasaweb.google.com/data/", "PicasaFS", {});
-VFS.register_media_handler("application/vnd.pigshell.picasa.user+json", "PicasaUser", {});
-VFS.register_media_handler("application/vnd.pigshell.picasa.album+json", "PicasaAlbum", {});
-VFS.register_media_handler("application/vnd.pigshell.picasa.photo+json", "PicasaPhoto", {});
+VFS.register_media_handler("application/vnd.pigshell.picasa.user", "PicasaUser", {});
+VFS.register_media_handler("application/vnd.pigshell.picasa.album", "PicasaAlbum", {});
+VFS.register_media_handler("application/vnd.pigshell.picasa.photo", "PicasaPhoto", {});
