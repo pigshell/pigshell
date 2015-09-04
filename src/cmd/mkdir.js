@@ -20,7 +20,8 @@ Mkdir.prototype.usage = 'mkdir        -- make directory\n\n' +
 
 Mkdir.prototype.next = check_next(do_docopt(function() {
     var self = this,
-        dirs = self.docopts['<dir>'];
+        dirs = self.docopts['<dir>'],
+        exitval = true;
 
     async.forEachSeries(dirs, function(dirname, lcb) {
         var pathComponents = pathsplit(dirname),
@@ -29,17 +30,20 @@ Mkdir.prototype.next = check_next(do_docopt(function() {
 
         sys.lookup(self, parentDir, {}, function(err, dir) {
             if (err) {
-                return self.exit(err, dirname);
+                self.errmsg(err, dirname);
+                exitval = false;
+                return lcb(null);
             }
             sys.mkdir(self, dir, filename, {}, function(err, newDir) {
                 if (err) {
-                    return self.exit(err, dirname);
+                    self.errmsg(err, dirname);
+                    exitval = false;
                 }
                 return lcb(null);
             });
         });
     }, function(err) {
-        return self.exit(null, null);
+        return self.exit(exitval);
     });
 }));
 
