@@ -34,11 +34,58 @@ function partcp {
     expect $? true cp.$3.4
 }
 
+# bundle targetdir checkdir num
+function bundle {
+    URL=http://pigshell.com/sample/bundletest.html
+    MNT_NOBDL=/tmp/nobundle
+
+    mkdir $MNT_NOBDL 2>/dev/null
+    umount $MNT_NOBDL 2>/dev/null
+
+    cp -va $URL $1/bundletest 2>$RESDIR/cp.$3.1
+    dcheck $? true cp.$3.1
+
+    BURL=$(ls -d $1 | jf 'x.ident')
+    mount -o '{"application/vnd.pigshell.dir": {"bdl_mime": ""}}' $BURL $MNT_NOBDL
+    cmpdir $2 $MNT_NOBDL/bundletest.bdl debug
+    expect $? true cp.$3.2
+    cat $1/bundletest | to text > $RESDIR/cp.$3.3
+    dcheck $? true cp.$3.3
+
+    rm $1/bundletest
+    expect $? true cp.$3.4
+    ls -F $MNT_NOBDL >/dev/null
+    [ -d $MNT_NOBDL/bundletest.bdl ]
+    dont_expect $? true cp.$3.5
+}
+
+function pstyfs_test {
+    TMP0=$RESDIR/cptest
+    TMP1=$TMP0/cptest1
+    TMP2=$TMP0/cptest2
+    TMP3=$TMP0/bundletest1
+
+    PSTYFS_URL=http://localhost:50937/
+
+    mkdir $TMP0 $TMP1 $TMP2 $TMP3 2>/dev/null
+    rm -r $TMP1/*  2>/dev/null
+    rm -r $TMP2/* 2>/dev/null
+    rm -r $TMP3/* 2>/dev/null
+
+    simplercp $SAMPLEDIR/ $TMP1 $TMP1 pstyfs.slash
+    simplercp $SAMPLEDIR $TMP2 $TMP2/sample pstyfs.noslash
+
+    partcp $SAMPLEDIR/clickingofcuthbert.pdf $TMP0/clickingofcuthbert.pdf pstyfs.partcp
+
+    bundle $TMP3 $REFDIR/cptest/bundletest1/bundletest pstyfs.bundle
+}
+
 function ramfs_test {
     TMP1=$TMP/cptest1
     TMP2=$TMP/cptest2
+    TMP3=$TMP/bundletest1
 
-    mkdir $TMP $TMP1 $TMP2 2>/dev/null
+    mkdir $TMP $TMP1 $TMP2 $TMP3 
 
     # With trailing slash, should copy contents
     simplercp $SAMPLEDIR/ $TMP1 $TMP1 ramfs.slash
@@ -46,20 +93,8 @@ function ramfs_test {
     simplercp $SAMPLEDIR $TMP2 $TMP2/sample ramfs.noslash
 
     partcp $SAMPLEDIR/clickingofcuthbert.pdf $TMP/clickingofcuthbert.pdf ramfs.partcp
-}
 
-function pstyfs_test {
-    TMP1=$TMP/cptest1
-    TMP2=$TMP/cptest2
-
-    mkdir $TMP $TMP1 $TMP2 2>/dev/null
-    rm -r $TMP1/*  2>/dev/null
-    rm -r $TMP2/* 2>/dev/null
-
-    simplercp $SAMPLEDIR/ $TMP1 $TMP1 pstyfs.slash
-    simplercp $SAMPLEDIR $TMP2 $TMP2/sample pstyfs.noslash
-
-    partcp $SAMPLEDIR/clickingofcuthbert.pdf $TMP/clickingofcuthbert.pdf pstyfs.partcp
+    bundle $TMP3 $REFDIR/cptest/bundletest1/bundletest ramfs.bundle
 }
 
 # GDrive as source

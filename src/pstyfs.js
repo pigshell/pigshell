@@ -36,6 +36,7 @@ PstyFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
 
     spath = spath.replace(/\/*$/, '');
     dpath = pathjoin(dpath, dfilename);
+    // XXX Bundle knowledge here isn't nice
     if (spath.match(/\.bdl$/)) {
         dpath = dpath + '.bdl';
     }

@@ -220,11 +220,6 @@ HttpFile.prototype._process_headers = function(xhr_headers) {
     return data;
 };
 
-/*
- * Options taken from base FS:
- * * html_nodir: will treat text/html as plain file
- */
-
 var TextHtml = function(meta, opts) {
     this.mime = meta.mime || "text/html";
     TextHtml.base.call(this, meta);

@@ -331,8 +331,10 @@ Bundle.prototype.update = function(meta, opts, cb) {
             self.files = myfiles;
             self.populated = true;
             var mh = VFS.lookup_media_handler(mime) ||
-                VFS.lookup_media_handler('application/octet-stream');
-            var mf = new mh.handler(self, meta);
+                VFS.lookup_media_handler('application/octet-stream'),
+                meta2 = $.extend({ident: self.ident, fs: self.fs,
+                    name: self.name}, meta);
+            var mf = new mh.handler(meta2, mh.opts);
             fstack_addtop(self, mf);
             return mf.update(meta, opts, cb);
         });
@@ -354,29 +356,15 @@ Bundle.prototype.readdir = function(opts, cb) {
 Bundle.prototype.read = function(opts, cb) {
     var self = this,
         data = self.dotmeta.data,
-        mime = self._ufile ? self._ufile.mime : 'application/octet-stream',
-        retstring;
+        mime = self._ufile ? self._ufile.mime : 'application/octet-stream';
 
     if (!data) {
         return cb(E('ENODATA'));
     }
     if (data.type === 'file') {
         return data.value.read(opts, cb);
-    }
-
-    if (data.type === 'direct') {
-        retstring = data.value;
-    } else if (data.type === 'object') {
-        retstring = JSON.stringify(data.value);
     } else {
         return cb("Unknown data type");
-    }
-    if (opts.type === 'text') {
-        return cb(null, retstring);
-    } else {
-        var blob = new Blob([retstring], {type: mime});
-        blob.href = self.ident;
-        return cb(null, blob);
     }
 };
 

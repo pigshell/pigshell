@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "origin": "http://pigshell.com/sample/bundletest.html",
+  "meta": {
+    "mime": "text/html",
+    "mtime": 1441003871000
+  },
+  "data": {
+    "type": "file",
+    "value": "bundletest.html"
+  }
+}

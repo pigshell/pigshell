@@ -9,7 +9,7 @@
  * by untarring a remote root.tar.
  */
 
-var RamFS = function(opts, uri) {
+var RamFS = function(opts, uri, rootfile) {
     var self = this,
         Uri = URI.parse(uri);
 
@@ -18,26 +18,52 @@ var RamFS = function(opts, uri) {
     self.uri = uri;
     self.Uri = Uri;
 
-    var rootmeta = {
-        ident: '/',
-        name: '/',
-        mtime: Date.now(),
-        cookie: Date.now(),
-        readable: true,
-        writable: true,
-        size: 0,
-        mime: self.dirmime
-    };
-    self.rootfile = { meta: rootmeta, data: {} };
+    self.rootfile = rootfile;
 };
 
 inherit(RamFS, Filesystem);
 
-RamFS.filesystems = [];
+RamFS.backend = {};
 
 RamFS.prototype.dirmime = 'application/vnd.pigshell.dir';
 
-RamFS.lookup_uri = HttpFS.lookup_uri;
+RamFS.lookup_uri = function(uri, opts, cb) {
+    var self = this,
+        u = URI.parse(uri),
+        mountopts = opts.mountopts || {},
+        comps = u.path().split("/"),
+        fsname = comps[0],
+        fs = opts.fs,
+        opts2 = $.extend({}, opts);
+
+    if (!fs) {
+        var rootfile = self.backend[fsname];
+        if (!rootfile) {
+            var rootmeta = {
+                ident: '/',
+                name: '/',
+                mtime: Date.now(),
+                cookie: Date.now(),
+                readable: true,
+                writable: true,
+                size: 0,
+                mime: self.prototype.dirmime
+            };
+            rootfile = {meta: rootmeta, data: {}};
+            self.backend[fsname] = rootfile;
+        }
+        try {
+            fs = new self(mountopts, uri, rootfile);
+        } catch (e) {
+            return cb(e.message);
+        }
+    }
+    var file = new self.fileclass({name: basenamedir(uri), ident: uri, fs: fs});
+    
+    delete opts2['mountopts'];
+    delete opts2['fs'];
+    return file.stat(opts2, cb);
+};
 
 RamFS.prototype.lookup_rfile = function(path, opts, cb) {
     var self = this,

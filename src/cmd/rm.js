@@ -36,7 +36,7 @@ Rm.prototype.next = check_next(do_docopt(function() {
     self.cliopts = optstr_parse(self.docopts['-o']);
     var files = self.docopts['<file>'];
 
-    if (self.docopts['-r'] && files.indexOf('/auth') !== -1 && files.indexOf('/proc') !== -1) {
+    if (self.docopts['-r'] && files.indexOf('/auth') !== -1 && files.indexOf('/sys') !== -1) {
         /*
          * It's a safe bet somebody goofed up and an rm -r $SOMEVAR/* expanded
          * to rm -r /*
