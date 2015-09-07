@@ -162,12 +162,11 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_head()
 
     def op_mkdir(self, fs):
-        path = self.ppath
         filename = fs['filename'].value
         if filename.find('/') != -1:
             raise Exception("Invalid filename")
 
-        path = os.path.join(path, filename)
+        path = os.path.join(self.fspath, filename)
         os.mkdir(path)
         # We should be doing a 201 Created and sending the dir as a response
         # body like in op_put, but lazy for now
@@ -180,12 +179,11 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if not psty_options["allow_delete"]:
             return self.send_error(403, "Deletion not allowed")
 
-        relpath, path = self.prelpath, self.ppath
         filename = fs['filename'].value
         if filename.find('/') != -1:
             raise Exception("Invalid filename")
 
-        path = os.path.join(path, filename)
+        path = os.path.join(self.fspath, filename)
         if os.path.isdir(path):
             os.rmdir(path)
         else:
@@ -193,7 +191,6 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_json_response(rcode=204)
 
     def op_link(self, fs):
-        relpath, path = self.prelpath, self.ppath
         data = fs['data'].value
         name = fs['name'].value
         try:
@@ -201,60 +198,58 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             ident = meta['ident']
         except:
             raise PException(400, "Bad request")
-        os.symlink(ident, os.path.join(path, name))
+        os.symlink(ident, os.path.join(self.fspath, name))
         self.send_json_response(rcode=204)
 
     def op_put(self, fs):
         """
         Write to file, truncating existing one if necessary
         """
-        relpath, path = self.prelpath, self.ppath
         filename = fs['filename'].value
         if filename.find('/') != -1:
             raise Exception("Invalid filename")
         data = fs['data'].file
 
-        path = os.path.join(path, filename)
-        relpath = os.path.join(relpath, filename)
-        with open(path, 'wb') as f:
+        fspath = os.path.join(self.fspath, filename)
+        urlpath = os.path.join(self.urlpath, filename)
+        with open(fspath, 'wb') as f:
             self.copyfile(data, f)
 
-        entry = self.get_pathinfo(path, relpath, filename)
-        self.send_json_response(entry, rcode=201, location=relpath,
+        entry = self.get_pathinfo(fspath, urlpath, filename)
+        self.send_json_response(entry, rcode=201, location=urlpath,
                                 ctype=FILEMIME, lm=entry["mtime"] / 1000)
 
     def op_append(self, fs):
         """
         Append to file
         """
-        relpath, path, filename = self.prelpath, self.ppath, self.pfilename
         data = fs['data'].file
 
-        with open(path, 'ab') as f:
+        with open(self.fspath, 'ab') as f:
             self.copyfile(data, f)
 
-        entry = self.get_pathinfo(path, relpath, filename)
-        self.send_json_response(entry, rcode=200, location=relpath,
+        entry = self.get_pathinfo(self.fspath, self.urlpath, self.filename)
+        self.send_json_response(entry, rcode=200, location=self.urlpath,
                                 ctype=FILEMIME, lm=entry["mtime"] / 1000)
 
     def op_rename(self, fs):
-        x, srcpath = self.translate_path(fs['src'].value)
-        x, dstpath = self.translate_path(fs['dst'].value)
+        x, srcpath, x, x = self.translate_path(fs['src'].value)
+        x, dstpath, x, x = self.translate_path(fs['dst'].value)
 
         os.rename(srcpath, dstpath)
         self.send_json_response(rcode=204)
 
-    def get_pathinfo(self, path, relpath, filename):
+    def get_pathinfo(self, fspath, urlpath, filename):
         entry = {}
-        sf = os.lstat(path)
+        sf = os.lstat(fspath)
         if stat.S_ISLNK(sf.st_mode):
-            link = os.readlink(path)
+            link = os.readlink(fspath)
             ctype = LINKMIME
             entry["href"] = link
         else:
-            ctype = self.get_mime(path)
+            ctype = self.get_mime(fspath)
 
-        ident = urllib.quote(relpath)
+        ident = urllib.quote(urlpath)
         if ctype == DIRMIME and not ident.endswith('/'):
             ident = ident + '/'
         entry.update({"name": filename, "ident": ident, "size": sf.st_size,
@@ -292,21 +287,20 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """
         Return metadata of a file
         """
-        relpath, path, filename = self.prelpath, self.ppath, self.pfilename
-        if os.path.isdir(path):
+        if os.path.isdir(self.fspath):
             entry, mtime = self.list_directory()
             del entry["files"]
             ctype = DIRMIME
         else:
-            entry = self.get_pathinfo(path, relpath, filename)
+            entry = self.get_pathinfo(self.fspath, self.urlpath, self.filename)
             mtime = entry["mtime"] / 1000
             ctype = FILEMIME
-        self.send_json_response(entry, rcode=200, location=relpath,
+        self.send_json_response(entry, rcode=200, location=self.urlpath,
                                 ctype=ctype, lm=mtime)
 
     @guard
     def do_POST(self):
-        self.translate_path(self.path)
+        self.set_paths()
         try:
             ctype, pdict = cgi.parse_header(self.headers.getheader("content-type"))
             if ctype != 'multipart/form-data':
@@ -355,23 +349,26 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         return None
 
     def send_head(self):
-        relpath, path = self.translate_path(self.path)
+        self.set_paths()
         try:
-            if self.pquery.get('op', None):
-                op = self.pquery['op'][0]
+            if self.urlquery.get('op', None):
+                op = self.urlquery['op'][0]
                 if not hasattr(self, 'op_' + op):
                     raise PException(403, "Invalid op")
                 method = getattr(self, 'op_' + op)
                 return method()
 
-            if os.path.isdir(path):
-                if self.path.endswith('/'):
+            if os.path.isdir(self.fspath):
+                if self.urlpath.endswith('/'):
                     return self.send_head_dir()
                     # redirect browser - doing basically what apache does
-                self.send_json_response(rcode=301, location=self.path + "/")
+                comps = list(urlparse.urlsplit(self.path))
+                comps[2] = comps[2] + '/'
+                redir = urlparse.urlunparse(comps)
+                self.send_json_response(rcode=301, location=redir)
                 return
 
-            sf = os.lstat(path)
+            sf = os.lstat(self.fspath)
             if not readable(sf):
                 raise PException(403, "Permission denied")
 
@@ -380,7 +377,7 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             #    self.send_json_response(rcode=304)
             #    return
 
-            entry = self.get_pathinfo(path, relpath, self.pfilename)
+            entry = self.get_pathinfo(self.fspath, self.urlpath, self.filename)
             my_range = self.get_range()
             filesize = entry["size"]
             if my_range:
@@ -407,10 +404,10 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             if self.command == 'GET':
                 if stat.S_ISLNK(sf.st_mode):
                     f = StringIO()
-                    f.write(os.readlink(path))
+                    f.write(os.readlink(self.fspath))
                     f.seek(0)
                 else:
-                    f = open(path, 'rb')
+                    f = open(self.fspath, 'rb')
                 written = self.copyfile(f, self.wfile, file_range=my_range)
                 f.close()
         except PException, e:
@@ -456,9 +453,8 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.wfile.write(content)
 
     def list_directory(self):
-        relpath, path, filename = self.prelpath, self.ppath, self.pfilename
         try:
-            file_list = os.listdir(path)
+            file_list = os.listdir(self.fspath)
         except:
             raise PException(404, "No permission to list directory")
         file_list.sort(key=lambda a: a.lower())
@@ -466,8 +462,8 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         siglist = []
         maxmtime = 0
         for name in file_list:
-            fullname = os.path.join(path, name)
-            relname = os.path.join(relpath, name)
+            fullname = os.path.join(self.fspath, name)
+            relname = os.path.join(self.urlpath, name)
             sf = os.lstat(fullname)
             if not (stat.S_ISREG(sf.st_mode) or stat.S_ISDIR(sf.st_mode) or stat.S_ISLNK(sf.st_mode)):
                 continue
@@ -477,7 +473,7 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             files.append(entry)
             siglist.append("%s%d%d" % (entry["name"], entry["size"], entry["mtime"]))
 
-        dirinfo = self.get_pathinfo(path, relpath, filename)
+        dirinfo = self.get_pathinfo(self.fspath, self.urlpath, self.filename)
         if dirinfo["mtime"] > maxmtime:
             maxmtime = dirinfo["mtime"]
         siglist.append("%s%d%d" % (dirinfo["name"], dirinfo["size"], dirinfo["mtime"]))
@@ -496,24 +492,24 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """
         # TODO Symlink verification
         pathcomps = urlparse.urlsplit(path)
-        relpath = path = urllib.unquote(pathcomps.path)
+        urlpath = urllib.unquote(pathcomps.path)
         querystr = pathcomps.query
-        self.pquery = urlparse.parse_qs(querystr, keep_blank_values=True)
-        posix_path = posixpath.normpath(path)
+        urlquery = urlparse.parse_qs(querystr, keep_blank_values=True)
+        posix_path = posixpath.normpath(urlpath)
         words = posix_path.split('/')
         words = filter(None, words)
-        path = psty_options["export_path"]
+        fspath = psty_options["export_path"]
         for word in words:
             drive, word = os.path.splitdrive(word)
             head, word = os.path.split(word)
             if word in (os.curdir, os.pardir):
                 continue
-            path = os.path.join(path, word)
-        self.prelpath = relpath
-        self.ppath = path
-        fname = os.path.basename(posix_path)
-        self.pfilename = fname if fname else '/'
-        return relpath, path
+            fspath = os.path.join(fspath, word)
+        filename = os.path.basename(posix_path) or '/'
+        return urlpath, fspath, urlquery, filename
+
+    def set_paths(self):
+        self.urlpath, self.fspath, self.urlquery, self.filename = self.translate_path(self.path)
 
     def copyfile(self, source, outputfile, file_range=None, buflen=16 * 1024):
         left = sys.maxint
@@ -624,7 +620,7 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         if version != "13":
             self.send_error(404) # TODO Figure out the RFC way to say FO
 
-        relpath, path = self.translate_path(self.path)
+        self.set_paths()
 
         sha_hash = sha1(key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").digest()
         self.send_response(101)
@@ -634,8 +630,8 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.end_headers()
         self.ws_state = "open"
         try:
-            os.chdir(path)
-            cmdlist = self.pquery.get('cmd[]', None)
+            os.chdir(self.fspath)
+            cmdlist = self.urlquery.get('cmd[]', None)
             if not cmdlist:
                 raise Exception("No command")
             p = subprocess.Popen(cmdlist, stdin=subprocess.PIPE,
