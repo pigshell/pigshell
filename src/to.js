@@ -30,7 +30,8 @@ var Converters = {
                         'text': passthrough,
                         'lines': text2lines,
                         'base64': text2base64,
-                        'canvas': text2canvas
+                        'canvas': text2canvas,
+                        'object': text2object
                     },
     'blob':         {
                         'canvas': blob2canvas,
@@ -39,7 +40,8 @@ var Converters = {
                         'arraybuffer': blob2ab,
                         'blob': passthrough,
                         'test': blob2test,
-                        'base64': _compose(blob2ab, ab2base64)
+                        'base64': _compose(blob2ab, ab2base64),
+                        'object': _compose(blob2text, text2object)
                     },
     'canvas':       {
                         'blob': canvas2blob,
@@ -53,6 +55,10 @@ var Converters = {
                     },
     'array':        {
                         'blob': array2blob,
+                    },
+    'object':       {
+                        'object': passthrough,
+                        'text': object2text
                     }
 };
 
@@ -68,6 +74,8 @@ function to(dtype, item, opts, cb) {
         stype = 'canvas';
     } else if (item instanceof Blob) {
         stype = 'blob';
+    } else if (item.constructor === Object) {
+        stype = 'object';
     } else {
         // TODO Handle arraybuffers some day
         return cb('Converter not found for item');
@@ -81,6 +89,19 @@ function to(dtype, item, opts, cb) {
 
 function passthrough(item, opts, cb) {
     return cb(null, item);
+}
+
+function text2object(item, opts, cb) {
+    var obj = parse_json(item);
+    if (!obj) {
+        return cb("JSON parsing error");
+    } else {
+        return cb(null, obj);
+    }
+}
+
+function object2text(item, opts, cb) {
+    return cb(null, JSON.stringify(item));
 }
 
 function blob2text(item, opts, cb) {
