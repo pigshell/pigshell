@@ -178,15 +178,25 @@ PicasaFile.prototype.rm = function(filename, opts, cb) {
         return cb(E('ENOSYS'));
     }
 
+    function rmfile(ident) {
+        tx.DELETE(ident, bopts, function(err, res) {
+            if (!err) {
+                self.populated = false;
+            }
+            return cb(err, res);
+        });
+    }
+
     ufile.lookup(filename, opts, ef(cb, function(file) {
-        if (file.mime === 'application/vnd.pigshell.picasa.album+json' ||
-            file.mime === 'application/vnd.pigshell.picasa.photo+json') {
-            tx.DELETE(file.ident, bopts, function(err, res) {
-                if (!err) {
-                    self.populated = false;
+        if (file.mime === 'application/vnd.pigshell.picasa.album+json') {
+            file.readdir(opts, ef(cb, function(files) {
+                if (Object.keys(files).length) {
+                    return cb(E('ENOTEMPTY'));
                 }
-                return cb(err, res);
-            });
+                return rmfile(file.ident);
+            }));
+        } else if (file.mime === 'application/vnd.pigshell.picasa.photo+json') {
+            return rmfile(file.ident);
         } else {
             return cb(E('ENOSYS'));
         }
