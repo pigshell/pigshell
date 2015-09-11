@@ -630,8 +630,8 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.send_response(101)
         self.send_header("Connection", "Upgrade")
         self.send_header("Upgrade", "WebSocket")
-        self.send_header("Sec-WebSocket-Accept", base64.encodestring(sha_hash))
-
+        self.send_header("Sec-WebSocket-Accept", base64.b64encode(sha_hash))
+        self.end_headers()
         self.ws_state = "open"
         try:
             os.chdir(path)

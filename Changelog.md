@@ -1,6 +1,15 @@
 Changelog
 =========
 
+0.6.4
+-----
+
+  * In Picasa, `rm <album>` complains if album is not empty. Earlier it would
+    wipe the album in accordance with the underlying API - a nasty shock for
+    those who expect standard Unix semantics of ENOTEMPTY.
+
+  * `wsh` works on Safari.
+
 0.6.3
 -----
 
