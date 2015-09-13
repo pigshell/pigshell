@@ -118,7 +118,7 @@ PicasaFile.prototype.mkdir = function(filename, opts, cb) {
             "</entry>"
             ].join(" ");
 
-    var tx = HttpTX.lookup('proxy');
+    var tx = VFS.lookup_tx('proxy');
     tx.POST(uri, data, bopts, function(err, res) {
         self.populated = false;
         return cb(err, res);
@@ -131,7 +131,7 @@ PicasaFile.prototype.rm = function(filename, opts, cb) {
             'Authorization': 'Bearer ' + self.fs.access_token(),
             'If-Match': '*'},
         bopts = {headers: headers},
-        tx = HttpTX.lookup('proxy'),
+        tx = VFS.lookup_tx('proxy'),
         ufile = self._ufile,
         mime = ufile ? ufile.mime : null;
 
@@ -139,15 +139,25 @@ PicasaFile.prototype.rm = function(filename, opts, cb) {
         return cb(E('ENOSYS'));
     }
 
+    function rmfile(ident) {
+        tx.DELETE(ident, bopts, function(err, res) {
+            if (!err) {
+                self.populated = false;
+            }
+            return cb(err, res);
+        });
+    }
+
     ufile.lookup(filename, opts, ef(cb, function(file) {
-        if (file.mime === 'application/vnd.pigshell.picasa.album' ||
-            file.mime === 'application/vnd.pigshell.picasa.photo') {
-            tx.DELETE(file.ident, bopts, function(err, res) {
-                if (!err) {
-                    self.populated = false;
+        if (file.mime === 'application/vnd.pigshell.picasa.album') {
+            file.readdir(opts, ef(cb, function(files) {
+                if (Object.keys(files).length) {
+                    return cb(E('ENOTEMPTY'));
                 }
-                return cb(err, res);
-            });
+                return rmfile(file.ident);
+            }));
+        } else if (file.mime === 'application/vnd.pigshell.picasa.photo') {
+            return rmfile(file.ident);
         } else {
             return cb(E('ENOSYS'));
         }
@@ -160,7 +170,7 @@ PicasaFile.prototype.putdir = mkblob(function(filename, blob, opts, cb) {
             'Authorization': 'Bearer ' + self.fs.access_token(),
             'Slug': filename},
         bopts = $.extend({}, opts, {headers: headers}),
-        tx = HttpTX.lookup('proxy'),
+        tx = VFS.lookup_tx('proxy'),
         valid = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp'],
         ufile = self._ufile,
         mime = ufile ? ufile.mime : null;

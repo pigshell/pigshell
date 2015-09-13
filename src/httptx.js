@@ -29,17 +29,6 @@ HttpTX.defaults = {
     "fallthrough": false
 };
 
-/*
-HttpTX.dict = {'direct': new HttpTX({}),
-    'proxy': new HttpTX({proxy_url: 'http://localhost:50937/'}),
-    'fallthrough': new HttpTX({proxy_url: 'http://localhost:50937/', fallthrough: true})
-};
-
-HttpTX.lookup = function(name) {
-    return HttpTX.dict[name];
-};
-*/
-
 HttpTX.prototype.do_xhr = function(op, url, data, opts, cb, use_proxy) {
     var self = this,
         xhr = new XMLHttpRequest(),
