@@ -16,12 +16,13 @@ var Dir = function(meta, opts) {
     Dir.base.apply(this, arguments);
     this.files = {};
     this.populated = false;
+    this.etag = undefined; /* etag is the "cache version" of this.files */
+    this.dirstate = undefined; /* opaque state used by underlying read() */
     
     this.opts = $.extend({}, this.constructor.defaults, opts,
         this.fs.opts[this.mime]);
     this.bdl_re = this.opts.bdl_mime ? new RegExp("(.*)\\." + this.opts.bdl_ext + "$", "i") : null;
     this.html = sprintf('<div class="pfolder"><a href="%s" target="_blank">{{name}}</a></div>', this.ident);
-    this.cookie = -1;
     this._update_time = 0;
 };
 
@@ -67,7 +68,7 @@ Dir.prototype.readdir = function(opts, cb) {
         } else {
             flist = data.files;
         }
-        self.files = {};
+        var newfiles = {};
         async.forEachSeries(flist, function(el, lcb) {
             var uri = URI.parse(el.ident),
                 ident = base.resolve(uri),
@@ -76,13 +77,16 @@ Dir.prototype.readdir = function(opts, cb) {
                 entryname = bdlmatch ? bdlmatch[1] : el.name,
                 bfile = bfiles[entryname];
 
+            if (bfile) {
+                delete bfiles[entryname];
+            }
             if (bfile && ident === bfile.ident) {
                 if (el.mtime === bfile.mtime && el.size === bfile.size) {
-                    self.files[entryname] = bfile;
+                    newfiles[entryname] = bfile;
                     return lcb(null);
                 } else {
                     bfile.update(el, opts, function() {
-                        self.files[entryname] = bfile;
+                        newfiles[entryname] = bfile;
                         return lcb(null);
                     });
                 }
@@ -90,17 +94,24 @@ Dir.prototype.readdir = function(opts, cb) {
                 var klass = self.fs.constructor.fileclass,
                     file = new klass({ident: ident, name: el.name, fs: self.fs});
                 file.update(el, opts, function(err, res) {
-                    self.files[entryname] = file;
+                    newfiles[entryname] = file;
                     return lcb(null);
                 });
             }
         }, function(err) {
+            self.files = newfiles;
             self.populated = true;
             return cb(null, fstack_topfiles(self.files));
         });
     }
 
     if (ropts.reload) {
+        self.populated = false;
+        self.dirstate = undefined;
+        self.etag = undefined;
+        self.files = {};
+    }
+    if (ropts.page) {
         self.populated = false;
     }
     if (self.populated && (!self.opts.cache_time ||
@@ -109,16 +120,21 @@ Dir.prototype.readdir = function(opts, cb) {
     }
 
     var opts2 = $.extend({}, opts);
-    opts2.read = $.extend({}, ropts, {dirstate: self.dirstate,
-        nitems: ropts.nitems, pgup: ropts.pgup});
+    opts2.read = $.extend({}, {etag: self.etag, dirstate: self.dirstate,
+        nitems: ropts.nitems, page: ropts.page});
 
     self.read(opts2, ef(cb, function(res) {
-        to('text', res, {}, ef(cb, function(txt) {
-            var data = parse_json(txt);
-            if (!data) {
-                return cb("JSON parsing error at " + self.ident);
-            }
+        to("object", res, {}, ef(cb, function(data) {
             self._update(data, opts);
+            self.dirstate = data.dirstate;
+            if (!ropts.page && self.etag && self.etag === data.etag) {
+                //console.log("Etag match", self.name);
+                self.populated = true;
+                return cb(null, fstack_topfiles(self.files));
+            } else {
+                //console.log("Etag no match", self.name);
+            }
+            self.etag = data.etag;
             return makefiles(data);
         }));
     }));
@@ -127,13 +143,12 @@ Dir.prototype.readdir = function(opts, cb) {
 Dir.prototype.update = function(meta, opts, cb) {
     var self = this,
         bdlmime = self.opts.bdl_mime,
-        bdlmatch = bdlmime ? self.name.match(self.bdl_re) : false;
+        bdlmatch = bdlmime ? self.name.match(self.bdl_re) : false,
+        changed = self._update(meta, opts);
 
-    if (!self._update(meta, opts)) {
-        /* Short-circuit update of the stack here */
-        return cb(null, fstack_top(self));
+    if (changed) {
+        self.populated = false;
     }
-    self.populated = false;
     if (bdlmime && bdlmatch) {
         assert("Dir.update.1", !self._ufile || self._ufile.mime === bdlmime, self);
         if (!self._ufile) {
@@ -148,23 +163,25 @@ Dir.prototype.update = function(meta, opts, cb) {
             return mf.update(meta, opts, cb);
         }
     }
-    return File.prototype.update.call(self, meta, opts, cb);
+    if (!changed) {
+        /* Short circuit to top of stack */
+        return cb(null, fstack_top(self));
+    } else {
+        return File.prototype.update.call(self, meta, opts, cb);
+    }
 };
 
 Dir.prototype._update = function(meta, opts) {
     var self = this,
         changed = false;
 
-    if (meta.cookie === undefined) {
-        meta.cookie = self._get_cookie(meta);
-    }
-    if (self.cookie !== meta.cookie) {
+    if (self.mtime !== meta.mtime || (self.etag && self.etag !== meta.etag)) {
         changed = true;
     }
     
     self._update_time = Date.now();
     mergeattr_x(self, meta, ["name", "ident", "fs", "mime", "populated",
-        "files", "opts", "_update_time", "html"]);
+        "files", "opts", "_update_time", "html", "etag", "dirstate"]);
     return changed;
 };
 
@@ -262,8 +279,6 @@ Dir.prototype.rm = function(filename, opts, cb) {
 var Bundle = function(meta, opts) {
     this.mime = meta.mime || 'application/vnd.pigshell.bundle';
     Bundle.base.apply(this, arguments);
-    this.populated = false;
-    this.files = {};
 };
 
 inherit(Bundle, MediaHandler);
@@ -284,59 +299,62 @@ Bundle.prototype.update = function(meta, opts, cb) {
     }
 
     fstack_rmtop(self);
-    self.files = {};
-    self.populated = false;
+    self.dotmeta = null;
+    self.datafile = null;
 
     bdldir.readdir(opts, function(err, bdlfiles) {
         if (err) {
             return ret(err);
         }
-        var metafile = fstack_base(bdlfiles['.meta']);
+        var metafile = fstack_base(bdlfiles[".meta"]);
         if (!metafile) {
             return ret("No meta file");
         }
-        metafile.read({'type': 'text', 'context': opts.context}, function(err, res) {
+        metafile.read(opts, function(err, res) {
             if (err) {
                 return ret(err);
             }
-            var dotmeta = parse_json(res);
-            if (!dotmeta || !dotmeta.meta) {
-                return ret("Meta parsing error");
-            }
-            if (dotmeta.version && dotmeta.version !== '1.0') {
-                return ret("Unsupported bundle version");
-            }
-            self.dotmeta = dotmeta;
-            var meta = dotmeta.meta,
-                ddata = dotmeta.data,
-                mime = meta.mime;
-
-            if (!mime) {
-                return ret("No mime in meta");
-            }
-
-            var myfiles = $.extend({}, bdlfiles);
-
-            delete myfiles['.meta'];
-            delete myfiles['.rsrc'];
-            if (ddata && ddata.type === 'file') {
-                var fname = ddata.value;
-                if (!bdlfiles[fname]) {
-                    return ret("Data file missing in bundle dir");
+            to("object", res, {}, function(err, dotmeta) {
+                if (err) {
+                    return ret(err);
                 }
-                delete myfiles[fname];
-                ddata.value = fstack_base(bdlfiles[fname]);
-            }
+                if (!dotmeta.meta) {
+                    return ret("Meta parsing error");
+                }
+                if (dotmeta.version && dotmeta.version !== "1.0") {
+                    return ret("Unsupported bundle version");
+                }
+                self.dotmeta = dotmeta;
+                var meta = dotmeta.meta,
+                    ddata = dotmeta.data,
+                    mime = meta.mime;
 
-            self.files = myfiles;
-            self.populated = true;
-            var mh = VFS.lookup_media_handler(mime) ||
-                VFS.lookup_media_handler('application/octet-stream'),
-                meta2 = $.extend({ident: self.ident, fs: self.fs,
-                    name: self.name}, meta);
-            var mf = new mh.handler(meta2, mh.opts);
-            fstack_addtop(self, mf);
-            return mf.update(meta, opts, cb);
+                if (!mime) {
+                    return ret("No mime in meta");
+                }
+
+                var myfiles = $.extend({}, bdlfiles);
+
+                delete myfiles[".meta"];
+                delete myfiles[".rsrc"];
+                if (ddata && ddata.type === "file") {
+                    var fname = ddata.value;
+                    if (!bdlfiles[fname]) {
+                        console.log(bdlfiles);
+                        return ret("Data file missing in bundle dir");
+                    }
+                    delete myfiles[fname];
+                    self.datafile = fstack_base(bdlfiles[fname]);
+                }
+
+                var mh = VFS.lookup_media_handler(mime) ||
+                    VFS.lookup_media_handler("application/octet-stream"),
+                    meta2 = $.extend({ident: self.ident, fs: self.fs,
+                        name: self.name}, meta);
+                var mf = new mh.handler(meta2, mh.opts);
+                fstack_addtop(self, mf);
+                return mf.update(meta, opts, cb);
+            });
         });
     });
 };
@@ -344,13 +362,14 @@ Bundle.prototype.update = function(meta, opts, cb) {
 Bundle.prototype.readdir = function(opts, cb) {
     var self = this;
 
-    if (self.populated) {
-        return cb(null, self.files);
-    } else {
-        self.stat(opts, ef(cb, function(res) {
-            return res.readdir(opts, cb);
-        }));
-    }
+    self._lfile.readdir(opts, ef(cb, function(files) {
+        delete files[".meta"];
+        delete files[".rsrc"];
+        if (self.datafile) {
+            delete files[self.dotmeta.ddata.value];
+        }
+        return cb(null, files);
+    }));
 };
 
 Bundle.prototype.read = function(opts, cb) {
@@ -362,7 +381,7 @@ Bundle.prototype.read = function(opts, cb) {
         return cb(E('ENODATA'));
     }
     if (data.type === 'file') {
-        return data.value.read(opts, cb);
+        return self.datafile.read(opts, cb);
     } else {
         return cb("Unknown data type");
     }

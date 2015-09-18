@@ -3,6 +3,7 @@
  * This program is free software - see the file COPYING for license details.
  */
 
+// YYY optstr_parse, make sure opts passed down to lower level ops
 function Ls(opts) {
     var self = this;
 
@@ -21,7 +22,7 @@ inherit(Ls, Command);
 Ls.prototype.usage = 'ls           -- list directory contents\n\n' +
     'Usage:\n' +
     '    ls [-h | --help]\n' +
-    '    ls [-aldRqrtcTGFDX] [-f <field>] [-s <date>] [-m <num>] [-n <depth>] [<file>...]\n\n' +
+    '    ls [-aldRqrtcTGFDXNP] [-f <field>] [-s <date>] [-m <num>] [-n <depth>] [<file>...]\n\n' +
     'Options:\n' +
     '    -h --help    Show this message.\n' +
     '    -a           Show hidden files\n' +
@@ -40,7 +41,9 @@ Ls.prototype.usage = 'ls           -- list directory contents\n\n' +
     '    -F           Force reload of all files in directory\n' +
     '    -f <field>   Use specified field for sorting\n' +
     '    -s <date>    Start timestamp, used when listing large "feed" directories\n' +
-    '    -m <num>     Maximum number of items per directory, used when listing large "feed" directories\n';
+    '    -m <num>     Maximum number of items per directory, used when listing large "feed" directories\n' +
+    '    -N           Retrieve next page of entries\n' +
+    '    -P           Retrieve previous page of entries\n';
 
 Ls.prototype.next = check_next(do_docopt(function(opts, cb) {
     var self = this;
@@ -151,6 +154,8 @@ Ls.prototype.next = check_next(do_docopt(function(opts, cb) {
                 var isfeed = entry.file.feed,
                     isurl = URI.parse(entry.path).isAbsolute(),
                     ropts = {reload: self.reload, nitems: self.maxentries};
+                ropts.page = self.docopts["-N"] ? "next" : self.docopts["-P"] ?
+                    "prev" : undefined;
                 self.visited[entry.file.ident] = true; /* Avoid cycles */
                 sys.readdir(self, entry.file, {readdir: ropts},
                     function(err, files) {
@@ -160,7 +165,8 @@ Ls.prototype.next = check_next(do_docopt(function(opts, cb) {
                         }
                         self.retval = false;
                         self.errmsg(err, entry.path);
-                        return self.output(format(entry));
+                        //return self.output(format(entry));
+                        return main();
                     }
 
                     /*

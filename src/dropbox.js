@@ -13,7 +13,7 @@ inherit(DropboxFS, HttpFS);
 DropboxFS.defaults = {
     "tx": "direct",
     "application/vnd.pigshell.dir": {
-        "cache_time": 60 * 1000
+        "cache_time": 5 * 60 * 1000 /* 5 minutes */
     }
 };
 
@@ -40,9 +40,9 @@ DropboxFS.fileclass = DropboxFile;
 DropboxFile.prototype.getmeta = function(opts, cb) {
     var self = this,
         u = URI.parse(self.ident),
-        params = {'access_token': self.fs.access_token(),
-            'list': 'false'},
-        opts2 = $.extend({}, opts, {params: params});
+        params = {'list': 'false'},
+        headers = {'Authorization': 'Bearer ' + self.fs.access_token()},
+        opts2 = $.extend({}, opts, {params: params, headers: headers});
 
     self.fs.tx.GET(self.ident, opts2, ef(cb, function(res) {
         var raw = parse_json(res.response),
@@ -74,6 +74,7 @@ DropboxFile.prototype._raw2meta = function(raw) {
 
     if (raw.is_dir) {
         meta.mime = this.fs.dirmime;
+        meta.etag = raw.hash;
     } else {
         meta.mime = raw.mime_type;
     }
@@ -93,22 +94,30 @@ DropboxFile.prototype.read = function(opts, cb) {
     }
 
     if (mime === self.fs.dirmime) {
-        DropboxFile.base.prototype.read.call(self, bopts, ef(cb, function(res) {
-            to('text', res, {}, ef(cb, function(txt) {
-                var data = parse_json(txt);
-                if (!data || !data.contents) {
-                    return cb("JSON parsing error at " + self.ident);
-                }
-                var files;
-                files = data.contents.map(function(f) {
-                    var meta =  self._raw2meta(f);
-                    return meta;
-                });
-                delete data["contents"];
-                var dirdata = self._raw2meta(data);
-                dirdata.files = files;
-                return cb(null, JSON.stringify(dirdata));
-            }));
+        var etag = (opts.read && opts.read.etag) ? opts.read.etag : null;
+        if (etag) {
+            bopts.params = {hash: etag};
+        }
+        self.fs.tx.GET(self.ident, bopts, ef(cb, function(res) {
+            var data = parse_json(res.response),
+                meta;
+
+            if (res.status === 304) {
+                assert("DropboxFile.read.1", etag, self);
+                return cb(null, {etag: etag});
+            }
+            if (!data || !data.contents) {
+                return cb("JSON parsing error at " + self.ident);
+            }
+            var files;
+            files = data.contents.map(function(f) {
+                var meta =  self._raw2meta(f);
+                return meta;
+            });
+            delete data["contents"];
+            var dirdata = self._raw2meta(data);
+            dirdata.files = files;
+            return cb(null, dirdata);
         }));
     } else {
         bopts.uri = uri + self.raw.path;

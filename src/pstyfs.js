@@ -27,6 +27,8 @@ inherit(PstyFile, HttpFile);
 
 PstyFS.fileclass = PstyFile;
 
+PstyFS.prototype.dirmime = "application/vnd.pigshell.dir";
+
 PstyFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
     dfilename, opts, cb) {
     var self = this,
@@ -89,6 +91,32 @@ PstyFile.prototype.getmeta = function(opts, cb) {
         return cb(null, data);
     }));
 };
+
+/*
+PstyFile.prototype.read = function(opts, cb) {
+    var self = this,
+        ropts = opts.read || {},
+        umime = self._ufile ? self._ufile.mime : null,
+        dir = (umime === self.fs.dirmime);
+
+    if (dir) {
+        var etag = ropts.etag,
+            gopts = $.extend({}, opts);
+        delete gopts["read"];
+        gopts.params = etag ? {etag: etag} : undefined;
+        self.fs.tx.GET(self.ident, gopts, ef(cb, function(res) {
+            var data = parse_json(res.response);
+            if (!data) {
+                return cb("JSON parsing error for " + self.ident);
+            }
+            data.etag = data.cookie;
+            return cb(null, data);
+        }));
+    } else {
+        return PstyFile.base.prototype.read.apply(self, arguments);
+    }
+};
+*/
 
 PstyFile.prototype.putdir = mkblob(function(file, blob, opts, cb) {
     var self = this,

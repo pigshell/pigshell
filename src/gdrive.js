@@ -11,7 +11,7 @@ var GDriveFS = function(opts, uri) {
 
 inherit(GDriveFS, HttpFS);
 
-GDriveFS.defaults = { "tx": "fallthrough" };
+GDriveFS.defaults = {"tx": "fallthrough"};
 
 GDriveFS.prototype.dirmime = 'application/vnd.google-apps.folder';
 GDriveFS.prototype.docmimes = [
@@ -169,6 +169,7 @@ GDriveFile.prototype.read = function(opts, cb) {
         headers = {'Authorization': 'Bearer ' + self.fs.access_token()},
         bopts = $.extend({}, opts, {headers: headers}),
         fmt = (opts.gdrive && opts.gdrive.fmt) ? opts.gdrive.fmt : ['docx', 'xlsx', 'pptx', 'svg'],
+        ropts = opts.read || {},
         ufile = self._ufile,
         mime = ufile ? ufile.mime : null;
 
@@ -199,29 +200,49 @@ GDriveFile.prototype.read = function(opts, cb) {
             params = {
                 "access_token": self.fs.access_token(),
                 "q": query,
-                "maxResults": 1000
+                "maxResults": ropts.nitems || 1000
             },
-            opts2 = $.extend({}, opts, {params: params});
+            dirstate = ropts.dirstate || {},
+            opts2 = $.extend({}, opts, {params: params}),
+            token;
 
+        if (ropts.page) {
+            if (ropts.page === "next") {
+                if (dirstate.nextPageToken === "EOF") {
+                    return cb(E("EINVAL"));
+                }
+                token = dirstate.nextPageToken;
+            } else {
+                return cb(E("EINVAL"));
+            }
+        } else {
+            token = dirstate.currentPageToken;
+        }
+        if (token) {
+            opts2.params.pageToken = token;
+        }
         // TODO Handle directories with more than 1000 files
         self.fs.tx.GET(self.fs.baseuri, opts2, ef(cb, function(res) {
-                var data = parse_json(res.response);
+            var data = parse_json(res.response);
 
-                if (!data) {
-                    return cb('JSON parsing error for ' + self.ident);
+            if (!data) {
+                return cb('JSON parsing error for ' + self.ident);
+            }
+            if (self.ident === self.fs.rooturi) {
+                for (var sd in self.fs.synthdirs) {
+                    data.items.push(self._synthraw(sd));
                 }
-                if (self.ident === self.fs.rooturi) {
-                    for (var sd in self.fs.synthdirs) {
-                        data.items.push(self._synthraw(sd));
-                    }
-                }
-                var files = [];
-                data.items.forEach(function(el) {
-                    var meta = self._raw2meta(el);
-                    files.push(meta);
-                });
-                files = unique_names(files);
-                return cb(null, JSON.stringify({files: files}));
+            }
+            var files = [],
+                dirstate = {};
+            data.items.forEach(function(el) {
+                var meta = self._raw2meta(el);
+                files.push(meta);
+            });
+            files = unique_names(files);
+            dirstate.nextPageToken = data.nextPageToken || "EOF";
+            dirstate.currentPageToken = token;
+            return cb(null, {dirstate: dirstate, files: files});
         }));
     } else {
         var link = self.raw.downloadUrl;
@@ -432,7 +453,7 @@ VFS.register_handler("GDriveFS", GDriveFS);
 VFS.register_handler("GDriveDoc", GDriveDoc);
 
 VFS.register_uri_handler("https://www.googleapis.com/drive/v2", "GDriveFS", {});
-VFS.register_media_handler("application/vnd.google-apps.folder", "Dir", {});
+VFS.register_media_handler("application/vnd.google-apps.folder", "Dir", {cache_time: 5 * 60 * 1000});
 VFS.register_media_handler("application/vnd.google-apps.presentation", "GDriveDoc", {});
 VFS.register_media_handler("application/vnd.google-apps.spreadsheet", "GDriveDoc", {});
 VFS.register_media_handler("application/vnd.google-apps.document", "GDriveDoc", {});
