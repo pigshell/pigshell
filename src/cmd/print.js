@@ -66,7 +66,8 @@ Print.prototype.next = check_next(do_docopt(objargs(function() {
 
     function printfile(file) {
         var f = {},
-            avoid = ["_lfile", "_ufile", "files", "data", "fs", "dotmeta"];
+            avoid = ["_lfile", "_ufile", "files", "data", "fs", "dotmeta",
+                "datafile"];
         for (var m in file) {
             if (avoid.indexOf(m) === -1) {
                 f[m] = file[m];

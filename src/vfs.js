@@ -230,6 +230,20 @@ File.prototype.search = function(name, opts, cb) {
    }
 };
 
+File.prototype.getlink = function() {
+    var self = this,
+        u = URI.parse(self.ident),
+        scheme = u.scheme(),
+        str = '<a href="';
+    if (scheme !== "http" && scheme !== "https") {
+        str += '" data-ident="' + self.ident + '">';
+    } else {
+        str += self.ident + '">';
+    }
+    str += "{{name}}</a>";
+    return str;
+};
+
 /*
 File.prototype.bundle = function(opts, cb) {
     return cb(null, { this.name: this });

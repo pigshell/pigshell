@@ -150,7 +150,7 @@ function fstack_rmbot(upper) {
 
 function fstack_passthrough(op) {
     return function() {
-        return this._lfile ? this._lfile[op].apply(this._lfile, arguments) :
+        return (this._lfile && this._lfile[op]) ? this._lfile[op].apply(this._lfile, arguments) :
             this.enosys.apply(this, arguments);
     };
 }
@@ -166,7 +166,7 @@ function fstack_invaldir_wrap(op) {
             return callback.apply(null, arguments);
         }
         args.push(invaldir);
-        return self._lfile ? self._lfile[op].apply(self._lfile, args) :
+        return (self._lfile && self._lfile[op]) ? self._lfile[op].apply(self._lfile, args) :
             self.enosys.apply(self, args);
     };
 }
@@ -1736,17 +1736,24 @@ function getcsl(obj, cb) {
     }
 }
 
-function _lookup_fs(uri, mountopts, fslist) {
-    var optstr = JSON.stringify(obj2list(mountopts)),
-        u = URI.parse(uri);
-    for (var i = 0, max = fslist.length; i < max; i++) {
-        var fs = fslist[i];
-        if (fs.Uri.authority() === u.authority() &&
-            (optstr === "[]" || optstr === JSON.stringify(obj2list(fs.opts)))) {
-            return fs;
+/*
+ * Check if file is a bundle or a link, adjust name accordingly
+ */
+
+function cookbdl(file, raw) {
+    if (file.fs.bdlre && raw.mime === file.fs.opts.dirmime) {
+        var match = raw.name.match(file.fs.bdlre);
+        if (match) {
+            raw.name = match[1];
+            raw._isbundle = true;
+        }
+    } else if (file.fs.linkre && raw.mime !== file.fs.opts.dirmime) {
+        var match = raw.name.match(file.fs.linkre);
+        if (match) {
+            raw.name = match[1];
+            raw.mime = file.fs.opts.linkmime;
         }
     }
-    return null;
 }
 
 /*

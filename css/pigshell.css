@@ -239,6 +239,13 @@
     color: #268BD2;
 }
 
+.pigshell .plink {
+    display: inline-block;
+    margin-left: 1em;
+    width: 16em;
+    font-weight: bold;
+    color: #268BD2;
+}
 .pigshell .pfile {
     display: inline-block;
     margin-left: 1em;
@@ -250,6 +257,11 @@
     color: #268BD2;
     text-decoration: none;
 }
+
+.pigshell .plink a {
+    color: #268BD2;
+}
+
 .pigshell .pfolder a:hover, .pigshell .pfile a:hover {
     text-decoration: underline;
 }

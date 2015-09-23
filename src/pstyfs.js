@@ -12,11 +12,21 @@
 
 var PstyFS = function() {
     PstyFS.base.apply(this, arguments);
+    this.bdlre = this.opts.bdlmime ? new RegExp("(.*)\\." + this.opts.bdlext + "$", "i") : null;
+    this.linkre = this.opts.linkmime ? new RegExp("(.*)\\." + this.opts.linkext + "$", "i") : null;
 };
 
 inherit(PstyFS, HttpFS);
 
 PstyFS.lookup_uri = HttpFS.lookup_uri;
+
+PstyFS.defaults = {
+    dirmime: "application/vnd.pigshell.dir",
+    bdlmime: "application/vnd.pigshell.bundle",
+    bdlext: "bdl",
+    linkmime: "application/vnd.pigshell.link",
+    linkext: "href"
+};
 
 var PstyFile = function() {
     PstyFile.base.apply(this, arguments);
@@ -26,8 +36,6 @@ var PstyFile = function() {
 inherit(PstyFile, HttpFile);
 
 PstyFS.fileclass = PstyFile;
-
-PstyFS.prototype.dirmime = "application/vnd.pigshell.dir";
 
 PstyFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
     dfilename, opts, cb) {
@@ -88,35 +96,47 @@ PstyFile.prototype.getmeta = function(opts, cb) {
         if (!data) {
             return cb('JSON parsing error for ' + self.ident);
         }
-        return cb(null, data);
+        return cb(null, self._raw2meta(data));
     }));
 };
 
-/*
+PstyFile.prototype._raw2meta = function(raw) {
+    var self = this;
+
+    if (raw.cookie) {
+        raw.etag = raw.cookie;
+    }
+    cookbdl(self, raw);
+    return raw;
+};
+
+
 PstyFile.prototype.read = function(opts, cb) {
     var self = this,
         ropts = opts.read || {},
         umime = self._ufile ? self._ufile.mime : null,
-        dir = (umime === self.fs.dirmime);
+        dir = (umime === self.fs.opts.dirmime);
 
     if (dir) {
         var etag = ropts.etag,
             gopts = $.extend({}, opts);
         delete gopts["read"];
-        gopts.params = etag ? {etag: etag} : undefined;
+        //gopts.params = etag ? {etag: etag} : undefined;
         self.fs.tx.GET(self.ident, gopts, ef(cb, function(res) {
             var data = parse_json(res.response);
             if (!data) {
                 return cb("JSON parsing error for " + self.ident);
             }
-            data.etag = data.cookie;
-            return cb(null, data);
+            var files = data.files.map(self._raw2meta.bind(self));
+            delete data["files"];
+            var dirdata = self._raw2meta(data);
+            dirdata.files = files;
+            return cb(null, dirdata);
         }));
     } else {
         return PstyFile.base.prototype.read.apply(self, arguments);
     }
 };
-*/
 
 PstyFile.prototype.putdir = mkblob(function(file, blob, opts, cb) {
     var self = this,
@@ -131,7 +151,7 @@ PstyFile.prototype.putdir = mkblob(function(file, blob, opts, cb) {
     }));
 });
 
-PstyFile.prototype.link = function(file, name, opts, cb) {
+PstyFile.prototype.link2 = function(file, name, opts, cb) {
     var self = this,
         form = new FormData();
 
@@ -143,6 +163,12 @@ PstyFile.prototype.link = function(file, name, opts, cb) {
     self.fs.tx.POST(self.ident, form, opts, pef(cb, function(res) {
         return cb(null, null);
     }));
+};
+
+PstyFile.prototype.link = function(str, linkname, opts, cb) {
+    var self = this;
+
+    return self.putdir(linkname + "." + self.fs.opts.linkext, str, opts, cb);
 };
 
 PstyFile.prototype.append = function(item, opts, cb) {

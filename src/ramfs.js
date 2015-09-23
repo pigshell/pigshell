@@ -19,13 +19,21 @@ var RamFS = function(opts, uri, rootfile) {
     self.Uri = Uri;
 
     self.rootfile = rootfile;
+    self.bdlre = this.opts.bdlmime ? new RegExp("(.*)\\." + this.opts.bdlext + "$", "i") : null;
+    self.linkre = this.opts.linkmime ? new RegExp("(.*)\\." + this.opts.linkext + "$", "i") : null;
 };
 
 inherit(RamFS, Filesystem);
 
 RamFS.backend = {};
 
-RamFS.prototype.dirmime = 'application/vnd.pigshell.dir';
+RamFS.defaults = {
+    dirmime: "application/vnd.pigshell.dir",
+    bdlmime: "application/vnd.pigshell.bundle",
+    bdlext: "bdl",
+    linkmime: "application/vnd.pigshell.link",
+    linkext: "href"
+};
 
 RamFS.lookup_uri = function(uri, opts, cb) {
     var self = this,
@@ -47,7 +55,7 @@ RamFS.lookup_uri = function(uri, opts, cb) {
                 readable: true,
                 writable: true,
                 size: 0,
-                mime: self.prototype.dirmime
+                mime: self.defaults.dirmime
             };
             rootfile = {meta: rootmeta, data: {}};
             self.backend[fsname] = rootfile;
@@ -73,7 +81,7 @@ RamFS.prototype.lookup_rfile = function(path, opts, cb) {
 
     for (var i = 0, len = comps.length; i < len; i++) {
         var item = comps[i];
-        if (curdir === undefined || curdir.meta.mime !== self.dirmime) {
+        if (curdir === undefined || curdir.meta.mime !== self.opts.dirmime) {
             return cb(E('ENOENT'));
         }
         if (item === '.' || item === '') {
@@ -112,7 +120,7 @@ RamFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
             delete rf_srcdir.data[sfilename];
             f.meta.ident = pathjoin(rf_dstdir.meta.ident, encodeURIComponent(dfilename));
             f.meta.name = dfilename;
-            if (f.meta.mime === self.dirmime) {
+            if (f.meta.mime === self.opts.dirmime) {
                 rename_dir(f);
             }
             rf_dstdir.data[dfilename] = f;
@@ -128,7 +136,7 @@ RamFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
         for (var name in rf.data) {
             var f = rf.data[name];
             f.meta.ident = pathjoin(rf.meta.ident, encodeURIComponent(f.meta.name));
-            if (f.meta.mime === self.dirmime) {
+            if (f.meta.mime === self.opts.dirmime) {
                 rename_dir(f);
             }
         }
@@ -150,17 +158,24 @@ RamFile.prototype.getmeta = function(opts, cb) {
         u = URI.parse(self.ident);
 
     self.fs.lookup_rfile(u.path(), opts, ef(cb, function(rfile) {
-        var meta = $.extend(true, {}, rfile.meta);
-        return cb(null, meta);
+        var raw = $.extend(true, {}, rfile.meta);
+        return cb(null, self._raw2meta(raw));
     }));
 };
+
+RamFile.prototype._raw2meta = function(raw) {
+    var self = this;
+    cookbdl(self, raw);
+    return raw;
+};
+
 
 RamFile.prototype.read = function(opts, cb) {
     var self = this,
         u = URI.parse(self.ident);
 
     self.fs.lookup_rfile(u.path(), opts, ef(cb, function(rfile) {
-        if (rfile.meta.mime !== self.fs.dirmime) {
+        if (rfile.meta.mime !== self.fs.opts.dirmime) {
             if (opts.type === 'text') {
                 return to('text', rfile.data, {}, cb);
             } else {
@@ -180,6 +195,7 @@ RamFile.prototype.read = function(opts, cb) {
                 "name", "ctime", "readable", "writable"]);
             files.push(file);
         }
+        files = files.map(self._raw2meta.bind(self));
         meta.files = files;
         data = JSON.stringify(meta);
         if (opts.type === 'text') {
@@ -198,7 +214,7 @@ RamFile.prototype.putdir = mkblob(function(filename, blob, opts, cb) {
         efname = encodeURIComponent(filename);
 
     self.fs.lookup_rfile(u.path(), opts, ef(cb, function(rfile) {
-        if (rfile.meta.mime !== self.fs.dirmime) {
+        if (rfile.meta.mime !== self.fs.opts.dirmime) {
             return cb(E('ENOTDIR'));
         }
         var meta = {
@@ -222,7 +238,7 @@ RamFile.prototype.append = function(item, opts, cb) {
         u = URI.parse(self.ident);
 
     self.fs.lookup_rfile(u.path(), opts, ef(cb, function(rfile) {
-        if (rfile.meta.mime === self.fs.dirmime) {
+        if (rfile.meta.mime === self.fs.opts.dirmime) {
             return cb(E('EISDIR'));
         }
         var blob = new Blob([rfile.data, item], { type: rfile.data.type });
@@ -240,14 +256,14 @@ RamFile.prototype.rm = function(filename, opts, cb) {
         efname = encodeURIComponent(filename);
 
     self.fs.lookup_rfile(u.path(), opts, ef(cb, function(rfile) {
-        if (rfile.meta.mime !== self.fs.dirmime) {
+        if (rfile.meta.mime !== self.fs.opts.dirmime) {
             return cb(E('ENOTDIR'));
         }
         var file = rfile.data[efname];
         if (file === undefined) {
             return cb(E('ENOENT'));
         }
-        if (file.meta.mime === self.fs.dirmime &&
+        if (file.meta.mime === self.fs.opts.dirmime &&
             Object.keys(file.data).length) {
             return cb(E('ENOTEMPTY'));
         }
@@ -263,7 +279,7 @@ RamFile.prototype.mkdir = function(filename, opts, cb) {
         efname = encodeURIComponent(filename);
 
     self.fs.lookup_rfile(u.path(), opts, ef(cb, function(rfile) {
-        if (rfile.meta.mime !== self.fs.dirmime) {
+        if (rfile.meta.mime !== self.fs.opts.dirmime) {
             return cb(E('ENOTDIR'));
         }
         if (rfile.data[filename]) {
@@ -277,13 +293,19 @@ RamFile.prototype.mkdir = function(filename, opts, cb) {
                 readable: true,
                 writable: true,
                 size: 0,
-                mime: self.fs.dirmime
+                mime: self.fs.opts.dirmime
             };
             
         rfile.data[efname] = { meta: rmeta, data: {} };
         rfile.meta.mtime = rfile.meta.cookie = Date.now();
         return cb(null, null);
     }));
+};
+
+RamFile.prototype.link = function(str, linkname, opts, cb) {
+    var self = this;
+
+    return self.putdir(linkname + "." + self.fs.opts.linkext, str, opts, cb);
 };
 
 VFS.register_handler("RamFS", RamFS);

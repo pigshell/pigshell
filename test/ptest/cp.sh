@@ -46,7 +46,7 @@ function bundle {
     dcheck $? true cp.$3.1
 
     BURL=$(ls -d $1 | jf 'x.ident')
-    mount -o '{"application/vnd.pigshell.dir": {"bdl_mime": ""}}' $BURL $MNT_NOBDL
+    mount -o bdlmime= $BURL $MNT_NOBDL
     cmpdir $2 $MNT_NOBDL/bundletest.bdl debug
     expect $? true cp.$3.2
     cat $1/bundletest | to text > $RESDIR/cp.$3.3
