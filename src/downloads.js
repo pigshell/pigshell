@@ -31,6 +31,7 @@ var DownloadFS = function() {
             mime: 'directory',
             htmlClass: 'pfolder',
             files: {},
+            mtime: 0,
             populated: true
         };
     DownloadFS.base.call(self);

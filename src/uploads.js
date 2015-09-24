@@ -124,6 +124,7 @@ var UploadFS = function() {
             writable: true,
             fs: self,
             mime: 'directory',
+            mtime: 0,
             htmlClass: 'pfolder',
             files: {},
             populated: true

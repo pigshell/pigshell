@@ -42,6 +42,7 @@ var DevFS = function() {
             fs: self,
             owner: 'me',
             mime: 'device',
+            mtime: 0,
             html: '<div class="pfile">null</div>'
         },
         rootfile = {
@@ -51,6 +52,7 @@ var DevFS = function() {
             writable: true,
             fs: self,
             mime: 'directory',
+            mtime: 0,
             htmlClass: 'pfolder',
             files: {}
         };

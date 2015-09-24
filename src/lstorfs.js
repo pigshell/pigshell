@@ -115,6 +115,7 @@ var LstorFS = function(obj, opts) {
         writable: true,
         fs: this,
         mime: 'directory',
+        mtime: 0,
         htmlClass: 'pfolder',
         files: {},
         populated: false

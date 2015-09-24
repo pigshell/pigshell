@@ -410,6 +410,7 @@ Link.prototype.update = function(meta, opts, cb) {
     fstack_rmtop(self);
     self.href = null;
 
+    mergeattr(self, meta, ["mtime", "size"]);
     linkfile.read(opts, function(err, res) {
         if (err) {
             return ret(err);
