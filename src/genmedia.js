@@ -441,6 +441,13 @@ Link.prototype.update = function(meta, opts, cb) {
     });
 };
 
+Link.prototype.readlink = function() {
+    var self = this;
+
+    assert("Link.readlink.1", self.href, self);
+    return self.href;
+};
+
 ["read", "readdir", "lookup", "search"].forEach(function(op) {
     Link.prototype[op] = function() {
         var self = this,

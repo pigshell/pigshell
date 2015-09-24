@@ -91,7 +91,7 @@ Rm.prototype.next = check_next(do_docopt(function() {
                  */
                 return self.exit(nuke);
             }
-            if (!isrealdir(file) || !self.docopts['-r']) {
+            if (islink(file) || !isrealdir(file) || !self.docopts['-r']) {
                 return rmfile(pathname, cb);
             }
             sys.readdir(self, file, self.cliopts, function(err, files) {

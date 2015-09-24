@@ -832,6 +832,12 @@ function isrealdir(file) {
         !file._nodescend);
 }
 
+function islink(file) {
+    var l1 = fstack_level(file, 1);
+
+    return l1 && l1.mime === file.fs.opts.linkmime;
+}
+
 /*
  * To be used by commands for processing a large file chunk by chunk
  * using a worker function. This is good for streaming operations like

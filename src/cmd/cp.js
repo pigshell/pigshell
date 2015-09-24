@@ -191,7 +191,12 @@ Cp.prototype.next = check_next(do_docopt(pathargs(function() {
 
     /* Target directory object, target filename, src file object */
     function cpfile2(tdir, tdirpath, tname, src, cb) {
-        if (self.docopts['-a'] && typeof tdir.unbundle !== 'function') {
+        if (self.docopts['-a'] && islink(src)) {
+            if (typeof tdir.link !== 'function') {
+                return cb(E('ENOSYS'));
+            }
+            return sys.link(self, tdir, src.readlink(), tname, self.cliopts, cb);
+        } else if (self.docopts['-a'] && typeof tdir.unbundle !== 'function') {
                 return cb(E('ENOSYS'));
         } else if (self.docopts['-a'] && typeof src.bundle === 'function') {
             sys.bundle(self, src, self.cliopts, ef(cb, function(data) {
@@ -247,6 +252,9 @@ Cp.prototype.next = check_next(do_docopt(pathargs(function() {
             }
             cpfile2(tdir, tdirpath, tname, file, function(err, dir, stats) {
                 cplog(src, err, stats);
+                if (err || dir === null) {
+                    return cb(err, dir);
+                }
                 return cpr_descend(dir);
             });
         });

@@ -73,7 +73,7 @@ LinkCmd.prototype.next = check_next(do_docopt(function() {
         if (err) {
             return self.exit(err, src);
         }
-        var str = srcfile.getlink();
+        var str = fstack_base(srcfile).getlink();
         return getdestdir(str);
     });
 }));

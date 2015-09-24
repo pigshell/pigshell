@@ -258,7 +258,7 @@ File.prototype.bundle = function(opts, cb) {
 ["mkdir", "putdir", "rm", "getmeta", "read", "append", "stat",
     "unbundle"].forEach(function(op) {
     File.prototype[op] = function() {
-        return this._lfile ? this._lfile[op].apply(this._lfile, arguments) :
+        return (this._lfile && this._lfile[op]) ? this._lfile[op].apply(this._lfile, arguments) :
             this.enosys.apply(this, arguments);
     };
 });
