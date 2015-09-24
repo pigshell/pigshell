@@ -11,71 +11,114 @@ function LinkCmd(opts) {
 
 inherit(LinkCmd, Command);
 
-LinkCmd.prototype.usage = 'link         -- make link\n\n' +
+LinkCmd.prototype.usage = 'link           -- make links\n\n' +
     'Usage:\n' +
-    '    link <source> <target>\n' +
+    '    link [-o <opts>] [-b] <source> <target>\n' +
+    '    link [-o <opts>] [-b] <source>... <directory>\n' +
+    '    link [-o <opts>] [-b] <directory>\n' +
     '    link -h | --help\n\n' +
     'Options:\n' +
-    '    -h --help    Show this message.\n';
+    '    -h --help    Show this message\n' +
+    '    -b           Link to the base of the file stack\n' +
+    '    -o <opts>    Options to pass to lower layers\n';
 
-LinkCmd.prototype.next = check_next(do_docopt(function() {
-    var self = this,
-        src = self.docopts['<source>'],
-        target = self.docopts['<target>'],
-        u = URI.parse(src);
+LinkCmd.prototype.internalUsage = 'link           -- make links\n\n' +
+    'Usage:\n' +
+    '    link [-o <opts>] [-b] <file>...\n' +
+    '    link <-h | --help>\n\n' +
+    'Options:\n' +
+    '    -h --help    Show this message.\n' +
+    '    -o <opts>    Options to pass to lower layers\n';
 
-    function makelink(str, destdir, name) {
-        if (typeof destdir.link === 'function') {
-            return sys.link(self, destdir, str, name, {}, function(err) {
-                return self.exit(err);
-            });
-        }
-        return self.exit(E('ENOSYS'), target);
+LinkCmd.prototype.next = check_next(do_docopt(pathargs(function() {
+    var self = this;
+
+    if (self.inited) {
+        return next();
     }
 
-    function getdestdir(str) {
-        sys.lookup(self, target, {}, function(err, dir) {
-            if (err && err.code !== "ENOENT") {
-                return self.exit(err, target);
-            }
-            if (!err) {
-                if (isrealdir(dir)) {
-                    return makelink(str, dir, basenamedir(src));
-                } else {
-                    return self.exit(E("EEXIST"), target);
-                }
-            }
-            var comps = pathsplit(target),
-                pdir = comps[0],
-                name = comps[1];
+    self.inited = true;
+    self.cliopts = optstr_parse(self.docopts['-o']);
+    self.retval = true;
 
-            sys.lookup(self, pdir, {}, function(err, dir) {
-                if (!err) {
-                    return makelink(str, dir, name);
+    sys.lookup(self, self.target, self.cliopts, function(err, tfile) {
+        if (err) {
+            if (err.code !== 'ENOENT') {
+                return self.exit(err, self.target);
+            }
+            if (self.mode === 'multi') {
+                return self.exit(err, self.target);
+            }
+        } else {
+            if (isrealdir(tfile)) {
+                self.tdir = fstack_base(tfile);
+                self.tdirpath = self.target;
+                return next();
+            } else if (self.mode === 'multi') {
+                return self.exit(E('ENOTDIR'), self.target);
+            }
+        }
+        /* mode = 'single', err = ENOENT */
+        var comps = pathsplit(self.target),
+            last = comps[1],
+            parentdir = comps[0];
+        sys.lookup(self, parentdir, self.cliopts, function(err, pfile) {
+            if (err) {
+                return self.exit(err, parentdir);
+            } else {
+                self.tdir = fstack_base(pfile);
+                self.tdirpath = parentdir;
+                self.tname = last;
+                return next();
+            }
+        });
+    });
+
+    function next() {
+        self.unext({}, cef(self, function(file) {
+            if (file === null) {
+                return self.exit(self.retval);
+            }
+            var spath = isstring(file) ? file : isstring(file._path) ? file._path : null,
+                tname = self.tname || basenamedir(spath);
+            if (!spath) {
+                return self.exit("Invalid file specification: " + file.toString());
+            }
+
+            makelink(fstack_top(self.tdir), self.tdirpath, tname, spath,
+                function(err, res) {
+                if (err) {
+                    self.retval = false;
+                    self.errmsg(err, res);
                 }
-                return self.exit(E('ENOENT'), pdir);
+                return next();
             });
+        }));
+    }
+
+    function makelink(tdir, tdirpath, tname, srcpath, cb) {
+        var u = URI.parse(srcpath);
+
+        if (u.isAbsolute()) {
+            var str = '<a href="';
+            if (u.scheme() !== "http" && u.scheme() !== "https") {
+                str += '" data-ident="' + srcpath + '">';
+            } else {
+                str += srcpath + '">';
+            }
+            str += "{{name}}</a>";
+            return sys.link(self, tdir, str, tname, self.cliopts, cb);
+        }
+        fstat.call(self, srcpath, function(err, file) {
+            if (err) {
+                return cb(err, srcpath);
+            }
+            var str = self.docopts["-b"] ? fstack_base(file).getlink() :
+                file.getlink();
+
+            return sys.link(self, tdir, str, tname, self.cliopts, cb);
         });
     }
-
-    if (u.isAbsolute()) {
-        var str = '<a href="';
-        if (u.scheme() !== "http" && u.scheme() !== "https") {
-            str += '" data-ident="' + src + '">';
-        } else {
-            str += src + '">';
-        }
-        str += "{{name}}</a>";
-        return getdestdir(str);
-    }
-
-    sys.lookup(self, src, {}, function(err, srcfile) {
-        if (err) {
-            return self.exit(err, src);
-        }
-        var str = fstack_base(srcfile).getlink();
-        return getdestdir(str);
-    });
-}));
+})));
 
 Command.register("link", LinkCmd);

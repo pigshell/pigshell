@@ -245,7 +245,7 @@ Ls.prototype.next = check_next(do_docopt(function(opts, cb) {
                 return entry.spacer;
             }
             var file = entry.file,
-                d = isdir(file) ? 'd' : '-',
+                d = islink(file) ? 'l' : isdir(file) ? 'd' : '-',
                 r = file.readable ? 'r' : '-',
                 w = file.writable ? 'w' : '-',
                 count,
