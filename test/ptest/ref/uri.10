@@ -1,0 +1,16 @@
+{
+    "source": "https://picasaweb.google.com/data/entry/api/user/357345893/albumid/457248754387#user=foo.bar@gmail.com",
+    "scheme": "https",
+    "authority": "picasaweb.google.com",
+    "userInfo": "",
+    "user": "",
+    "password": "",
+    "host": "picasaweb.google.com",
+    "port": "",
+    "relative": "/data/entry/api/user/357345893/albumid/457248754387#user=foo.bar@gmail.com",
+    "path": "/data/entry/api/user/357345893/albumid/457248754387",
+    "directory": "/data/entry/api/user/357345893/albumid/457248754387",
+    "file": "",
+    "query": "",
+    "fragment": "user=foo.bar@gmail.com"
+}

@@ -1,0 +1,16 @@
+{
+    "source": "ramfs://root/data/entry/api/user/357345893/albumid/457248754387?q1=1&q2=2#user=foo.bar@gmail.com",
+    "scheme": "ramfs",
+    "authority": "root",
+    "userInfo": "",
+    "user": "",
+    "password": "",
+    "host": "root",
+    "port": "",
+    "relative": "/data/entry/api/user/357345893/albumid/457248754387?q1=1&q2=2#user=foo.bar@gmail.com",
+    "path": "/data/entry/api/user/357345893/albumid/457248754387",
+    "directory": "/data/entry/api/user/357345893/albumid/457248754387",
+    "file": "",
+    "query": "q1=1&q2=2",
+    "fragment": "user=foo.bar@gmail.com"
+}

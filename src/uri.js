@@ -28,7 +28,7 @@ function GenericURI(uri) {
         scheme = x ? x[1]: '';
 
     function parseUri(str) {
-        var parser = /^(?:\/\/((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?(((\/?(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/,
+        var parser = /^(?:\/\/((?:(([^:@\/]*)(?::([^:@\/]*))?)?@)?([^:\/?#]*)(?::(\d*))?))?(((\/?(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/,
             parserKeys = ["source", "authority", "userInfo", "user", "password", "host", "port", "relative", "path", "directory", "file", "query", "fragment"],
             m = parser.exec(str || ''),
             parts = {};
@@ -114,7 +114,7 @@ function HttpURI(uri) {
  */
 
     function parseUri(str) {
-        var parser = /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/,
+        var parser = /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@\/]*)(?::([^:@\/]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/,
             parserKeys = ["source", "scheme", "authority", "userInfo", "user", "password", "host", "port", "relative", "path", "directory", "file", "query", "fragment"],
             m = parser.exec(str || ''),
             parts = {};
@@ -253,39 +253,3 @@ HttpURI.prototype.clone = function() {
 URI.register_uri_parser('http', HttpURI);
 URI.register_uri_parser('https', HttpURI);
 URI.register_uri_parser('file', HttpURI);
-
-/* Testing
-function inherit(sub, base) {
-    sub.prototype = Object.create(base.prototype);
-    sub.prototype.constructor = sub;
-    sub.base = base;
-}
-var u = URI.parse('http://user1:pass1@foo.bar/a/b/c?q1=1&q2=2#frag1=v1,frag2=v2');
-var v = URI.parse('//foo/bar?q1=1&q2=2#frag1=v1');
-var w = URI.parse('foo/bar?q1=1&q2=2#frag1=v1');
-var x = URI.parse('/foo/bar?q1=1&q2=2#frag1=v1');
-var x2 = URI.parse('http://foo.bar');
-var x3 = URI.parse('../');
-var x4 = URI.parse('../../../../');
-
-console.log(v.parts);
-console.log(u.parts);
-console.log(w.parts);
-console.log(x.parts);
-console.log(u.resolve(v));
-console.log(u.resolve(x4));
-console.log(u.resolve(x3));
-console.log(u.setFragment('').toString());
-
-var f1 = URI.parse('http://www.freebsd.org');
-var f2 = URI.parse('.');
-var f3 = URI.parse('./');
-var f4 = URI.parse('./foo/bar/baz.html');
-
-console.log(f1.resolve(f2));
-console.log(f1.resolve(f3));
-console.log(f1.resolve(f4));
-var k1 = URI.parse('https://www.kernel.org/pub/');
-var k2 = URI.parse('dist/');
-console.log(k1.resolve(k2));
-*/
