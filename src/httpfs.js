@@ -16,15 +16,14 @@
  * TODO TextHtml reload
  */
 
-var HttpFS = function(opts, uri) {
+var HttpFS = function(mountopts, uri) {
     var self = this,
         Uri = URI.parse(uri),
         host = Uri.host();
 
-    HttpFS.base.call(this, {});
+    HttpFS.base.call(this, mountopts);
     self.uri = uri;
     self.Uri = Uri;
-    self.opts = opts;
     self.tx = VFS.lookup_tx(self.opts.tx);
 };
 

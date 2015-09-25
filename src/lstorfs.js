@@ -105,9 +105,8 @@ LstorFile.prototype.rm = function(name, opts, cb) {
 };
 
 var LstorFS = function(obj, opts) {
-    LstorFS.base.call(this);
+    LstorFS.base.call(this, opts);
     this.lstor = window.localStorage; // Object we are shadowing
-    this.opts = $.extend({}, opts);
     var rootfile = {
         name: '/',
         ident: 'lstor:/',

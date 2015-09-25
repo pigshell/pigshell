@@ -25,7 +25,10 @@ PstyFS.defaults = {
     bdlmime: "application/vnd.pigshell.bundle",
     bdlext: "bdl",
     linkmime: "application/vnd.pigshell.link",
-    linkext: "href"
+    linkext: "href",
+    "application/vnd.pigshell.dir": {
+        "cache_time": 5 * 1000 /* 5 seconds */
+    }
 };
 
 var PstyFile = function() {
@@ -150,20 +153,6 @@ PstyFile.prototype.putdir = mkblob(function(file, blob, opts, cb) {
         return cb(null, null);
     }));
 });
-
-PstyFile.prototype.link2 = function(file, name, opts, cb) {
-    var self = this,
-        form = new FormData();
-
-    form.append("op", "link");
-    form.append("name", name);
-    // YYY Serialize
-    form.append("data", '{"ident": "' + file.ident + '"}');
-
-    self.fs.tx.POST(self.ident, form, opts, pef(cb, function(res) {
-        return cb(null, null);
-    }));
-};
 
 PstyFile.prototype.link = function(str, linkname, opts, cb) {
     var self = this;

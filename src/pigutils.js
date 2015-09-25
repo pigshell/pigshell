@@ -769,6 +769,17 @@ function optstr_parse(str, parsenum) {
     return opts;
 }
 
+function optstr_make(obj) {
+    var opts = [];
+    for (var k in obj) {
+        if (typeof obj[k] === "object") {
+           return JSON.stringify(obj);
+        }
+        opts.push(k + "=" + obj[k]);
+    }
+    return opts.toString();
+}
+
 /*
  * Strict encoding of URI component
  */

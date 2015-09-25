@@ -167,9 +167,8 @@ JsonFile.prototype.notify = function(nlist, name, op) {
 };
 
 var JsonFS = function(obj, opts) {
-    JsonFS.base.call(this);
+    JsonFS.base.call(this, opts);
     this.obj = obj; // Object we are shadowing
-    this.opts = $.extend({}, opts);
     var rootfile = {
         name: '/',
         ident: opts.rootident || '/',

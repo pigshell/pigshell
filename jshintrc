@@ -191,6 +191,7 @@
     "dec_uri": false,
     "enc_uri_path": false,
     "cookbdl": false,
-    "islink": false
+    "islink": false,
+    "optstr_make": false
     }
 }

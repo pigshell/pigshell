@@ -9,12 +9,11 @@
  * by untarring a remote root.tar.
  */
 
-var RamFS = function(opts, uri, rootfile) {
+var RamFS = function(mountopts, uri, rootfile) {
     var self = this,
         Uri = URI.parse(uri);
 
-    RamFS.base.apply(this);
-    self.opts = opts;
+    RamFS.base.apply(this, mountopts);
     self.uri = uri;
     self.Uri = Uri;
 

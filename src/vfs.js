@@ -57,7 +57,7 @@ var VFS = {
         if (!handler) {
             return cb(E('EPROTONOSUPPORT'));
         }
-        mountopts = $.extend(true, {}, handler.defaults, entry.opts, mountopts);
+        mountopts = $.extend(true, {}, entry.opts, mountopts);
         var opts2 = $.extend({}, opts, {mountopts: mountopts});
 
         return handler.lookup_uri(url, opts2, cb);
@@ -141,6 +141,7 @@ function lookup_handler(list, pattern) {
 var Filesystem = function(mountopts) {
     this.root = undefined; 
     this.mountopts = mountopts || {};
+    this.opts = $.extend(true, this.constructor.defaults, this.mountopts);
 }; 
 
 var File = function() {
@@ -232,13 +233,20 @@ File.prototype.search = function(name, opts, cb) {
 
 File.prototype.getlink = function() {
     var self = this,
-        u = URI.parse(self.ident),
+        url = self.ident,
+        u = URI.parse(url),
         scheme = u.scheme(),
-        str = '<a href="';
+        str = '<a href="',
+        fsopts = self.fs.mountopts;
+
+    if (fsopts && Object.keys(fsopts).length) {
+        u.fragment(optstr_make(fsopts));
+        url = u.toString();
+    }
     if (scheme !== "http" && scheme !== "https") {
-        str += '" data-ident="' + self.ident + '">';
+        str += '" data-ident="' + url + '">';
     } else {
-        str += self.ident + '">';
+        str += url + '">';
     }
     str += "{{name}}</a>";
     return str;
