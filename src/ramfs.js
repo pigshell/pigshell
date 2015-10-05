@@ -13,7 +13,7 @@ var RamFS = function(mountopts, uri, rootfile) {
     var self = this,
         Uri = URI.parse(uri);
 
-    RamFS.base.apply(this, mountopts);
+    RamFS.base.apply(this, [mountopts]);
     self.uri = uri;
     self.Uri = Uri;
 
@@ -105,7 +105,7 @@ RamFS.prototype.lookup_rfile = function(path, opts, cb) {
 RamFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
     dfilename, opts, cb) {
     var self = this,
-        sfpath = URI.parse(srcfile.ident).path(),
+        sfpath = URI.parse(fstack_base(srcfile).ident).path(),
         sdpath = URI.parse(srcdir.ident).path(),
         dpath = URI.parse(dstdir.ident).path();
 

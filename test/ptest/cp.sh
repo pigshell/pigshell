@@ -35,7 +35,7 @@ function partcp {
 }
 
 # bundle targetdir checkdir num
-function bundle {
+function bundletest {
     URL=http://pigshell.com/sample/bundletest.html
     MNT_NOBDL=/tmp/nobundle
 
@@ -57,6 +57,58 @@ function bundle {
     ls -F $MNT_NOBDL >/dev/null
     [ -d $MNT_NOBDL/bundletest.bdl ]
     dont_expect $? true cp.$3.5
+
+    # TODO
+    # bundle mv
+}
+
+function linktest {
+    URL=http://pigshell.com/sample/bundletest.html
+    MNT_NOLINK=/tmp/nolink
+    DEST=$1
+
+    mkdir $MNT_NOLINK 2>/dev/null
+    umount $MNT_NOLINK 2>/dev/null
+
+    LURL=$(ls -d $DEST | jf 'x.ident')
+    mount -o linkmime= $LURL $MNT_NOLINK
+
+    link $SAMPLEDIR $DEST/samplelink
+    expect $? true cp.$2.1
+    cat $MNT_NOLINK/samplelink.href >$RESDIR/cp.$2.2
+    dcheck $? true cp.$2.2
+    cmpdir $SAMPLEDIR $DEST/samplelink 
+    expect $? true cp.$2.3
+
+    mkdir $DEST/linkdir1 $DEST/linkdir2 2>/dev/null
+
+    link $SAMPLEDIR/* $DEST/linkdir1
+    expect $? true cp.$2.4
+    cmpdir $SAMPLEDIR $DEST/linkdir1 debug
+    expect $? true cp.$2.5
+
+    ls $SAMPLEDIR | link $DEST/linkdir2
+    expect $? true cp.$2.6
+    cmpdir $SAMPLEDIR $DEST/linkdir2 debug
+    expect $? true cp.$2.7
+
+    link $URL $DEST/ulink
+    cat $DEST/ulink | to text > $RESDIR/cp.$2.8
+    dcheck $? true cp.$2.8
+
+    rm $DEST/ulink
+    expect $? true cp.$2.9
+    ls -F $MNT_NOLINK >/dev/null
+    [ -d $MNT_NOLINK/ulink.href ]
+    dont_expect $? true cp.$2.10
+
+    rm -r $DEST/linkdir1
+    expect $? true cp.$2.11
+    [ -f $SAMPLEDIR/bundletest.html ]
+    expect $? true cp.$2.12
+
+    # TODO
+    # link mv
 }
 
 function pstyfs_test {
@@ -64,37 +116,40 @@ function pstyfs_test {
     TMP1=$TMP0/cptest1
     TMP2=$TMP0/cptest2
     TMP3=$TMP0/bundletest1
+    TMP4=$TMP0/linktest1
 
     PSTYFS_URL=http://localhost:50937/
 
-    mkdir $TMP0 $TMP1 $TMP2 $TMP3 2>/dev/null
+    mkdir $TMP0 $TMP1 $TMP2 $TMP3 $TMP4 2>/dev/null
     rm -r $TMP1/*  2>/dev/null
     rm -r $TMP2/* 2>/dev/null
     rm -r $TMP3/* 2>/dev/null
+    rm -r $TMP4/* 2>/dev/null
 
     simplercp $SAMPLEDIR/ $TMP1 $TMP1 pstyfs.slash
     simplercp $SAMPLEDIR $TMP2 $TMP2/sample pstyfs.noslash
 
     partcp $SAMPLEDIR/clickingofcuthbert.pdf $TMP0/clickingofcuthbert.pdf pstyfs.partcp
 
-    bundle $TMP3 $REFDIR/cptest/bundletest1/bundletest pstyfs.bundle
+    bundletest $TMP3 $REFDIR/cptest/bundletest1/bundletest pstyfs.bundle
+    linktest $TMP4 pstyfs.link
 }
 
 function ramfs_test {
-    TMP1=$TMP/cptest1
-    TMP2=$TMP/cptest2
-    TMP3=$TMP/bundletest1
+    CPTMP=($TMP/cptest1 $TMP/cptest2 $TMP/bundletest1 $TMP/linktest1)
 
-    mkdir $TMP $TMP1 $TMP2 $TMP3 
+    rm -r $CPTMP 2>/dev/null
+    mkdir $TMP $CPTMP
 
     # With trailing slash, should copy contents
-    simplercp $SAMPLEDIR/ $TMP1 $TMP1 ramfs.slash
+    simplercp $SAMPLEDIR/ $CPTMP(0) $CPTMP(0) ramfs.slash
     # Without trailing slash, should copy directory as well
-    simplercp $SAMPLEDIR $TMP2 $TMP2/sample ramfs.noslash
+    simplercp $SAMPLEDIR $CPTMP(1) $CPTMP(1)/sample ramfs.noslash
 
     partcp $SAMPLEDIR/clickingofcuthbert.pdf $TMP/clickingofcuthbert.pdf ramfs.partcp
 
-    bundle $TMP3 $REFDIR/cptest/bundletest1/bundletest ramfs.bundle
+    bundletest $CPTMP(2) $REFDIR/cptest/bundletest1/bundletest ramfs.bundle
+    linktest $CPTMP(3) ramfs.link
 }
 
 # GDrive as source

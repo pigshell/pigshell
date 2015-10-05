@@ -141,7 +141,7 @@ function lookup_handler(list, pattern) {
 var Filesystem = function(mountopts) {
     this.root = undefined; 
     this.mountopts = mountopts || {};
-    this.opts = $.extend(true, this.constructor.defaults, this.mountopts);
+    this.opts = $.extend(true, {}, this.constructor.defaults, this.mountopts);
 }; 
 
 var File = function() {

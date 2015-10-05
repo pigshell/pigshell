@@ -21,6 +21,7 @@ inherit(PstyFS, HttpFS);
 PstyFS.lookup_uri = HttpFS.lookup_uri;
 
 PstyFS.defaults = {
+    tx: "direct",
     dirmime: "application/vnd.pigshell.dir",
     bdlmime: "application/vnd.pigshell.bundle",
     bdlext: "bdl",
@@ -44,20 +45,22 @@ PstyFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
     dfilename, opts, cb) {
     var self = this,
         form = new FormData(),
-        spath = URI.parse(srcfile.ident).path(),
+        sfile = fstack_base(srcfile),
+        spath = URI.parse(sfile.ident).path(),
         dpath = URI.parse(dstdir.ident).path();
 
     spath = spath.replace(/\/*$/, '');
     dpath = pathjoin(dpath, dfilename);
-    // XXX Bundle knowledge here isn't nice
-    if (spath.match(/\.bdl$/)) {
-        dpath = dpath + '.bdl';
+    if (self.bdlre && spath.match(self.bdlre)) {
+        dpath = dpath + "." + self.opts.bdlext;
+    } else if (self.linkre && spath.match(self.linkre)) {
+        dpath = dpath + "." + self.opts.linkext;
     }
     form.append("op", "rename");
     form.append("src", spath);
     form.append("dst", dpath);
 
-    self.tx.POST(srcfile.ident, form, opts, pef(cb, function(res) {
+    self.tx.POST(sfile.ident, form, opts, pef(cb, function(res) {
         fstack_invaldir(srcdir);
         fstack_invaldir(dstdir);
         return cb(null, null);
@@ -157,6 +160,9 @@ PstyFile.prototype.putdir = mkblob(function(file, blob, opts, cb) {
 PstyFile.prototype.link = function(str, linkname, opts, cb) {
     var self = this;
 
+    if (!self.fs.opts.linkmime) {
+        return cb(E("ENOSYS"));
+    }
     return self.putdir(linkname + "." + self.fs.opts.linkext, str, opts, cb);
 };
 
@@ -207,5 +213,5 @@ PstyFile.prototype.mkdir = function(file, opts, cb) {
 };
 
 VFS.register_handler("PstyFS", PstyFS);
-VFS.register_uri_handler("http://localhost:50937", "PstyFS", {"tx": "direct"});
+VFS.register_uri_handler("http://localhost:50937", "PstyFS", {});
 VFS.register_media_handler("application/vnd.pigshell.link", "HttpLink", {});
