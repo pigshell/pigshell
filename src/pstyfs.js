@@ -189,11 +189,13 @@ PstyFile.prototype.append = function(item, opts, cb) {
 };
 
 PstyFile.prototype.rm = function(file, opts, cb) {
+    assert("PstyFile.rm.1", file instanceof PstyFile, file);
     var self = this,
-        form = new FormData();
+        form = new FormData(),
+        name = dec_uri(basenamedir(file.ident));
 
     form.append("op", "rm");
-    form.append("filename", file);
+    form.append("filename", name);
 
     self.fs.tx.POST(self.ident, form, opts, pef(cb, function(res) {
         return cb(null, null);

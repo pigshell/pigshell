@@ -113,6 +113,12 @@ RamFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
         /* Parent cannot be moved into child */
         return cb(E('EINVAL'));
     }
+    if (self.bdlre && sfpath.match(self.bdlre)) {
+        dfilename = dfilename + "." + self.opts.bdlext;
+    } else if (self.linkre && sfpath.match(self.linkre)) {
+        dfilename = dfilename + "." + self.opts.linkext;
+    }
+    sfilename = basenamedir(sfpath);
     self.lookup_rfile(sdpath, opts, ef(cb, function(rf_srcdir) {
         self.lookup_rfile(dpath, opts, ef(cb, function(rf_dstdir) {
             var f = rf_srcdir.data[sfilename];
@@ -249,16 +255,18 @@ RamFile.prototype.append = function(item, opts, cb) {
     }));
 };
 
-RamFile.prototype.rm = function(filename, opts, cb) {
+RamFile.prototype.rm = function(file, opts, cb) {
+    assert("RamFile.rm.1", file instanceof RamFile, file);
+
     var self = this,
         u = URI.parse(self.ident),
-        efname = encodeURIComponent(filename);
+        filename = basenamedir(file.ident);
 
     self.fs.lookup_rfile(u.path(), opts, ef(cb, function(rfile) {
         if (rfile.meta.mime !== self.fs.opts.dirmime) {
             return cb(E('ENOTDIR'));
         }
-        var file = rfile.data[efname];
+        var file = rfile.data[filename];
         if (file === undefined) {
             return cb(E('ENOENT'));
         }
@@ -266,7 +274,7 @@ RamFile.prototype.rm = function(filename, opts, cb) {
             Object.keys(file.data).length) {
             return cb(E('ENOTEMPTY'));
         }
-        delete rfile.data[efname];
+        delete rfile.data[filename];
         rfile.meta.mtime = rfile.meta.cookie = Date.now();
         return cb(null, null);
     }));

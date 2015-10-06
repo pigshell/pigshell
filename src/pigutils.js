@@ -850,6 +850,71 @@ function islink(file) {
 }
 
 /*
+ * Copy a file, streaming if possible.
+ * Target directory object, target name, srcfile object
+ */
+
+function simplecp(tdir, tname, sfile, opts, cb) {
+    var chunksize = opts.chunksize || 65536,
+        context = opts.context;
+
+    assert("simplecp.1", context, opts);
+
+    if (typeof sfile.read !== 'function') {
+        return cb(E('ENOSYS'));
+    }
+    var fc = tdir.fs.constructor.fileclass,
+        do_stream = fc && fc.prototype.hasOwnProperty('append') && (sfile.size > chunksize || opts.range);
+    if (opts.range) {
+        if (!do_stream) {
+            return cb(E('EINVAL'));
+        }
+    }
+
+    tdir.lookup(tname, opts, function(err, res) {
+        if (do_stream && (err || !opts.resume)) {
+            /* in streaming, we use append. so create a 0 length file */
+            var popts = $.extend({}, opts, {mime: sfile.mime});
+            tdir.putdir(tname, [''], popts, ef(cb, function() {
+                tdir.lookup(tname, opts, ef(cb, cp3));
+            }));
+        } else {
+            return cp3(res);
+        }
+    });
+
+    function cp3(tfile) {
+        var opts = $.extend({}, opts, {chunksize: chunksize});
+            
+        if (tfile && opts.resume && !opts.range) {
+            if (sfile.size > 0) {
+                if (sfile.size === tfile.size) {
+                    return cb(null, null, {status: 'skipped', more: 'size check'});
+                }
+                opts.range = {off: tfile.size, len: -1};
+            } else if (sfile.mtime <= tfile.mtime) {
+                return cb(null, null, {status: 'skipped', more: 'mtime check'});
+            }
+        }
+        if (do_stream) {
+            var tfbase = fstack_base(tfile);
+            fproc.call(context, sfile, opts, function(res, range, acb) {
+                var ftop = fstack_top(tfbase);
+                ftop.append(res, opts, ef(cb, acb));
+            }, function(err, res, stats) {
+               //fstack_invaldir(tdir); // Hack to get ls see updated size
+               return cb.apply(null, arguments);
+            });
+        } else {
+            var popts = $.extend({}, opts, {mime: sfile.mime});
+            sfile.read(opts, ef(cb, function(data) {
+                tdir.putdir(tname, [data], popts, cb);
+            }));
+        }
+    }
+}
+
+/*
  * To be used by commands for processing a large file chunk by chunk
  * using a worker function. This is good for streaming operations like
  * copy, checksum etc. which don't need the file all at once in memory.
@@ -964,47 +1029,13 @@ function restoretree(obj, opts, cb) {
         context = opts.context,
         fnamelist = Object.keys(obj);
 
-    function streamcp(tname, sfile, cb) {
-        self.lookup(tname, opts, function(err, res) {
-            if (!err && opts['resume']) {
-                return cp3(res);
-            }
-            self.putdir(tname, [''], opts, ef(cb, function() {
-                self.lookup(tname, opts, ef(cb, cp3));
-            }));
-        });
-
-        function cp3(tfile) {
-            var opts3 = $.extend({}, opts),
-                basefile = fstack_base(tfile);
-                
-            if (opts['resume']) {
-                if (sfile.size > 0) {
-                    opts3.range = {off: basefile.size, len: -1};
-                } else if (sfile.mtime <= tfile.mtime) {
-                    return cb(null, null, {status: 'skipped', more: 'mtime check'});
-                }
-            }
-            fproc.call(context, sfile, opts, function(res, range, acb) {
-                basefile.append(res, opts, ef(cb, acb));
-            }, cb);
-        }
-    }
-
     async.forEachSeries(fnamelist, function(fname, acb) {
         var data = obj[fname];
 
         if (data instanceof File) {
-            streamcp(fname, data, acb);
+            simplecp(self, fname, data, opts, acb);
         } else if (isstring(data)) {
-            self.lookup(fname, opts, function(err, res) {
-                if (!err && opts['resume']) {
-                    var basefile = fstack_base(res);
-                    return basefile.append(data.slice(basefile.size), opts, ef(cb, acb));
-                } else {
-                    return self.putdir(fname, [data], opts, ef(cb, acb));
-                }
-            });
+            return self.putdir(fname, [data], opts, ef(cb, acb));
         } else {
             try {
                 var k = Object.keys(data);
@@ -1028,39 +1059,6 @@ function restoretree(obj, opts, cb) {
     }, function(err) {
         return cb(err);
     });
-}
-
-function rmtree(file, opts, cb)
-{
-    var self = this;
-
-    if (!isrealdir(file)) {
-        return cb(null, null);
-    }
-
-    file.readdir(opts, ef(cb, function(files) {
-        var fnames = Object.keys(files);
-        async.forEachSeries(fnames, function(fname, acb) {
-            var f = files[fname];
-            if (isrealdir(f)) {
-                rmtree(f, opts, function(err) {
-                    if (!err) {
-                        file.rm(fname, opts, function() {
-                            return acb(null);
-                        });
-                    } else {
-                        return acb(null);
-                    }
-                });
-            } else {
-                file.rm(fname, opts, function() {
-                    return acb(null);
-                });
-            }
-        }, function(err) {
-            return cb(err);
-        });
-    }));
 }
 
 /*
@@ -1757,17 +1755,18 @@ function getcsl(obj, cb) {
  * Check if file is a bundle or a link, adjust name accordingly
  */
 
-function cookbdl(file, raw) {
+function cookbdl(file, raw, namefield) {
+    namefield = namefield || "name";
     if (file.fs.bdlre && raw.mime === file.fs.opts.dirmime) {
-        var match = raw.name.match(file.fs.bdlre);
+        var match = raw[namefield].match(file.fs.bdlre);
         if (match) {
-            raw.name = match[1];
+            raw[namefield] = match[1];
             raw._isbundle = true;
         }
     } else if (file.fs.linkre && raw.mime !== file.fs.opts.dirmime) {
-        var match = raw.name.match(file.fs.linkre);
+        var match = raw[namefield].match(file.fs.linkre);
         if (match) {
-            raw.name = match[1];
+            raw[namefield] = match[1];
             raw.mime = file.fs.opts.linkmime;
         }
     }

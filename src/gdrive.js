@@ -7,13 +7,21 @@ var GDriveFS = function(opts, uri) {
     GDriveFS.base.call(this, opts, uri);
     this.baseuri = "https://www.googleapis.com/drive/v2/files";
     this.rootraw = null;
+    this.bdlre = this.opts.bdlmime ? new RegExp("(.*)\\." + this.opts.bdlext + "$", "i") : null;
+    this.linkre = this.opts.linkmime ? new RegExp("(.*)\\." + this.opts.linkext + "$", "i") : null;
 };
 
 inherit(GDriveFS, HttpFS);
 
-GDriveFS.defaults = {"tx": "fallthrough"};
+GDriveFS.defaults = {
+    tx: "fallthrough",
+    dirmime: "application/vnd.google-apps.folder",
+    bdlmime: "application/vnd.pigshell.bundle",
+    bdlext: "bdl",
+    linkmime: "application/vnd.pigshell.link",
+    linkext: "href"
+};
 
-GDriveFS.prototype.dirmime = 'application/vnd.google-apps.folder';
 GDriveFS.prototype.docmimes = [
     'application/vnd.google-apps.document',
     'application/vnd.google-apps.spreadsheet',
@@ -58,12 +66,17 @@ GDriveFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
         srcdirid = sdirb.raw.id,
         dstdirid = db.raw.id,
         parents = sfb.raw.parents.map(function(p) { return { id: p.id }; }),
-        meta = { title: dfilename },
         uri = self.baseuri + '/' + sfb.raw.id;
 
+    if (self.bdlre && sfb.raw.title.match(self.bdlre)) {
+        dfilename = dfilename + "." + self.opts.bdlext;
+    } else if (self.linkre && sfb.raw.title.match(self.linkre)) {
+        dfilename = dfilename + "." + self.opts.linkext;
+    }
+    var meta = {title: dfilename};
     if (srcdirid !== dstdirid) {
         parents = parents.filter(function(p) { return p.id !== srcdirid; });
-        parents.push({ id: dstdirid });
+        parents.push({id: dstdirid});
         meta.parents = parents;
     }
     self.tx.PATCH(uri, JSON.stringify(meta), bopts, ef(cb, function() {
@@ -118,17 +131,18 @@ GDriveFile.prototype.getmeta = function(opts, cb) {
 
 GDriveFile.prototype._raw2meta = function(raw) {
     var meta = {
-            raw: raw,
-            mime: raw.mimeType,
-            mtime: Date.parse(raw.modifiedTime || raw.modifiedDate),
-            ctime: Date.parse(raw.createdDate),
-            owner: raw.owners[0].displayName,
-            readable: true,
-            writable: raw.editable,
-            size: +raw.fileSize || 0,
-            ident: raw.selfLink,
-            title: raw.title
-        };
+        raw: raw,
+        mime: raw.mimeType,
+        mtime: Date.parse(raw.modifiedTime || raw.modifiedDate),
+        ctime: Date.parse(raw.createdDate),
+        owner: raw.owners[0].displayName,
+        readable: true,
+        writable: raw.editable,
+        size: +raw.fileSize || 0,
+        ident: raw.selfLink,
+        title: raw.title
+    };
+    cookbdl(this, meta, "title");
     return meta;
 };
 
@@ -193,7 +207,7 @@ GDriveFile.prototype.read = function(opts, cb) {
         }
         bopts.uri = links[0];
         return GDriveFile.base.prototype.read.call(self, bopts, cb);
-    } else if (mime === self.fs.dirmime) {
+    } else if (mime === self.fs.opts.dirmime) {
         var query = self._is_synthuri(self.ident) ?
             self.fs.synthdirs[self.ident].q :
             "'" + self.raw.id + "' in parents and trashed != true",
@@ -221,7 +235,6 @@ GDriveFile.prototype.read = function(opts, cb) {
         if (token) {
             opts2.params.pageToken = token;
         }
-        // TODO Handle directories with more than 1000 files
         self.fs.tx.GET(self.fs.baseuri, opts2, ef(cb, function(res) {
             var data = parse_json(res.response);
 
@@ -284,7 +297,7 @@ GDriveFile.prototype.mkdir = function(filename, opts, cb) {
         ufile = self._ufile,
         mime = ufile ? ufile.mime : null;
 
-    if (mime !== self.fs.dirmime || self._is_synthuri(self.ident)) {
+    if (mime !== self.fs.opts.dirmime || self._is_synthuri(self.ident)) {
         return cb(E('ENOSYS'));
     }
 
@@ -300,7 +313,7 @@ GDriveFile.prototype.mkdir = function(filename, opts, cb) {
         var data = JSON.stringify({
             "title": filename,
             "parents": [{"id": self.raw.id}],
-            "mimeType": self.fs.dirmime
+            "mimeType": self.fs.opts.dirmime
         });
 
         var tx = VFS.lookup_tx('proxy'),
@@ -312,44 +325,30 @@ GDriveFile.prototype.mkdir = function(filename, opts, cb) {
     }
 };
 
-GDriveFile.prototype.rm = function(filename, opts, cb) {
+GDriveFile.prototype.rm = function(file, opts, cb) {
+    assert("GDriveFile.rm.1", file instanceof GDriveFile, file);
+
     var self = this,
         headers = { 'Authorization': 'Bearer ' + self.fs.access_token() },
         bopts = {headers: headers},
         ufile = self._ufile,
+        b = fstack_base(file),
+        uri = self.fs.baseuri + '/' + b.raw.id + '/trash',
         mime = ufile ? ufile.mime : null;
 
-    if (!mime || mime !== self.fs.dirmime) {
+    if (!mime || mime !== self.fs.opts.dirmime) {
         return cb(E('ENOSYS'));
     }
 
-    function do_delete(uri) {
-        self.fs.tx.POST(uri, null, bopts, function(err, res) {
-            if (!err) {
-                self.populated = false;
-            }
-            return cb(err, res);
-        });
+    if (self._is_synthuri(b.ident)) {
+        return cb(E('EPERM'));
     }
-    ufile.lookup(filename, opts, ef(cb, function(file) {
-        var b = fstack_base(file),
-            uri = self.fs.baseuri + '/' + b.raw.id + '/trash';
-
-        if (self._is_synthuri(b.ident)) {
-            return cb(E('EPERM'));
+    self.fs.tx.POST(uri, null, bopts, function(err) {
+        if (err) {
+            return cb(E('EINVAL'));
         }
-        if (file.mime === self.fs.dirmime) {
-            file.readdir(opts, ef(cb, function(files) {
-                if (Object.keys(files).length) {
-                    return cb(E('ENOTEMPTY'));
-                } else {
-                    return do_delete(uri);
-                }
-            }));
-        } else {
-            return do_delete(uri);
-        }
-    }));
+        return cb(null, null);
+    });
 };
 
 GDriveFile.prototype.putdir = mkblob(function(filename, blob, opts, cb) {
@@ -364,7 +363,7 @@ GDriveFile.prototype.putdir = mkblob(function(filename, blob, opts, cb) {
         conv = opts.gdrive ? opts.gdrive.convert : false,
         uri = "https://www.googleapis.com/upload/drive/v2/files";
 
-    if (!mime || mime !== self.fs.dirmime) {
+    if (!mime || mime !== self.fs.opts.dirmime) {
         return cb(E('ENOSYS'));
     }
 
@@ -448,6 +447,15 @@ GDriveFile.prototype.putdir = mkblob(function(filename, blob, opts, cb) {
         }));
     }
 });
+
+GDriveFile.prototype.link = function(str, linkname, opts, cb) {
+    var self = this;
+
+    if (!self.fs.opts.linkmime) {
+        return cb(E("ENOSYS"));
+    }
+    return self.putdir(linkname + "." + self.fs.opts.linkext, str, opts, cb);
+};
 
 VFS.register_handler("GDriveFS", GDriveFS);
 VFS.register_handler("GDriveDoc", GDriveDoc);

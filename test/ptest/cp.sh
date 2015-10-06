@@ -46,20 +46,26 @@ function bundletest {
     dcheck $? true cp.$3.1
 
     BURL=$(ls -d $1 | jf 'x.ident')
-    mount -o bdlmime= $BURL $MNT_NOBDL
+    mount -o $"4^bdlmime= $BURL $MNT_NOBDL
     cmpdir $2 $MNT_NOBDL/bundletest.bdl debug
     expect $? true cp.$3.2
     cat $1/bundletest | to text > $RESDIR/cp.$3.3
     dcheck $? true cp.$3.3
 
-    rm $1/bundletest
+    mv $1/bundletest $1/bundletest2
     expect $? true cp.$3.4
     ls -F $MNT_NOBDL >/dev/null
-    [ -d $MNT_NOBDL/bundletest.bdl ]
-    dont_expect $? true cp.$3.5
+    cmpdir $2 $MNT_NOBDL/bundletest2.bdl debug
+    expect $? true cp.$3.5
+    cat $1/bundletest2 | to text > $RESDIR/cp.$3.6
+    dcheck $? true cp.$3.6
 
-    # TODO
-    # bundle mv
+    rm $1/bundletest2
+    expect $? true cp.$3.7
+    ls -F $MNT_NOBDL >/dev/null
+    [ -d $MNT_NOBDL/bundletest2.bdl ]
+    dont_expect $? true cp.$3.8
+
 }
 
 function linktest {
@@ -71,7 +77,7 @@ function linktest {
     umount $MNT_NOLINK 2>/dev/null
 
     LURL=$(ls -d $DEST | jf 'x.ident')
-    mount -o linkmime= $LURL $MNT_NOLINK
+    mount -o $"3^linkmime= $LURL $MNT_NOLINK
 
     link $SAMPLEDIR $DEST/samplelink
     expect $? true cp.$2.1
@@ -96,19 +102,24 @@ function linktest {
     cat $DEST/ulink | to text > $RESDIR/cp.$2.8
     dcheck $? true cp.$2.8
 
-    rm $DEST/ulink
+    mv $DEST/ulink $DEST/ulink2
     expect $? true cp.$2.9
     ls -F $MNT_NOLINK >/dev/null
-    [ -d $MNT_NOLINK/ulink.href ]
-    dont_expect $? true cp.$2.10
+    [ -f $MNT_NOLINK/ulink2.href ]
+    expect $? true cp.$2.10
+    cat $DEST/ulink2 | to text > $RESDIR/cp.$2.11
+    dcheck $? true cp.$2.11
+
+    rm $DEST/ulink2
+    expect $? true cp.$2.12
+    ls -F $MNT_NOLINK >/dev/null
+    [ -f $MNT_NOLINK/ulink2.href ]
+    dont_expect $? true cp.$2.13
 
     rm -r $DEST/linkdir1
-    expect $? true cp.$2.11
+    expect $? true cp.$2.14
     [ -f $SAMPLEDIR/bundletest.html ]
-    expect $? true cp.$2.12
-
-    # TODO
-    # link mv
+    expect $? true cp.$2.15
 }
 
 function pstyfs_test {
@@ -150,6 +161,20 @@ function ramfs_test {
 
     bundletest $CPTMP(2) $REFDIR/cptest/bundletest1/bundletest ramfs.bundle
     linktest $CPTMP(3) ramfs.link
+}
+
+function dropbox_test {
+    DTMP=/dropbox/$DROPBOXUSER/pigshell-test
+    CPTMP=($DTMP/cptest1 $DTMP/bundletest1 $DTMP/linktest1)
+
+    if ! [ -d $"DTMP ]; then echo "DROPBOXUSER not available; skipping"; return; fi
+
+    rm -r $DTMP/* 2>/dev/null
+    mkdir $CPTMP 2>/dev/null
+    
+    simplercp $SAMPLEDIR $CPTMP(0) $CPTMP(0)/sample dropbox.noslash
+    bundletest $CPTMP(1) $REFDIR/cptest/bundletest1/bundletest dropbox.bundle user=$DROPBOXUSER,
+    linktest $CPTMP(2) dropbox.link user=$DROPBOXUSER,
 }
 
 # GDrive as source
@@ -229,4 +254,5 @@ function gdrivefs_doc_test {
 ramfs_test
 pstyfs_test
 gdrivefs_test
-gdrivefs_doc_test
+#gdrivefs_doc_test
+dropbox_test

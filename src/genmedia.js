@@ -225,8 +225,7 @@ Dir.prototype.rm = function(filename, opts, cb) {
 
     function rmbundle(file) {
         rmtree(file, opts, ef(cb, function() {
-            self._lfile.rm(filename + "." + self.fs.opts.bdlext, opts,
-                ef(cb, function(res) {
+            self._lfile.rm(fstack_base(file), opts, ef(cb, function(res) {
                     self.populated = false;
                     return cb.apply(null, arguments);
                 }));
@@ -234,7 +233,8 @@ Dir.prototype.rm = function(filename, opts, cb) {
     }
 
     self.lookup(filename, opts, ef(cb, function(file) {
-        var l1 = fstack_level(file, 1),
+        var l0 = fstack_base(file),
+            l1 = fstack_level(file, 1),
             l2 = fstack_level(file, 2);
 
         if (l1 && l2 && l1.mime === self.mime &&
@@ -250,19 +250,61 @@ Dir.prototype.rm = function(filename, opts, cb) {
                 return rmbundle(l1);
             }
         } else if (l1.mime === self.fs.opts.linkmime) {
-            return self._lfile.rm(filename + "." + self.fs.opts.linkext, opts,
-                ef(cb, function() {
+            return self._lfile.rm(l0, opts, ef(cb, function() {
                 self.populated = false;
                 return cb.apply(null, arguments);
             }));
+        } else if (isrealdir(file)) {
+            file.readdir(opts, ef(cb, function(files) {
+                if (Object.keys(files).length) {
+                    return cb(E('ENOTEMPTY'));
+                }
+                return self._lfile.rm(l0, opts, ef(cb, function() {
+                    self.populated = false;
+                    return cb.apply(null, arguments);
+                }));
+            }));
         } else {
-            return self._lfile.rm(file.name, opts, ef(cb, function(res) {
+            return self._lfile.rm(l0, opts, ef(cb, function(res) {
                 self.populated = false;
                 return cb.apply(null, arguments);
             }));
         }
     }));
 };
+
+function rmtree(file, opts, cb)
+{
+    var self = this;
+
+    if (!isrealdir(file)) {
+        return cb(null, null);
+    }
+
+    file.readdir(opts, ef(cb, function(files) {
+        var fnames = Object.keys(files);
+        async.forEachSeries(fnames, function(fname, acb) {
+            var f = files[fname];
+            if (isrealdir(f)) {
+                rmtree(f, opts, function(err) {
+                    if (!err) {
+                        file.rm(fstack_base(f), opts, function() {
+                            return acb(null);
+                        });
+                    } else {
+                        return acb(null);
+                    }
+                });
+            } else {
+                file.rm(fstack_base(f), opts, function() {
+                    return acb(null);
+                });
+            }
+        }, function(err) {
+            return cb(err);
+        });
+    }));
+}
 
 var Bundle = function(meta, opts) {
     this.mime = meta.mime || 'application/vnd.pigshell.bundle';
