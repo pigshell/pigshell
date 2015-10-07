@@ -31,7 +31,10 @@ RamFS.defaults = {
     bdlmime: "application/vnd.pigshell.bundle",
     bdlext: "bdl",
     linkmime: "application/vnd.pigshell.link",
-    linkext: "href"
+    linkext: "href",
+    "application/vnd.pigshell.dir": {
+        "cache_time": -1 /* Cache indefinitely */
+    }
 };
 
 RamFS.lookup_uri = function(uri, opts, cb) {

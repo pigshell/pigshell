@@ -32,7 +32,7 @@ inherit(Dir, MediaHandler);
 });
 
 Dir.defaults = {
-    cache_time: 0, /* Cache for x milliseconds */
+    cache_time: 0, /* Cache for x milliseconds. -1 means cache indefinitely */
 };
 
 Dir.prototype.readdir = function(opts, cb) {
@@ -92,7 +92,7 @@ Dir.prototype.readdir = function(opts, cb) {
     if (ropts.page) {
         self.populated = false;
     }
-    if (!opts.nocache && self.populated && (!self.opts.cache_time ||
+    if (!opts.nocache && self.populated && (self.opts.cache_time < 0 ||
         self._update_time + self.opts.cache_time > Date.now())) {
         return cb(null, fstack_topfiles(self.files));
     }

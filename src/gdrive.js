@@ -19,7 +19,10 @@ GDriveFS.defaults = {
     bdlmime: "application/vnd.pigshell.bundle",
     bdlext: "bdl",
     linkmime: "application/vnd.pigshell.link",
-    linkext: "href"
+    linkext: "href",
+    "application/vnd.google-apps.folder": {
+        "cache_time": 5 * 60 * 1000 /* 5 minutes */
+    },
 };
 
 GDriveFS.prototype.docmimes = [
