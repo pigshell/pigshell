@@ -320,9 +320,9 @@ function basenamedir(path) {
     }
 }
 
-/* Normalize path by removing extra slashes */
+/* Normalize path by removing extra slashes, extra . */
 function pathnorm(path) {
-    return path.replace(/\/{2,}/g, '\/');
+    return path.replace(/\/{2,}/g, "\/").replace(/\/\.\//g, "\/");
 }
 
 function hasWildCard(string) {

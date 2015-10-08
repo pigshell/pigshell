@@ -46,7 +46,8 @@ Ls.prototype.usage = 'ls           -- list directory contents\n\n' +
     '    -P           Retrieve previous page of entries\n';
 
 Ls.prototype.next = check_next(do_docopt(function(opts, cb) {
-    var self = this;
+    var self = this,
+        pwd = self.pwd();
 
     function feed_sort(a, b) {
         return (b.file.mtime < a.file.mtime) ? -1 : ((b.file.mtime > a.file.mtime) ? 1 : 0);
@@ -160,12 +161,12 @@ Ls.prototype.next = check_next(do_docopt(function(opts, cb) {
                 sys.readdir(self, entry.file, {readdir: ropts},
                     function(err, files) {
                     if (err) {
-                        if (err.code === 'ESTACKMOD') {
+                        if (err.code === "ESTACKMOD") {
+                            /* Was a link which turned out to be a non-dir */
                             return self.output(format(entry));
                         }
                         self.retval = false;
                         self.errmsg(err, entry.path);
-                        //return self.output(format(entry));
                         return main();
                     }
 
@@ -179,42 +180,51 @@ Ls.prototype.next = check_next(do_docopt(function(opts, cb) {
                         return self.output(format(entry));
                     }
 
-                    var paths = Object.keys(files).map(function(i) {
-                        return isurl ? files[i].ident :
-                            pathjoin(entry.path, i);
-                        });
-                    if (isurl) {
-                        paths = paths.filter(function(e, i, s) {
-                            return s.indexOf(e) === i;
-                        });
-                    }
+                    var diruri = URI.parse(entry.file.ident),
+                        ns = self.shell.ns;
+
                     self.entries.push({depth: self.curdepth + 1});
-                    var diruri = URI.parse(entry.file.ident);
-                    lookup_files.call(self, {search: self.query}, paths, function(flist) {
-                        /*
-                         * Avoid crossing filesystems while recursing 
-                         */
-                        if (!self.docopts['-X']) {
-                            flist.forEach(function(e) {
-                                var euri = URI.parse(e.file.ident);
+
+                    var flist = Object.keys(files).map(function(fname) {
+                        var file = files[fname],
+                            path,
+                            e = {};
+                        if (!isurl) {
+                            path = pathjoin(entry.path, fname);
+                            var mntpt = ns.getmnt(pathjoin(pwd, path));
+                            if (mntpt) {
+                                if (self.docopts["-X"]) {
+                                    file = fstack_top(mntpt);
+                                } else {
+                                    e.nodescend = true;
+                                }
+                            }
+                        } else {
+                            path = file.ident;
+                            if (!self.docopts["-X"]) {
+                                var euri = URI.parse(file.ident);
                                 if (diruri.authority() !== euri.authority()) {
                                     e.nodescend = true;
                                 }
-                            });
-                        }
-                        if (self.docopts['<file>'].length === 1 && self.curdepth === 0) {
-                            queue_add(flist, isfeed);
-                            return self.state_func();
-                        } else {
-                            self.entries.push({spacer: '\n' + entry.path + ':\n'});
-                            queue_add(flist, isfeed);
-                            if (self.curdepth > 0) {
-                                return self.output(format(entry));
-                            } else {
-                                return self.state_func();
                             }
                         }
+                        e.file = file;
+                        e.path = path;
+                        return e;
                     });
+                    if (self.docopts['<file>'].length === 1 &&
+                        self.curdepth === 0) {
+                        queue_add(flist, isfeed);
+                        return self.state_func();
+                    } else {
+                        self.entries.push({spacer: '\n' + entry.path + ':\n'});
+                        queue_add(flist, isfeed);
+                        if (self.curdepth > 0) {
+                            return self.output(format(entry));
+                        } else {
+                            return self.state_func();
+                        }
+                    }
                 });
                 return;
             } else {

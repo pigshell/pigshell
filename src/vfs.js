@@ -489,6 +489,10 @@ Namespace.prototype.mountlist = function() {
     return this.mounts;
 };
 
+Namespace.prototype.getmnt = function(mntpath) {
+    return this.mounts[mntpath] ? this.mounts[mntpath].dir : null;
+};
+
 /*
  * "System" calls, meant to be called from the context of a command.
  */
