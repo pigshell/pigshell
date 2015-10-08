@@ -846,7 +846,7 @@ function isrealdir(file) {
 function islink(file) {
     var l1 = fstack_level(file, 1);
 
-    return l1 && l1.mime === file.fs.opts.linkmime;
+    return l1 && l1.mime === l1.fs.opts.linkmime;
 }
 
 /*

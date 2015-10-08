@@ -13,7 +13,7 @@ inherit(Test, Command);
 
 Test.prototype.usage2 = '%(cmd)s         -- test an expression\n\n' +
     'Usage:\n' +
-    '    %(cmd)s (-a|-f|-d|-r|-w) <path>%(end)s\n' +
+    '    %(cmd)s (-a|-f|-d|-r|-w|-L) <path>%(end)s\n' +
     '    %(cmd)s (-z|-n) <string>%(end)s\n' +
     '    %(cmd)s <string1> <op> <string2>%(end)s\n' +
     '    %(cmd)s <arg>%(end)s\n' +
@@ -24,6 +24,7 @@ Test.prototype.usage2 = '%(cmd)s         -- test an expression\n\n' +
     '    -a           File exists.\n' +
     '    -f           File exists and is a regular file.\n' +
     '    -d           File exists and is a directory.\n' +
+    '    -L           File exists and is a symbolic link.\n' +
     '    -r           File is readable.\n' +
     '    -w           File is writable.\n' +
     '    -z           String is empty.\n' +
@@ -113,7 +114,7 @@ Test.prototype.next = check_next(function() {
          * and self.exit would print an error message */
     }
 
-    var fileops = ['-a', '-f', '-d', '-r', '-w'],
+    var fileops = ['-a', '-f', '-d', '-r', '-w', '-L'],
         stringops = ['-z', '-n'];
 
     if (fileops.indexOf(op) != -1) {
@@ -134,6 +135,8 @@ Test.prototype.next = check_next(function() {
                 e = res.readable;
             } else if (op === '-w') {
                 e = res.writable;
+            } else if (op === '-L') {
+                e = islink(res);
             }
             return exit(e);
         });

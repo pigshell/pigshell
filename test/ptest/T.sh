@@ -148,3 +148,15 @@ T '1 + 1 === 2'
 expect $? true T.61
 T '1 + 1 === 3'
 dont_expect $? true T.62
+
+TESTLINK=/tmp/tlink.1
+T -L /
+dont_expect $? true T.63
+T -L $TESTFILE
+dont_expect $? true T.64
+link $TESTFILE $TESTLINK
+T -L $TESTLINK
+expect $? true T.65
+cat $TESTLINK >/dev/null
+T -L $TESTLINK
+expect $? true T.66
