@@ -83,7 +83,7 @@ Print.prototype.next = check_next(do_docopt(objargs(function() {
         */
         }
         f.fs = {};
-        mergeattr(f.fs, file.fs, ["opts", "uri"]);
+        mergeattr(f.fs, file.fs, ["mountopts", "uri"]);
         return JSON.stringify(f, null, 4);
     }
 
