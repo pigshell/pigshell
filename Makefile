@@ -13,10 +13,11 @@ RONN = ronn
 
 CURDIR = $(shell pwd)
 
+include local.mk
 VERSION_MAJOR = 0
-VERSION_MINOR = 6
-VERSION_PATCH = 3
-VERSION_TAG = 
+VERSION_MINOR = 7
+VERSION_PATCH = 0
+VERSION_TAG = -dev
 VERSION_STR = $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)$(VERSION_TAG)
 VERSION_GIT = $(shell git rev-list --max-count=1 HEAD)
 
@@ -27,6 +28,7 @@ CHECK_SOURCES = src/mimeMap.js\
     src/pigutils.js\
     src/cache.js\
     src/vfs.js\
+	src/env.js\
     src/jsonfs.js\
     src/uploads.js\
     src/downloads.js\
@@ -93,14 +95,10 @@ etc/httpd-vhosts.conf: etc/httpd-vhosts.conf.in src/version.js
 	sed 's,PATH_TO_PIGSHELL,$(CURDIR),g;s,PIGSHELL_VERSION,$(VERSION_STR),g' < $< >$@
 
 src/version.js: FORCE
-	@if [ -f $@ ]; then \
-		if [ X`sed 's/.*str:[^"]*"\([^"]*\).*/\1/' < $@` = X$(VERSION_STR) ] && \
-			[ X`sed 's/.*git:[^"]*"\([^"]*\).*/\1/' < $@` = X`git rev-list --max-count=1 HEAD` ]; then \
-			exit 0; \
-		fi; \
-	fi; \
-	printf '!function(){ var pigshell = {version: { str: "%s", major: %d, minor: %d, patch: %d, git: "%s" }};\n' $(VERSION_STR) $(VERSION_MAJOR) $(VERSION_MINOR) $(VERSION_PATCH) $(VERSION_GIT) >$@
-	
+	@printf '!function(){ var pigshell = {version: {str: "%s", major: %d, minor: %d, patch: %d, git: "%s"}, site: {name: "%s", url: "%s", env: "%s"}};\n' $(VERSION_STR) $(VERSION_MAJOR) $(VERSION_MINOR) $(VERSION_PATCH) $(VERSION_GIT) $(SITE_NAME) $(SITE_URL) $(SITE_ENV) >$@.mk
+	@cmp $@ $@.mk >/dev/null 2>&1 || mv $@.mk $@
+	@rm -f $@.mk 
+
 $(ROOT): src/root/bin src/root/usr src/root/etc src/root
 	tar --posix -c -C src/root --exclude .gitignore -f $@ .
 
