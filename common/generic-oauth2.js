@@ -15,6 +15,8 @@
  * dependent on any external libraries like jQuery.
  */
 
+(function() {
+
 function OAuth2(options) {
     this.options = {};
     var oauth2 = options.oauth2;
@@ -37,7 +39,7 @@ function OAuth2(options) {
 OAuth2.sendmsg = function() {
     var opener = window.opener || window.parent;
 
-    if (!opener) {
+    if (!opener || !opener.OAuth2) {
         console.log("Could not find opener?!");
         return;
     }
@@ -46,18 +48,18 @@ OAuth2.sendmsg = function() {
         search: window.location.search || '',
         hash: window.location.hash || ''
     };
-    opener.postMessage(msg, "http://pigshell.com");
+    opener.OAuth2.recvmsg(JSON.stringify(msg));
 };
 
-OAuth2.recvmsg = function(event) {
-    if (event.origin !== "http://pigshell.com" && event.origin !==
-        "https://pigshell.com") {
-        return;
+OAuth2.recvmsg = function(str) {
+    var msg;
+    try {
+        msg = JSON.parse(str);
+    } catch(e) {
     }
-    var msg = event.data;
     if (!msg || (msg.hash === undefined || msg.search === undefined ||
         !msg.name)) {
-        //console.log("Unknown message: ", msg);
+        console.log("Unknown message: ", msg);
         return;
     }
     var hp = parseqs(msg.hash.slice(1)),
@@ -102,7 +104,7 @@ function parseqs(str) {
 
 OAuth2.prototype.login = function(immediate) {
     var self = this;
-    self.state = Math.random().toString(32).substr(2);
+    self.state = Math.random().toString(36).substr(2);
     self.oauth2['state'] = self.state;
     self.name = self.name + self.state;
     if (window.__activeOA2 === undefined) {
@@ -170,13 +172,12 @@ OAuth2.prototype.cleanup = function() {
     if (window.__activeOA2) {
         delete window.__activeOA2[self.name];
     }
-    if (self.listener) {
-        window.removeEventListener("message", self.listener, false);
-    }
 };
 
 if (window.name.match(/^oauth2-win/)) {
     OAuth2.sendmsg();
 } else {
-    window.addEventListener("message", OAuth2.recvmsg, false);
+    window.OAuth2 = OAuth2;
 }
+
+})();
