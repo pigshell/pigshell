@@ -1,6 +1,6 @@
 echo pigshell $(uname -r)
 cat /etc/motd
-mount http://pigshell.com/v/$(uname -r)/usr/ /usr
+mount $(uname -u)/v/$(uname -r)/usr/ /usr
 if [ $? = true ]; then PATH=(/bin /usr/bin); fi
 sh -s /etc/profile
 

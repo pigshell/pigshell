@@ -435,8 +435,8 @@ VFS.register_handler("HttpLink", HttpLink);
 VFS.register_uri_handler("http", "HttpFS", {});
 VFS.register_uri_handler("https", "HttpFS", {});
 
-VFS.register_uri_handler("http://pigshell.com", "HttpFS", {"tx": "direct"});
-VFS.register_uri_handler("https://pigshell.com", "HttpFS", {"tx": "direct"});
+VFS.register_uri_handler("http://" + pigshell.site.name, "HttpFS", {"tx": "direct"});
+VFS.register_uri_handler("https://" + pigshell.site.name, "HttpFS", {"tx": "direct"});
 
 VFS.register_media_handler("text/html", "TextHtml", {});
 VFS.register_media_handler("text/vnd.pigshell.html+dir", "TextHtml", {"nodescend": false});

@@ -65,7 +65,7 @@ psty_options = {
     "enable_proxy": False,       # Enable proxy
     "enable_cookies": False,     # Borrow cookies from Chrome/Firefox,
                                  # set False to disable sending all cookies
-    "cors_allow": "http://pigshell.com"
+    "cors_allow": "http://dev.pigshell.com"
 
 # Change the cors_allow setting if you are running pigshell on your own
 # site. *** DO NOT, UNDER ANY CIRCUMSTANCES, SET THIS TO '*'. ***

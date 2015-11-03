@@ -122,7 +122,7 @@ var GoogleOAuth2 = {
                     'https://www.googleapis.com/auth/userinfo.email',
                     'https://www.googleapis.com/auth/drive',
                     'https://picasaweb.google.com/data/' ].join(' '),
-                'redirect_uri': 'http://pigshell.com/common/oauth2_redirect.html'
+                'redirect_uri': pigshell.site.url + '/common/oauth2_redirect.html'
             },
             options = {oauth2: opts2},
             go2, iframe;
@@ -292,7 +292,7 @@ var DropboxOAuth2 = {
         var self = this,
             opts2 = {
                 'client_id': 'ctc1idg9mu021c5',
-                'redirect_uri': 'https://pigshell.com/common/oauth2_redirect_https.html'
+                'redirect_uri': 'https://' + pigshell.site.name + '/common/oauth2_redirect_https.html'
             },
             options = {oauth2: opts2},
             go2;

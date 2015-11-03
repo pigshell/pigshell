@@ -10,7 +10,7 @@ function Chart(opts) {
 }
 
 inherit(Chart, Command);
-Chart.scripts = ["http://pigshell.com/common/d3.v3/d3.v3.min.js"];
+Chart.scripts = [pigshell.site.url + "/common/d3.v3/d3.v3.min.js"];
 
 Chart.prototype.usage = 'chart        -- generate chart\n\n' +
     'Usage:\n' +
