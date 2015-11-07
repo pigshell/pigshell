@@ -35,46 +35,26 @@ function OAuth2(options) {
 }
 
 OAuth2.sendmsg = function() {
-    var opener = window.opener || window.parent;
-
-    if (!opener) {
-        console.log("Could not find opener?!");
-        return;
-    }
-    var msg = {
-        name: window.name || '',
-        search: window.location.search || '',
-        hash: window.location.hash || ''
-    };
-    opener.postMessage(msg, "http://pigshell.com");
 };
 
-OAuth2.recvmsg = function(event) {
-    if (event.origin !== "http://pigshell.com" && event.origin !==
-        "https://pigshell.com") {
+OAuth2.prototype.recvmsg = function(event) {
+    if (event.origin !== "http://" + window.location.hostname &&
+        event.origin !== "https://" + window.location.hostname) {
         return;
     }
     var msg = event.data;
     if (!msg || (msg.hash === undefined || msg.search === undefined ||
-        !msg.name)) {
-        //console.log("Unknown message: ", msg);
+        !msg.name || msg.name !== this.name)) {
         return;
     }
     var hp = parseqs(msg.hash.slice(1)),
         sp = parseqs(msg.search.slice(1));
 
-    if (window.__activeOA2 && window.__activeOA2[msg.name]) {
-        var oa2 = window.__activeOA2[msg.name];
-        if (!hp['access_token'] && !hp['error'] && !sp['error']) {
-            console.log("Unknown message: ", msg);
-            return oa2.process_msg({'error': 'Unknown'});
-        }
-        if (sp['error']) {
-            return oa2.process_msg(sp);
-        } else {
-            return oa2.process_msg(hp);
-        }
+    if (!hp['access_token'] && !hp['error'] && !sp['error']) {
+        console.log("Unknown message: ", msg);
+        return this.process_msg({'error': 'Unknown'});
     }
+    this.process_msg(sp.error ? sp : hp);
 };
 
 function makeqs(opts) {
@@ -102,16 +82,14 @@ function parseqs(str) {
 
 OAuth2.prototype.login = function(immediate) {
     var self = this;
-    self.state = Math.random().toString(32).substr(2);
+    self.state = Math.random().toString(36).substr(2);
     self.oauth2['state'] = self.state;
     self.name = self.name + self.state;
-    if (window.__activeOA2 === undefined) {
-        window.__activeOA2 = {};
-    }
-    window.__activeOA2[self.name] = self;
     var qs = makeqs(self.oauth2),
         url = self.url + '?' + qs;
 
+    self.listener = self.recvmsg.bind(self);
+    window.addEventListener("message", self.listener, false);
     self.timer = setTimeout(function() {
         self.cleanup();
         if (self.onlogin) {
@@ -175,8 +153,21 @@ OAuth2.prototype.cleanup = function() {
     }
 };
 
+function sendmsg() {
+    var opener = window.opener || window.parent;
+
+    if (!opener) {
+        console.log("Could not find opener?!");
+        return;
+    }
+    var msg = {
+        name: window.name || '',
+        search: window.location.search || '',
+        hash: window.location.hash || ''
+    };
+    opener.postMessage(msg, "http://" + window.location.hostname);
+}
+
 if (window.name.match(/^oauth2-win/)) {
-    OAuth2.sendmsg();
-} else {
-    window.addEventListener("message", OAuth2.recvmsg, false);
+    sendmsg();
 }
