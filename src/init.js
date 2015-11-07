@@ -74,7 +74,7 @@ function init(opts, cb) {
 
     function mountrest(opts, cb) {
         var sysfs = new JsonFS(Sys, {}),
-            authfs = new JsonFS(Auth.authlist, {rootident: '/auth'}),
+            authfs = new JsonFS(Auth, {rootident: '/auth'}),
             lstorfs = new LstorFS(),
             devfs = new DevFS(),
             downloadfs = new DownloadFS();
@@ -159,7 +159,7 @@ function run_initshell(opts, cb) {
 function mountcloud(opts, cb) {
     startgoog(function() {});
     startfb(function() {});
-    startdropbox(function() {});
+    //startdropbox(function() {});
     startupload(function() {});
     return cb(null);
 }
@@ -248,11 +248,10 @@ function startgoog(cb) {
     var loginbuttonstr = '<div class="dspopover"><button type="button" class="btn btn-default googlogin">Add Google Account</button></div>';
 
     function update_button() {
-        var userlist = Object.keys(GoogleOAuth2.authdata.tokens),
+        var userlist = GoogleAuth.users(),
             divstring = [];
         userlist.forEach(function(user) {
-            var name = GoogleOAuth2.authdata.tokens[user].userinfo.email;
-            divstring.push('<tr class="dspopover"><td>' + name + '</td><td><button class="googlogout btn btn-default btn-xs" data-email="' + user + '">Logout</button></td></tr>');
+            divstring.push('<tr class="dspopover"><td>' + user + '</td><td><button class="googlogout btn btn-default btn-xs" data-email="' + user + '">Logout</button></td></tr>');
         });
         $('#btnGoog').attr('data-content', '<table class="dspopover">' + divstring.join(' ') + '</table>' + loginbuttonstr);
         if (userlist.length) {
@@ -282,7 +281,7 @@ function startgoog(cb) {
                 });
             }));
         }
-        GoogleOAuth2.login(username, {}, ef(cb, function(res) {
+        GoogleAuth.login(username, {}, ef(cb, function(res) {
             update_button();
             mount_picasa(res.userinfo, function() {
                 mount_gdrive(res.userinfo, cb);
@@ -293,7 +292,7 @@ function startgoog(cb) {
     function handle_logout(email) {
         initshell.ns.umount('/gdrive/' + email, function(){});
         initshell.ns.umount('/picasa/' + email, function(){});
-        GoogleOAuth2.logout(email, {}, function() {
+        GoogleAuth.logout(email, {}, function() {
             update_button();
         });
     }
@@ -311,7 +310,7 @@ function startgoog(cb) {
         handle_logout(email);
     });
 
-    var userlist = GoogleOAuth2.cache_list_users();
+    var userlist = GoogleAuth.cache_list();
     async.forEachSeries(userlist, function(user, acb) {
         handle_login(user, function() {
             return acb(null);

@@ -50,7 +50,7 @@ GDriveFS.prototype.synthdirs = {
 };
 
 GDriveFS.prototype.access_token = function() {
-    var auth = GoogleOAuth2.authdata.tokens[this.opts.user];
+    var auth = GoogleAuth.get_auth(this.opts.user);
 
     return (auth && auth.access_token) ? auth.access_token : 'invalid';
 };

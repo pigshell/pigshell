@@ -19,19 +19,19 @@ function OAuth2(options) {
     this.options = {};
     var oauth2 = options.oauth2;
     if (!options || !oauth2 || !options.url) {
-        throw 'options not set';
+        throw "options not set";
     }
     this.oauth2 = oauth2;
     if (!oauth2.client_id) {
         throw "client_id must be set";
     }
-    oauth2.response_type = 'token';
+    oauth2.response_type = "token";
     this.popupWidth = options.popupWidth || 500;
     this.popupHeight = options.popupHeight || 400;
-    this.timeout = options.timeout || 300;
+    this.timeout = options.timeout || 60;
     this.url = options.url;
     this.onlogin = this.popup = this.iframe = this.timer = null;
-    this.name = 'oauth2-win';
+    this.name = "oauth2-win";
 }
 
 OAuth2.sendmsg = function() {
@@ -80,7 +80,7 @@ function parseqs(str) {
     return params;
 }
 
-OAuth2.prototype.login = function(immediate) {
+OAuth2.prototype.login = function(display, cb) {
     var self = this;
     self.state = Math.random().toString(36).substr(2);
     self.oauth2['state'] = self.state;
@@ -92,12 +92,11 @@ OAuth2.prototype.login = function(immediate) {
     window.addEventListener("message", self.listener, false);
     self.timer = setTimeout(function() {
         self.cleanup();
-        if (self.onlogin) {
-            return self.onlogin({error: "Timed out"});
-        }
+        return cb({error: "Timed out"});
     }, self.timeout * 1000);
 
-    if (immediate) {
+    self.onlogin = cb;
+    if (display === "iframe") {
         var iframe = self.iframe = document.createElement('iframe');
         iframe.src = url;
         iframe.hidden = true;
@@ -116,6 +115,10 @@ OAuth2.prototype.login = function(immediate) {
                    ',left=' + left +
                    ',location=yes,toolbar=no,menubar=no';
     self.popup = window.open(url, self.name, features);
+    if (!self.popup) {
+        self.cleanup();
+        return cb("Popup blocked");
+    }
 };
 
 OAuth2.prototype.process_msg = function(msg) {
@@ -126,7 +129,9 @@ OAuth2.prototype.process_msg = function(msg) {
         msg = {'error': 'State mismatch'};
     }
     if (self.onlogin) {
-        self.onlogin(msg);
+        self.onlogin(msg.error || null, msg);
+    } else {
+        console.log("onlogin not set!");
     }
 };
 

@@ -152,7 +152,7 @@
     "RamFS": true,
     "Auth": true,
     "GO2": false,
-    "GoogleOAuth2": true,
+    "GoogleAuth": true,
     "Zlib": false,
     "frename": false,
     "isrealdir": false,
