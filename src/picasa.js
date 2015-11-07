@@ -5,6 +5,8 @@
 
 var PicasaFS = function(opts, uri) {
     PicasaFS.base.call(this, opts, uri);
+    this.auth_handler = VFS.lookup_auth_handler("google").handler;
+    assert("PicasaFS.1", !!this.auth_handler);
 };
 
 inherit(PicasaFS, HttpFS);
@@ -14,7 +16,7 @@ PicasaFS.lookup_uri = HttpFS.lookup_uri;
 
 
 PicasaFS.prototype.access_token = function() {
-    var auth = GoogleAuth.get_auth(this.opts.user);
+    var auth = this.auth_handler.get_auth(this.opts.user);
 
     return (auth && auth.access_token) ? auth.access_token : 'invalid';
 };

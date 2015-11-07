@@ -92,6 +92,7 @@ GoogleOA2.prototype.login = function(name, opts, cb) {
 
     if (opts.force || !name) {
         display = "popup";
+        oauth2.approval_prompt = "force";
     }
         
     if (name) {
@@ -160,4 +161,5 @@ GoogleOA2.prototype.userinfo = function(access_token, cb) {
     });
 };
 
-var GoogleAuth = new GoogleOA2();
+VFS.register_handler("GoogleAuth", new GoogleOA2());
+VFS.register_auth_handler("google", "GoogleAuth");

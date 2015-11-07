@@ -245,10 +245,11 @@ window.fbAsyncInit = function() {
 
 // GOOGLE BEGIN
 function startgoog(cb) {
-    var loginbuttonstr = '<div class="dspopover"><button type="button" class="btn btn-default googlogin">Add Google Account</button></div>';
+    var loginbuttonstr = '<div class="dspopover"><button type="button" class="btn btn-default googlogin">Add Google Account</button></div>',
+        google_auth = VFS.lookup_auth_handler("google").handler;
 
     function update_button() {
-        var userlist = GoogleAuth.users(),
+        var userlist = google_auth.users(),
             divstring = [];
         userlist.forEach(function(user) {
             divstring.push('<tr class="dspopover"><td>' + user + '</td><td><button class="googlogout btn btn-default btn-xs" data-email="' + user + '">Logout</button></td></tr>');
@@ -281,7 +282,7 @@ function startgoog(cb) {
                 });
             }));
         }
-        GoogleAuth.login(username, {}, ef(cb, function(res) {
+        google_auth.login(username, {}, ef(cb, function(res) {
             update_button();
             mount_picasa(res.userinfo, function() {
                 mount_gdrive(res.userinfo, cb);
@@ -292,7 +293,7 @@ function startgoog(cb) {
     function handle_logout(email) {
         initshell.ns.umount('/gdrive/' + email, function(){});
         initshell.ns.umount('/picasa/' + email, function(){});
-        GoogleAuth.logout(email, {}, function() {
+        google_auth.logout(email, {}, function() {
             update_button();
         });
     }
@@ -310,8 +311,8 @@ function startgoog(cb) {
         handle_logout(email);
     });
 
-    var userlist = GoogleAuth.cache_list();
-    async.forEachSeries(userlist, function(user, acb) {
+    var cusers = google_auth.cache_list();
+    async.forEachSeries(Object.keys(cusers), function(user, acb) {
         handle_login(user, function() {
             return acb(null);
         });

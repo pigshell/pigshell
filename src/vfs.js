@@ -71,7 +71,7 @@ var VFS = {
     }
 };
 
-["uri", "media", "media_ui", "tx"].forEach(function(x) {
+["uri", "media", "media_ui", "tx", "auth"].forEach(function(x) {
     var dict = x + "_handler",
         lst = x + "_handler_list";
 
@@ -89,6 +89,9 @@ var VFS = {
     };
     VFS["lookup_" + dict] = function(pattern) {
         return lookup_handler(VFS[lst], pattern);
+    };
+    VFS["list_" + x] = function() {
+        return VFS[lst].map(function(e) { return e.pattern; });
     };
     Sys[x] = VFS[dict];
 });
