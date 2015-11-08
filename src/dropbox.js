@@ -8,6 +8,8 @@ var DropboxFS = function(opts, uri) {
     this.metauri = 'https://api.dropbox.com/1/metadata/dropbox';
     this.bdlre = this.opts.bdlmime ? new RegExp("(.*)\\." + this.opts.bdlext + "$", "i") : null;
     this.linkre = this.opts.linkmime ? new RegExp("(.*)\\." + this.opts.linkext + "$", "i") : null;
+    this.auth_handler = VFS.lookup_auth_handler("dropbox").handler;
+    assert("DropboxFS.1", !!this.auth_handler);
 };
 
 inherit(DropboxFS, HttpFS);
@@ -25,7 +27,7 @@ DropboxFS.defaults = {
 };
 
 DropboxFS.prototype.access_token = function() {
-    var auth = DropboxOAuth2.authdata.tokens[this.opts.user];
+    var auth = this.auth_handler.get_auth(this.opts.user);
 
     return (auth && auth.access_token) ? auth.access_token : 'invalid';
 };

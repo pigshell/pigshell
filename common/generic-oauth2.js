@@ -15,10 +15,24 @@
  * dependent on any external libraries like jQuery.
  */
 
+/**
+ * @param {string} options.url - OAuth2 endpoint URL
+ * @param {number} [options.timeout] - Timeout for auth dialog
+ * @param {string} [options.display] - "iframe", "popup"
+ * @param {number} [options.popupWidth]
+ * @param {number} [options.popupHeight]
+ * @param {Object} options.oauth2 - OAuth2 parameters
+ * @param {string} options.oauth2.client_id
+ * @param {string} [options.oauth2.scope]
+ * @param {string} options.oauth2.redirect_uri
+ * @param {string[]} opts.scope - List of scopes
+ * @param {boolean} opts.force - Force reauthentication
+ */
+
 function OAuth2(options) {
     this.options = {};
     var oauth2 = options.oauth2;
-    if (!options || !oauth2 || !options.url) {
+    if (!options || !oauth2 || !options.url || !options.display) {
         throw "options not set";
     }
     this.oauth2 = oauth2;
@@ -29,13 +43,11 @@ function OAuth2(options) {
     this.popupWidth = options.popupWidth || 500;
     this.popupHeight = options.popupHeight || 400;
     this.timeout = options.timeout || 60;
+    this.display = options.display || "iframe";
     this.url = options.url;
     this.onlogin = this.popup = this.iframe = this.timer = null;
     this.name = "oauth2-win";
 }
-
-OAuth2.sendmsg = function() {
-};
 
 OAuth2.prototype.recvmsg = function(event) {
     if (event.origin !== "http://" + window.location.hostname &&
@@ -80,7 +92,7 @@ function parseqs(str) {
     return params;
 }
 
-OAuth2.prototype.login = function(display, cb) {
+OAuth2.prototype.login = function(cb) {
     var self = this;
     self.state = Math.random().toString(36).substr(2);
     self.oauth2['state'] = self.state;
@@ -96,7 +108,7 @@ OAuth2.prototype.login = function(display, cb) {
     }, self.timeout * 1000);
 
     self.onlogin = cb;
-    if (display === "iframe") {
+    if (self.display === "iframe") {
         var iframe = self.iframe = document.createElement('iframe');
         iframe.src = url;
         iframe.hidden = true;
@@ -149,9 +161,6 @@ OAuth2.prototype.cleanup = function() {
     if (self.timer) {
         clearTimeout(self.timer);
         self.timer = null;
-    }
-    if (window.__activeOA2) {
-        delete window.__activeOA2[self.name];
     }
     if (self.listener) {
         window.removeEventListener("message", self.listener, false);

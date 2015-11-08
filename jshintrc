@@ -167,7 +167,6 @@
     "pdebug": false,
     "parse_json": false,
     "OAuth2": true,
-    "DropboxOAuth2": true,
     "_nstack_max": true,
     "obj2list": false,
     "publish": false,

@@ -159,7 +159,7 @@ function run_initshell(opts, cb) {
 function mountcloud(opts, cb) {
     startgoog(function() {});
     startfb(function() {});
-    //startdropbox(function() {});
+    startdropbox(function() {});
     startupload(function() {});
     return cb(null);
 }
@@ -322,14 +322,14 @@ function startgoog(cb) {
 }
 
 function startdropbox(cb) {
-    var loginbuttonstr = '<div class="dspopover"><button type="button" class="btn btn-default dropboxlogin">Add Dropbox Account</button></div>';
+    var loginbuttonstr = '<div class="dspopover"><button type="button" class="btn btn-default dropboxlogin">Add Dropbox Account</button></div>',
+        dropbox_auth = VFS.lookup_auth_handler("dropbox").handler;
 
     function update_button() {
-        var userlist = Object.keys(DropboxOAuth2.authdata.tokens),
+        var userlist = dropbox_auth.users(),
             divstring = [];
         userlist.forEach(function(user) {
-            var name = DropboxOAuth2.authdata.tokens[user].userinfo.email;
-            divstring.push('<tr class="dspopover"><td>' + name + '</td><td><button class="dropboxlogout btn btn-default btn-xs" data-email="' + user + '">Logout</button></td></tr>');
+            divstring.push('<tr class="dspopover"><td>' + user + '</td><td><button class="dropboxlogout btn btn-default btn-xs" data-email="' + user + '">Logout</button></td></tr>');
         });
         $('#btnDropbox').attr('data-content', '<table class="dspopover">' + divstring.join(' ') + '</table>' + loginbuttonstr);
         if (userlist.length) {
@@ -350,7 +350,7 @@ function startdropbox(cb) {
                 });
             }));
         }
-        DropboxOAuth2.login(username, {}, ef(cb, function(res) {
+        dropbox_auth.login(username, {}, ef(cb, function(res) {
             update_button();
             mount_dropbox(res.userinfo, cb);
         }));
@@ -358,7 +358,7 @@ function startdropbox(cb) {
 
     function handle_logout(email) {
         initshell.ns.umount('/dropbox/' + email, function(){});
-        DropboxOAuth2.logout(email, {}, function() {
+        dropbox_auth.logout(email, {}, function() {
             update_button();
         });
     }
@@ -375,8 +375,8 @@ function startdropbox(cb) {
         var email = $(this).attr('data-email');
         handle_logout(email);
     });
-    var userlist = DropboxOAuth2.cache_list_users();
-    async.forEachSeries(userlist, function(user, acb) {
+    var userlist = dropbox_auth.cache_list();
+    async.forEachSeries(Object.keys(userlist), function(user, acb) {
         handle_login(user, function() {
             return acb(null);
         });
