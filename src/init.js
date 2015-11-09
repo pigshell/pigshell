@@ -161,6 +161,7 @@ function mountcloud(opts, cb) {
     startfb(function() {});
     startdropbox(function() {});
     startupload(function() {});
+    setup_authbuttons("windows");
     return cb(null);
 }
 
@@ -382,6 +383,49 @@ function startdropbox(cb) {
         });
     }, function(err) {
         return cb(null);
+    });
+}
+
+function setup_authbuttons(service) {
+    var Service = service[0].toUpperCase() + service.slice(1),
+        popupstr = sprintf('<div class="dspopover"><button type="button" class="btn btn-default %slogin">Add %s Account</button></div>', service, Service),
+        button = $("#btn_" + service),
+        loginclass = "button." + service + "login",
+        logoutclass = "button." + service + "logout",
+        auth_handler = VFS.lookup_auth_handler(service).handler;
+
+    function update_button() {
+        var userlist = auth_handler.users(),
+            divstring = [];
+        userlist.forEach(function(user) {
+            divstring.push(sprintf('<tr class="dspopover"><td>%s</td><td><button class="%slogout btn btn-default btn-xs" data-email="%s">Logout</button></td></tr>', user, service, user));
+        });
+        button.attr('data-content', '<table class="dspopover">' + divstring.join(' ') + '</table>' + popupstr);
+        if (userlist.length) {
+            button.addClass(service + 'enabled');
+        } else {
+            button.removeClass(service + 'enabled');
+        }
+    }
+
+    button.popover({container: 'body', html: true});
+    update_button();
+    $('body').on('click', loginclass, function(){
+        $('div.popover').removeClass('in').hide();
+        auth_handler.login("", {}, function() {});
+    });
+    $('body').on('click', logoutclass, function(){
+        $('div.popover').removeClass('in').hide();
+        var email = $(this).attr('data-email');
+        auth_handler.logout(email, function() {});
+    });
+    var userlist = auth_handler.cache_list();
+    async.forEachSeries(Object.keys(userlist), function(user, acb) {
+        auth_handler.login(user, {}, function() {
+            return acb(null);
+        });
+    }, function(err) {
+        //return cb(null);
     });
 }
 

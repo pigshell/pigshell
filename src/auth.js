@@ -42,7 +42,7 @@ OA2Client.prototype.get_params = function(name, centry, opts) {
     opts2.display = display;
     oauth2.scope = scope.map(function(s) { return self.opts.scope_map[s]; })
         .filter(function(s) { return !!s; })
-        .join(" ");
+        .join(self.opts.scope_sep);
     opts2.oauth2 = oauth2;
 
     return opts2;
@@ -78,7 +78,7 @@ OA2Client.prototype.login = function(name, opts, cb) {
                 expires_in = +msg.expires_in || self.opts.expires_in ||
                     "unknown",
                 expires = isnumber(expires_in) ?
-                    Date.now() + expires_in * 1000 : expires_in;
+                    Date.now() / 1000 + expires_in : expires_in;
             if (!access_token) {
                 return error("OAuth2 login failed");
             }
@@ -94,13 +94,15 @@ OA2Client.prototype.login = function(name, opts, cb) {
                     expires: expires,
                     _jfs: ["userinfo", "access_token", "expires"]
                 },
-                old = self.authdata[res.email];
+                old = self.authdata[res.email],
+                now = Date.now() / 1000;
             if (old && old._timer) {
                 clearTimeout(old._timer);
             }
-            if (isnumber(expires) && expires > Date.now() / 1000 + 600) {
+
+            if (isnumber(expires) && expires - now > 600) {
                 t._timer = setTimeout(self.login.bind(self, name,
-                    opts, function(){}), (expires - 300) * 1000);
+                    opts, function(){}), (expires - now - 300) * 1000);
             }
             self.authdata[res.email] = t;
             var centry = {
@@ -145,6 +147,7 @@ OA2Client.prototype.cache_remove = function(name) {
 
 OA2Client.prototype.userinfo = function(access_token, cb) {
     $.getJSON(this.opts.userinfo_url + access_token, function(userinfo) {
+        //console.log("USERINFO", userinfo);
         return cb(null, userinfo);
     }).fail(function() {
         return cb("Invalid access token?");
@@ -167,6 +170,7 @@ GoogleOA2.defaults = {
         drive: "https://www.googleapis.com/auth/drive",
         picasa: "https://picasaweb.google.com/data/"
     },
+    scope_sep: " ",
     scope: ["basic", "email", "drive", "picasa"],
     auth_url: "https://accounts.google.com/o/oauth2/auth",
     userinfo_url: "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=",
@@ -202,6 +206,7 @@ DropboxOA2.defaults = {
     client_id: "ctc1idg9mu021c5",
     scope_map: {},
     scope: [],
+    scope_sep: " ",
     auth_url: "https://www.dropbox.com/1/oauth2/authorize",
     userinfo_url: "https://api.dropbox.com/1/account/info?access_token=",
     redirect_uri: "https://" + pigshell.site.name + "/common/oauth2_redirect_https.html"
@@ -219,3 +224,45 @@ DropboxOA2.prototype.get_params = function(name, centry, opts) {
 
 VFS.register_handler("DropboxAuth", new DropboxOA2());
 VFS.register_auth_handler("dropbox", "DropboxAuth");
+
+var WindowsOA2 = function(opts) {
+    this.name = "windows";
+    WindowsOA2.base.call(this, opts);
+};
+
+inherit(WindowsOA2, OA2Client);
+
+WindowsOA2.defaults = {
+    cache: "windows-oauth2",
+    client_id: "0000000048175E9E",
+    scope_map: {
+        signin: "wl.signin",
+        basic: "wl.basic",
+        onedrive: "wl.skydrive_update",
+        email: "wl.emails"
+    },
+    scope: ["signin", "basic", "onedrive", "email"],
+    scope_sep: ",",
+    auth_url: "https://login.live.com/oauth20_authorize.srf",
+    userinfo_url: "https://apis.live.net/v5.0/me?access_token=",
+    redirect_uri: pigshell.site.url + "/common/oauth2_redirect.html"
+};
+
+
+WindowsOA2.prototype.get_params = function(name, centry, opts) {
+    var opts2 = WindowsOA2.base.prototype.get_params.call(this, name, centry,
+        opts);
+
+    return opts2;
+};
+
+WindowsOA2.prototype.userinfo = function(access_token, cb) {
+    WindowsOA2.base.prototype.userinfo.call(this, access_token, ef(cb, function(userinfo) {
+        userinfo.email = userinfo.emails.account || userinfo.id + "@windowslive";
+        return cb(null, userinfo);
+    }));
+};
+
+VFS.register_handler("WindowsAuth", new WindowsOA2());
+VFS.register_auth_handler("windows", "WindowsAuth");
+
