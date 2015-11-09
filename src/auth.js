@@ -40,6 +40,7 @@ OA2Client.prototype.get_params = function(name, centry, opts) {
     opts2.url = self.opts.auth_url;
     opts2.force = force;
     opts2.display = display;
+    opts2.scope = scope;
     oauth2.scope = scope.map(function(s) { return self.opts.scope_map[s]; })
         .filter(function(s) { return !!s; })
         .join(self.opts.scope_sep);
@@ -62,14 +63,16 @@ OA2Client.prototype.login = function(name, opts, cb) {
     if (opts2.force || exp) {
         return do_login();
     }
-    do_login2(centry.access_token, centry.expires);
+    check_token(centry.access_token, centry.expires);
     
     function error(err) {
         if (name) {
             self.cache_remove(name);
+            publish("auth.logout", {network: self.name, user: name});
         }
         return cb(err);
     }
+
     function do_login() {
         var go2 = new OAuth2(opts2);
 
@@ -82,11 +85,20 @@ OA2Client.prototype.login = function(name, opts, cb) {
             if (!access_token) {
                 return error("OAuth2 login failed");
             }
-            do_login2(access_token, expires);
+            check_token(access_token, expires);
         }));
     }
 
-    function do_login2(access_token, expires) {
+    function check_token(access_token, expires) {
+        if (self.tokeninfo) {
+            self.tokeninfo(access_token, ef(error, function(tinfo) {
+            }));
+        } else {
+            get_userinfo(access_token, expires, opts2.scope);
+        }
+    }
+
+    function get_userinfo(access_token, expires, token_scope) {
         self.userinfo(access_token, ef(error, function(res) {
             var t = {
                     userinfo: res,
@@ -94,30 +106,38 @@ OA2Client.prototype.login = function(name, opts, cb) {
                     expires: expires,
                     _jfs: ["userinfo", "access_token", "expires"]
                 },
-                old = self.authdata[res.email],
+                username = res.email,
+                old = self.authdata[username],
                 now = Date.now() / 1000;
             if (old && old._timer) {
                 clearTimeout(old._timer);
             }
 
             if (isnumber(expires) && expires - now > 600) {
-                t._timer = setTimeout(self.login.bind(self, name,
+                t._timer = setTimeout(self.login.bind(self, username,
                     opts, function(){}), (expires - now - 300) * 1000);
             }
-            self.authdata[res.email] = t;
+            self.authdata[username] = t;
             var centry = {
-                scope: opts2.scope,
+                scope: token_scope,
                 access_token: access_token,
                 expires: expires
             };
-            self.cache_add(res.email, centry);
+            self.cache_add(username, centry);
+            publish("auth.login", {network: self.name, user: username});
             return cb(null, t);
         }));
     }
 };
 
 OA2Client.prototype.logout = function(name, opts, cb) {
+    if (this.authdata[name]) {
+        clearTimeout(this.authdata[name]._timer);
+        delete this.authdata[name];
+    }
     this.cache_remove(name);
+    publish("auth.logout", {network: this.name, user: name});
+    return cb(null, null);
 };
 
 OA2Client.prototype.users = function() {
@@ -265,4 +285,3 @@ WindowsOA2.prototype.userinfo = function(access_token, cb) {
 
 VFS.register_handler("WindowsAuth", new WindowsOA2());
 VFS.register_auth_handler("windows", "WindowsAuth");
-

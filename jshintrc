@@ -190,6 +190,7 @@
     "enc_uri_path": false,
     "cookbdl": false,
     "islink": false,
-    "optstr_make": false
+    "optstr_make": false,
+    "popen": false
     }
 }

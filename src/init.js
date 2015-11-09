@@ -157,10 +157,12 @@ function run_initshell(opts, cb) {
 // SHELL END
 
 function mountcloud(opts, cb) {
-    startgoog(function() {});
     startfb(function() {});
-    startdropbox(function() {});
     startupload(function() {});
+    setup_authbuttons("google");
+    automount_google();
+    setup_authbuttons("dropbox");
+    automount_dropbox();
     setup_authbuttons("windows");
     return cb(null);
 }
@@ -244,148 +246,6 @@ window.fbAsyncInit = function() {
 
 // FACEBOOK END
 
-// GOOGLE BEGIN
-function startgoog(cb) {
-    var loginbuttonstr = '<div class="dspopover"><button type="button" class="btn btn-default googlogin">Add Google Account</button></div>',
-        google_auth = VFS.lookup_auth_handler("google").handler;
-
-    function update_button() {
-        var userlist = google_auth.users(),
-            divstring = [];
-        userlist.forEach(function(user) {
-            divstring.push('<tr class="dspopover"><td>' + user + '</td><td><button class="googlogout btn btn-default btn-xs" data-email="' + user + '">Logout</button></td></tr>');
-        });
-        $('#btnGoog').attr('data-content', '<table class="dspopover">' + divstring.join(' ') + '</table>' + loginbuttonstr);
-        if (userlist.length) {
-            $('#btnGoog').addClass('googenabled');
-        } else {
-            $('#btnGoog').removeClass('googenabled');
-        }
-    }
-
-    function handle_login(username, cb) {
-
-        function mount_picasa(user, cb) {
-            var mntpt = '/picasa/' + user.email;
-            mkdir.call(initshell, mntpt, ef(cb, function() {
-                mount_uri('https://picasaweb.google.com/data/feed/api/user/' + user.id + '/', mntpt, {user: user.email}, initshell, function(err){
-                    if (err) { console.log(err); }
-                    return cb(null);
-                });
-            }));
-        }
-        function mount_gdrive(user, cb) {
-            var mntpt = '/gdrive/' + user.email;
-            mkdir.call(initshell, mntpt, ef(cb, function() {
-                mount_uri('https://www.googleapis.com/drive/v2/files/root', mntpt, {user: user.email}, initshell, function(err){
-                    if (err) { console.log(err); }
-                    return cb(null);
-                });
-            }));
-        }
-        google_auth.login(username, {}, ef(cb, function(res) {
-            update_button();
-            mount_picasa(res.userinfo, function() {
-                mount_gdrive(res.userinfo, cb);
-            });
-        }));
-    }
-
-    function handle_logout(email) {
-        initshell.ns.umount('/gdrive/' + email, function(){});
-        initshell.ns.umount('/picasa/' + email, function(){});
-        google_auth.logout(email, {}, function() {
-            update_button();
-        });
-    }
-
-    $('#btnGoog').popover({container: 'body', html: true});
-    update_button();
-
-    $('body').on('click', 'button.googlogin', function(){
-        $('div.popover').removeClass('in').hide();
-        handle_login('', function() {});
-    });
-    $('body').on('click', 'button.googlogout', function(){
-        $('div.popover').removeClass('in').hide();
-        var email = $(this).attr('data-email');
-        handle_logout(email);
-    });
-
-    var cusers = google_auth.cache_list();
-    async.forEachSeries(Object.keys(cusers), function(user, acb) {
-        handle_login(user, function() {
-            return acb(null);
-        });
-    }, function(err) {
-        return cb(null);
-    });
-}
-
-function startdropbox(cb) {
-    var loginbuttonstr = '<div class="dspopover"><button type="button" class="btn btn-default dropboxlogin">Add Dropbox Account</button></div>',
-        dropbox_auth = VFS.lookup_auth_handler("dropbox").handler;
-
-    function update_button() {
-        var userlist = dropbox_auth.users(),
-            divstring = [];
-        userlist.forEach(function(user) {
-            divstring.push('<tr class="dspopover"><td>' + user + '</td><td><button class="dropboxlogout btn btn-default btn-xs" data-email="' + user + '">Logout</button></td></tr>');
-        });
-        $('#btnDropbox').attr('data-content', '<table class="dspopover">' + divstring.join(' ') + '</table>' + loginbuttonstr);
-        if (userlist.length) {
-            $('#btnDropbox').addClass('dropboxenabled');
-        } else {
-            $('#btnDropbox').removeClass('dropboxenabled');
-        }
-    }
-
-    function handle_login(username, cb) {
-
-        function mount_dropbox(user, cb) {
-            var mntpt = '/dropbox/' + user.email;
-            mkdir.call(initshell, mntpt, ef(cb, function() {
-                mount_uri('https://api.dropbox.com/1/metadata/dropbox/', mntpt, {user: user.email}, initshell, function(err){
-                    if (err) { console.log(err); }
-                    return cb(null);
-                });
-            }));
-        }
-        dropbox_auth.login(username, {}, ef(cb, function(res) {
-            update_button();
-            mount_dropbox(res.userinfo, cb);
-        }));
-    }
-
-    function handle_logout(email) {
-        initshell.ns.umount('/dropbox/' + email, function(){});
-        dropbox_auth.logout(email, {}, function() {
-            update_button();
-        });
-    }
-
-    $('#btnDropbox').popover({container: 'body', html: true});
-    update_button();
-
-    $('body').on('click', 'button.dropboxlogin', function(){
-        $('div.popover').removeClass('in').hide();
-        handle_login('', function() {});
-    });
-    $('body').on('click', 'button.dropboxlogout', function(){
-        $('div.popover').removeClass('in').hide();
-        var email = $(this).attr('data-email');
-        handle_logout(email);
-    });
-    var userlist = dropbox_auth.cache_list();
-    async.forEachSeries(Object.keys(userlist), function(user, acb) {
-        handle_login(user, function() {
-            return acb(null);
-        });
-    }, function(err) {
-        return cb(null);
-    });
-}
-
 function setup_authbuttons(service) {
     var Service = service[0].toUpperCase() + service.slice(1),
         popupstr = sprintf('<div class="dspopover"><button type="button" class="btn btn-default %slogin">Add %s Account</button></div>', service, Service),
@@ -402,14 +262,19 @@ function setup_authbuttons(service) {
         });
         button.attr('data-content', '<table class="dspopover">' + divstring.join(' ') + '</table>' + popupstr);
         if (userlist.length) {
-            button.addClass(service + 'enabled');
+            button.addClass(service + '_enabled');
         } else {
-            button.removeClass(service + 'enabled');
+            button.removeClass(service + '_enabled');
         }
     }
 
     button.popover({container: 'body', html: true});
     update_button();
+    subscribe("auth.login auth.logout", function(a) {
+        if (a.network === service) {
+            update_button();
+        }
+    });
     $('body').on('click', loginclass, function(){
         $('div.popover').removeClass('in').hide();
         auth_handler.login("", {}, function() {});
@@ -417,7 +282,7 @@ function setup_authbuttons(service) {
     $('body').on('click', logoutclass, function(){
         $('div.popover').removeClass('in').hide();
         var email = $(this).attr('data-email');
-        auth_handler.logout(email, function() {});
+        auth_handler.logout(email, {}, function() {});
     });
     var userlist = auth_handler.cache_list();
     async.forEachSeries(Object.keys(userlist), function(user, acb) {
@@ -428,6 +293,50 @@ function setup_authbuttons(service) {
         //return cb(null);
     });
 }
+
+function automount_google() {
+    subscribe("auth.login", function(a) {
+        if (a.network !== "google") {
+            return;
+        }
+        var authinfo = VFS.lookup_auth_handler("google").handler.get_auth(a.user),
+            userinfo = authinfo.userinfo,
+            picasacmd = sprintf("mkdir /picasa/%s; mount -o user=%s https://picasaweb.google.com/data/feed/api/user/%s/ /picasa/%s", a.user, a.user,
+                userinfo.id, a.user),
+            gdrivecmd = sprintf("mkdir /gdrive/%s; mount -o user=%s https://www.googleapis.com/drive/v2/files/root /gdrive/%s", a.user, a.user, a.user);
+        popen(picasacmd, {}, null, {shopts: "-sc"}).read({}, function(){});
+        popen(gdrivecmd, {}, null, {shopts: "-sc"}).read({}, function(){});
+    });
+
+    subscribe("auth.logout", function(a) {
+        if (a.network !== "google") {
+            return;
+        }
+        var cmd = sprintf("umount /picasa/%s; umount /gdrive/%s", a.user,
+            a.user);
+        popen(cmd, {}, null, {shopts: "-sc"}).read({}, function(){});
+    });
+}
+function automount_dropbox() {
+    subscribe("auth.login", function(a) {
+        if (a.network !== "dropbox") {
+            return;
+        }
+        var authinfo = VFS.lookup_auth_handler("dropbox").handler.get_auth(a.user),
+            userinfo = authinfo.userinfo,
+            cmd = sprintf("mkdir /dropbox/%s; mount -o user=%s https://api.dropbox.com/1/metadata/dropbox/ /dropbox/%s", a.user, a.user, a.user);
+        popen(cmd, {}, null, {shopts: "-sc"}).read({}, function(){});
+    });
+
+    subscribe("auth.logout", function(a) {
+        if (a.network !== "dropbox") {
+            return;
+        }
+        var cmd = sprintf("umount /dropbox/%s", a.user);
+        popen(cmd, {}, null, {shopts: "-sc"}).read({}, function(){});
+    });
+}
+
 
 // FILE UPLOAD START
 function startupload(cb) {

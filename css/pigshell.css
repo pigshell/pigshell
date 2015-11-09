@@ -191,13 +191,18 @@
     color: #0084b4;
 }
 
-.pigshell .googenabled {
+.pigshell .google_enabled {
     color: #dd4b39;
 }
 
-.pigshell .dropboxenabled {
+.pigshell .dropbox_enabled {
     color: #007ee5;
 }
+
+.pigshell .windows_enabled {
+    color: #0078d7
+}
+
 .pigshell .dspopover {
     font-size: 14px;
     font-family: monospace;

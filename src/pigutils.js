@@ -1792,23 +1792,36 @@ function mkediv(parent_div) {
 }
 
 var ps_topics = {};
+
 function publish(channel, data) {
-    if (ps_topics[channel] === undefined) {
-        ps_topics[channel] = $.Callbacks('memory');
+    var channels = channel.split(/\s+/);
+    for (var i = 0, len = channels.length; i < len; i++) {
+        var c = channels[i];
+        if (ps_topics[c] === undefined) {
+            ps_topics[c] = $.Callbacks('memory');
+        }
+        ps_topics[c].fire(data);
     }
-    return ps_topics[channel].fire(data);
 }
 
 function subscribe(channel, cb) {
-    if (ps_topics[channel] === undefined) {
-        ps_topics[channel] = $.Callbacks('memory');
+    var channels = channel.split(/\s+/);
+    for (var i = 0, len = channels.length; i < len; i++) {
+        var c = channels[i];
+        if (ps_topics[c] === undefined) {
+            ps_topics[c] = $.Callbacks('memory');
+        }
+        ps_topics[c].add(cb);
     }
-    return ps_topics[channel].add(cb);
 }
 
 function unsubscribe(channel, cb) {
-    if (ps_topics[channel]) {
-        ps_topics[channel].remove(cb);
+    var channels = channel.split(/\s+/);
+    for (var i = 0, len = channels.length; i < len; i++) {
+        var c = channels[i];
+        if (ps_topics[c]) {
+            ps_topics[c].remove(cb);
+        }
     }
 }
 
