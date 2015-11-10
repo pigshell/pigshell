@@ -21,13 +21,13 @@ OA2Client.prototype.get_params = function(name, centry, opts) {
     var self = this,
         oauth2 = {client_id: self.opts.client_id, redirect_uri: self.opts.redirect_uri},
         opts2 = {},
-        scope = self.opts.scope,
+        scope = opts.scope || self.opts.scope,
         display = "iframe",
         cscope = centry.scope,
         force = opts.force || !name;
 
     if (name) {
-        scope = opts.scope || centry.scope || scope;
+        scope = opts.scope || centry.scope || self.opts.scope;
         if (scope && opts.scope && opts.scope.sort().toString() !==
             scope.sort().toString()) {
             force = true;
@@ -104,7 +104,8 @@ OA2Client.prototype.login = function(name, opts, cb) {
                     userinfo: res,
                     access_token: access_token,
                     expires: expires,
-                    _jfs: ["userinfo", "access_token", "expires"]
+                    scope: token_scope.join(","),
+                    _jfs: ["userinfo", "access_token", "expires", "scope"]
                 },
                 username = res.email,
                 old = self.authdata[username],
@@ -240,6 +241,25 @@ DropboxOA2.prototype.get_params = function(name, centry, opts) {
         opts2.oauth2.force_reapprove = "true";
     }
     return opts2;
+};
+
+DropboxOA2.prototype.logout = function(name, opts, cb) {
+    var self = this,
+        access_token = self.authdata[name] ? self.authdata[name].access_token : null;
+    if (!access_token) {
+        return ret(null);
+    }
+    $.getJSON('https://api.dropbox.com/1/disable_access_token?access_token=' +
+        access_token, function() {
+        return ret(null);
+    }).fail(function() {
+        return ret("Failed to disable access token");
+    });
+    function ret(e) {
+        DropboxOA2.base.prototype.logout.call(self, name, opts, function(err) {
+            return cb(err || e, null);
+        });
+    }
 };
 
 VFS.register_handler("DropboxAuth", new DropboxOA2());
