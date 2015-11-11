@@ -81,7 +81,7 @@ OneDriveFile.prototype._raw2meta = function(raw) {
             name: raw.name
         };
 
-    if (raw.type === "folder") {
+    if (raw.type === "folder" || raw.type === "album") {
         meta.mime = this.fs.dirmime;
     } else {
         meta.mime = "application/octet-stream"; // XXX Revisit
@@ -121,6 +121,67 @@ OneDriveFile.prototype.read = function(opts, cb) {
         return OneDriveFile.base.prototype.read.call(self, bopts, cb);
     }
 };
+
+OneDriveFile.prototype.mkdir = function(filename, opts, cb) {
+    var self = this,
+        headers = {"Content-Type": "application/json"},
+        params = {"access_token": self.fs.access_token()},
+        bopts = $.extend({}, opts, {params: params, headers: headers}),
+        ufile = self._ufile,
+        mime = ufile ? ufile.mime : null,
+        data = {name: filename, description: ""};
+
+    if (mime !== self.fs.dirmime) {
+        return cb(E('ENOSYS'));
+    }
+    self.fs.tx.POST(self.ident, JSON.stringify(data), bopts,
+        function(err, res) {
+        if (err) {
+            return cb(E('EINVAL'));
+        }
+        fstack_invaldir(self);
+        return cb(null, null);
+    });
+};
+
+OneDriveFile.prototype.rm = function(file, opts, cb) {
+    var self = this,
+        params = {"access_token": self.fs.access_token()},
+        bopts = $.extend({}, opts, {params: params}),
+        ufile = self._ufile,
+        mime = ufile ? ufile.mime : null;
+
+    if (mime !== self.fs.dirmime) {
+        return cb(E('ENOSYS'));
+    }
+
+    self.fs.tx.DELETE(file.ident, bopts, function(err, res) {
+        if (err) {
+            return cb(E('EINVAL'));
+        }
+        return cb(null, null);
+    });
+};
+
+OneDriveFile.prototype.putdir = mkblob(function(filename, blob, opts, cb) {
+    var self = this,
+        // XXX WTF?! Setting a meaningful value for content type fails
+        headers = {"Content-Type": " "},
+        params = {"access_token": self.fs.access_token()},
+        bopts = $.extend({}, opts, {params: params, headers: headers}),
+        ufile = self._ufile,
+        mime = ufile ? ufile.mime : null;
+
+    if (!mime || mime !== self.fs.dirmime) {
+        return cb(E('ENOSYS'));
+    }
+
+    self.fs.tx.PUT(self.ident + "/files/" + filename, blob, bopts,
+        ef(cb, function() {
+        fstack_invaldir(self);
+        return cb(null, null);
+    }));
+});
 
 VFS.register_handler("OneDriveFS", OneDriveFS);
 VFS.register_uri_handler("https://apis.live.net/v5.0", "OneDriveFS", {});
