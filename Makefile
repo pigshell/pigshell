@@ -52,7 +52,8 @@ CHECK_SOURCES = src/mimeMap.js\
     src/ramfs.js\
     src/picasa.js\
     src/gdrive.js\
-    src/dropbox.js
+    src/dropbox.js\
+    src/onedrive.js
 
 LIB_SOURCES = src/lib/jquery-1.7.2.js\
     src/lib/jquery.ba-resize.js\
