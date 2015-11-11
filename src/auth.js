@@ -90,12 +90,23 @@ OA2Client.prototype.login = function(name, opts, cb) {
     }
 
     function check_token(access_token, expires) {
-        if (self.tokeninfo) {
-            self.tokeninfo(access_token, ef(error, function(tinfo) {
-            }));
-        } else {
-            get_userinfo(access_token, expires, opts2.scope);
+        if (!self.check_token) {
+            return get_userinfo(access_token, expires, opts2.scope);
         }
+        self.check_token(access_token, ef(error, function(expires_in, rscope) {
+            var expires = isnumber(expires_in) ? Date.now() / 1000 +
+                expires_in : expires;
+            var scope = [];
+            rscope.forEach(function(r) {
+                for (var k in self.opts.scope_map) {
+                    if (r === self.opts.scope_map[k]) {
+                        scope.push(k);
+                        return;
+                    }
+                }
+            });
+            get_userinfo(access_token, expires, scope);
+        }));
     }
 
     function get_userinfo(access_token, expires, token_scope) {
@@ -212,6 +223,18 @@ GoogleOA2.prototype.get_params = function(name, centry, opts) {
     return opts2;
 };
 
+GoogleOA2.prototype.check_token = function(token, cb) {
+    var self = this;
+    $.getJSON("https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=" + token, function(tokeninfo) {
+        if (tokeninfo.audience !== self.opts.client_id) {
+            return cb("Tokeninfo failed client id verification!");
+        }
+        return cb(null, tokeninfo.expires_in, tokeninfo.scope.split(/\s+/));
+    }).fail(function() {
+        return cb("Tokeninfo failed");
+    });
+};
+
 VFS.register_handler("GoogleAuth", new GoogleOA2());
 VFS.register_auth_handler("google", "GoogleAuth");
 
@@ -288,14 +311,6 @@ WindowsOA2.defaults = {
     redirect_uri: pigshell.site.url + "/common/oauth2_redirect.html"
 };
 
-
-WindowsOA2.prototype.get_params = function(name, centry, opts) {
-    var opts2 = WindowsOA2.base.prototype.get_params.call(this, name, centry,
-        opts);
-
-    return opts2;
-};
-
 WindowsOA2.prototype.userinfo = function(access_token, cb) {
     WindowsOA2.base.prototype.userinfo.call(this, access_token, ef(cb, function(userinfo) {
         userinfo.email = userinfo.emails.account || userinfo.id + "@windowslive";
@@ -303,5 +318,14 @@ WindowsOA2.prototype.userinfo = function(access_token, cb) {
     }));
 };
 
+WindowsOA2.prototype.check_token = function(token, cb) {
+    var self = this;
+    $.getJSON("https://apis.live.net/v5.0/me/permissions?access_token=" + token,
+        function(res) {
+        return cb(null, null, Object.keys(res.data[0]));
+    }).fail(function() {
+        return cb("Tokeninfo failed");
+    });
+};
 VFS.register_handler("WindowsAuth", new WindowsOA2());
 VFS.register_auth_handler("windows", "WindowsAuth");
