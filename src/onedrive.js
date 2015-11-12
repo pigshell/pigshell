@@ -183,5 +183,41 @@ OneDriveFile.prototype.putdir = mkblob(function(filename, blob, opts, cb) {
     }));
 });
 
+OneDriveFile.prototype.link = function(str, linkname, opts, cb) {
+    var self = this;
+
+    if (!self.fs.opts.linkmime) {
+        return cb(E("ENOSYS"));
+    }
+    return self.putdir(linkname + "." + self.fs.opts.linkext, str, opts, cb);
+};
+
+OneDriveFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
+    dfilename, opts, cb) {
+    var self = this,
+        params = {"access_token": self.access_token()},
+        headers = {"Content-Type": "application/json"},
+        bopts = $.extend({}, opts, {params: params, headers: headers}),
+        sfile = fstack_base(srcfile),
+        ddirb = fstack_base(dstdir);
+
+    if (self.bdlre && sfile.raw.name.match(self.bdlre)) {
+        dfilename = dfilename + "." + self.opts.bdlext;
+    } else if (self.linkre && sfile.raw.name.match(self.linkre)) {
+        dfilename = dfilename + "." + self.opts.linkext;
+    }
+
+    var data = {destination: ddirb.raw.id};
+    self.tx.do_xhr("MOVE", sfile.ident, JSON.stringify(data), bopts,
+        function(err, res) {
+        if (err) {
+            return cb(E('EINVAL'));
+        }
+        fstack_invaldir(srcdir);
+        fstack_invaldir(dstdir);
+        return cb(null, null);
+    });
+};
+
 VFS.register_handler("OneDriveFS", OneDriveFS);
 VFS.register_uri_handler("https://apis.live.net/v5.0", "OneDriveFS", {});
