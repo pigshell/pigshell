@@ -4,27 +4,27 @@
 
 sh -s testlib.sh
 echo "join tests started on" $(date)
-
-a=${cat http://pigshell.com/sample/life-expectancy.html | table2js foo name years | jf 'x.name = x.name.trim(), x' | sort -f name}
+URL=$(uname -u)/sample/life-expectancy.html
+a=${cat $URL | table2js foo name years | jf 'x.name = x.name.trim(), x' | sort -f name}
 b=${cat /usr/misc/countries.json | to text | jf 'JSON.parse(x)'|sort -f name}
 
 join -s -e "x.name === y.name ? 0 : x.name < y.name ? -1 : 1" $a $b | jf 'x.manyears = Math.round(x.population * +x.years), x' | printf "%(name)-20s %(years)15s %(population)15s %(manyears)15s\n" >$RESDIR/join.1
 dcheck $? true join.1
 
-a=${cat http://pigshell.com/sample/life-expectancy.html | table2js foo name years | jf 'x.name = x.name.trim(), x'}
+a=${cat $URL | table2js foo name years | jf 'x.name = x.name.trim(), x'}
 b=${cat /usr/misc/countries.json | to text | jf 'JSON.parse(x)'}
 
 
 join -e "x.name === y.name" $a $b | jf 'x.manyears = Math.round(x.population * +x.years), x' | printf "%(name)-20s %(years)15s %(population)15s %(manyears)15s\n" >$RESDIR/join.2
 dcheck $? true join.2
 
-a=${cat http://pigshell.com/sample/life-expectancy.html | table2js foo name years | jf 'x.name = x.name.trim(), x' | sort -f name}
+a=${cat $URL | table2js foo name years | jf 'x.name = x.name.trim(), x' | sort -f name}
 b=${cat /usr/misc/countries.json | to text | jf 'JSON.parse(x)'|sort -f name}
 
 join -s -f name $a $b | jf 'x.manyears = Math.round(x.population * +x.years), x' | printf "%(name)-20s %(years)15s %(population)15s %(manyears)15s\n" >$RESDIR/join.3
 dcheck $? true join.3
 
-a=${cat http://pigshell.com/sample/life-expectancy.html | table2js foo name years | jf 'x.name = x.name.trim(), x'}
+a=${cat $URL | table2js foo name years | jf 'x.name = x.name.trim(), x'}
 b=${cat /usr/misc/countries.json | to text | jf 'JSON.parse(x)'}
 
 

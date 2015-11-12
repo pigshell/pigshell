@@ -36,7 +36,7 @@ function partcp {
 
 # bundle targetdir checkdir num
 function bundletest {
-    URL=http://pigshell.com/sample/bundletest.html
+    URL=$(uname -u)/sample/bundletest.html
     MNT_NOBDL=/tmp/nobundle
 
     mkdir $MNT_NOBDL 2>/dev/null
@@ -69,7 +69,7 @@ function bundletest {
 }
 
 function linktest {
-    URL=http://pigshell.com/sample/bundletest.html
+    URL=$(uname -u)/sample/bundletest.html
     MNT_NOLINK=/tmp/nolink
     DEST=$1
 

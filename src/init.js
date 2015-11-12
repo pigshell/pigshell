@@ -53,7 +53,7 @@ function init(opts, cb) {
                 return bail(err);
             }
             ns = new Namespace(fstack_base(res));
-            initshell = new Shell({argv: ['init', '/etc/rc.sh'], ns: ns});
+            initshell = new Shell({argv: ['init', '-s', '/etc/rc.sh'], ns: ns});
 
             VFS.lookup_uri(rooturi, {}, function(err, res) {
                 if (err) {
@@ -82,15 +82,14 @@ function init(opts, cb) {
         termfs = new PtermFS();
         uploadfs = new UploadFS();
 
-        ns.mount('/local', lstorfs.root, {}, function(){});
-        ns.mount('/sys', sysfs.root, {}, function(){});
-        ns.mount('/auth', authfs.root, {}, function(){});
-        ns.mount('/pterm', termfs.root, {}, function(){});
-        ns.mount('/downloads', downloadfs.root, {}, function(){});
-        ns.mount('/uploads', uploadfs.root, {}, function(){});
-        ns.mount('/dev', devfs.root, {}, function(){});
+        var fslist = [["/local", lstorfs.root], ["/sys", sysfs.root],
+           ["/auth", authfs.root], ["/pterm", termfs.root],
+           ["/downloads", downloadfs.root], ["/uploads", uploadfs.root],
+           ["/dev", devfs.root]];
 
-        return cb(null);
+        async.forEach(fslist, function(fs, acb) {
+            ns.mount(fs[0], fs[1], {}, acb);
+        }, cb);
     }
 
     function focus_cm(el, event) {

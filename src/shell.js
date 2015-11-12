@@ -1031,7 +1031,7 @@ Shell.prototype.next = check_next(do_docopt(function(opts, cb) {
             self.ns = self.shell.ns;
             self.functions = self.shell.functions;
         } else {
-            self.ns = $.extend(true, {}, self.shell.ns);
+            self.ns = self.shell.ns.clone();
             self.vars = $.extend(true, {}, self.shell.vars);
             self.functions = $.extend(true, {}, self.shell.functions);
             self.vars['?'] = ['true'];

@@ -323,9 +323,9 @@ MediaHandler.prototype.update = function(meta, opts, cb) {
     return File.prototype.update.call(self, meta, opts, cb);
 };
 
-Namespace = function(root) {
+Namespace = function(root, mounts) {
     this.root = root;
-    this.mounts = {};
+    this.mounts = mounts || {};
 };
 
 Namespace.prototype.lookup = function(path, opts, cb) {
@@ -494,6 +494,11 @@ Namespace.prototype.mountlist = function() {
 
 Namespace.prototype.getmnt = function(mntpath) {
     return this.mounts[mntpath] ? this.mounts[mntpath].dir : null;
+};
+
+Namespace.prototype.clone = function() {
+    var c = new Namespace(this.root, $.extend({}, this.mounts));
+    return c;
 };
 
 /*
