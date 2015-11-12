@@ -160,9 +160,7 @@ function mountcloud(opts, cb) {
     startfb(function() {});
     startupload(function() {});
     setup_authbuttons("google");
-    automount_google();
     setup_authbuttons("dropbox");
-    automount_dropbox();
     setup_authbuttons("windows");
     return cb(null);
 }
@@ -314,7 +312,36 @@ function setup_authbuttons(service) {
     });
 }
 
-function automount_google() {
+[["google", "gdrive", "https://www.googleapis.com/drive/v2/files/root"],
+ ["dropbox", "dropbox", "https://api.dropbox.com/1/metadata/dropbox/"],
+ ["windows", "onedrive", "https://apis.live.net/v5.0/me/skydrive/"]].forEach(function(f) {
+    var authname = f[0],
+        fsname = f[1],
+        rooturi = f[2];
+
+    subscribe("auth.login", function(a) {
+        if (a.network !== authname) {
+            return;
+        }
+            
+        var authinfo = VFS.lookup_auth_handler(authname).handler.get_auth(a.user),
+            userinfo = authinfo.userinfo,
+            cmd = sprintf("mkdir /%s/%s; mount -o user=%s %s /%s/%s", fsname,
+                a.user, a.user, rooturi, fsname, a.user);
+        popen(cmd, {}, null, {shopts: "-sc"}).read({}, function(){});
+    });
+
+    subscribe("auth.logout", function(a) {
+        if (a.network !== authname) {
+            return;
+        }
+        var cmd = sprintf("umount /%s/%s", fsname, a.user);
+        popen(cmd, {}, null, {shopts: "-sc"}).read({}, function(){});
+    });
+});
+    
+    
+function automount_picasa() {
     subscribe("auth.login", function(a) {
         if (a.network !== "google") {
             return;
@@ -322,41 +349,20 @@ function automount_google() {
         var authinfo = VFS.lookup_auth_handler("google").handler.get_auth(a.user),
             userinfo = authinfo.userinfo,
             picasacmd = sprintf("mkdir /picasa/%s; mount -o user=%s https://picasaweb.google.com/data/feed/api/user/%s/ /picasa/%s", a.user, a.user,
-                userinfo.id, a.user),
-            gdrivecmd = sprintf("mkdir /gdrive/%s; mount -o user=%s https://www.googleapis.com/drive/v2/files/root /gdrive/%s", a.user, a.user, a.user);
+                userinfo.id, a.user);
         popen(picasacmd, {}, null, {shopts: "-sc"}).read({}, function(){});
-        popen(gdrivecmd, {}, null, {shopts: "-sc"}).read({}, function(){});
     });
 
     subscribe("auth.logout", function(a) {
         if (a.network !== "google") {
             return;
         }
-        var cmd = sprintf("umount /picasa/%s; umount /gdrive/%s", a.user,
-            a.user);
-        popen(cmd, {}, null, {shopts: "-sc"}).read({}, function(){});
-    });
-}
-function automount_dropbox() {
-    subscribe("auth.login", function(a) {
-        if (a.network !== "dropbox") {
-            return;
-        }
-        var authinfo = VFS.lookup_auth_handler("dropbox").handler.get_auth(a.user),
-            userinfo = authinfo.userinfo,
-            cmd = sprintf("mkdir /dropbox/%s; mount -o user=%s https://api.dropbox.com/1/metadata/dropbox/ /dropbox/%s", a.user, a.user, a.user);
-        popen(cmd, {}, null, {shopts: "-sc"}).read({}, function(){});
-    });
-
-    subscribe("auth.logout", function(a) {
-        if (a.network !== "dropbox") {
-            return;
-        }
-        var cmd = sprintf("umount /dropbox/%s", a.user);
+        var cmd = sprintf("umount /picasa/%s", a.user);
         popen(cmd, {}, null, {shopts: "-sc"}).read({}, function(){});
     });
 }
 
+automount_picasa();
 
 // FILE UPLOAD START
 function startupload(cb) {
