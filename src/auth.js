@@ -57,13 +57,24 @@ OA2Client.prototype.login = function(name, opts, cb) {
         now = Date.now() / 1000,
         exp = isnumber(centry.expires) && centry.expires - 300 < now;
 
-    assert("OA2Client.login.1", opts2.force || (name && centry.access_token),
-        centry);
+    //assert("OA2Client.login.1", opts2.force || (name && centry.access_token),
+    //    centry);
 
     if (opts2.force || exp) {
         return do_login();
     }
-    check_token(centry.access_token, centry.expires);
+
+    check_token(centry.access_token, centry.expires, ef(retry_login,
+        function(access_token, expires, scope) {
+        get_userinfo(access_token, expires, scope, ef(retry_login, cb));
+    }));
+
+    function retry_login() {
+        if (name) {
+            self.cache_remove(name);
+        }
+        return do_login();
+    }
     
     function error(err) {
         if (name) {
@@ -85,15 +96,19 @@ OA2Client.prototype.login = function(name, opts, cb) {
             if (!access_token) {
                 return error("OAuth2 login failed");
             }
-            check_token(access_token, expires);
+            check_token(access_token, expires, ef(error,
+                function(access_token, expires, scope) {
+                return get_userinfo(access_token, expires, scope,
+                    ef(error, cb));
+            }));
         }));
     }
 
-    function check_token(access_token, expires) {
+    function check_token(access_token, expires, cb) {
         if (!self.check_token) {
-            return get_userinfo(access_token, expires, opts2.scope);
+                return cb(null, access_token, expires, opts2.scope);
         }
-        self.check_token(access_token, ef(error, function(expires_in, rscope) {
+        self.check_token(access_token, ef(cb, function(expires_in, rscope) {
             var expires = isnumber(expires_in) ? Date.now() / 1000 +
                 expires_in : expires;
             var scope = [];
@@ -105,12 +120,12 @@ OA2Client.prototype.login = function(name, opts, cb) {
                     }
                 }
             });
-            get_userinfo(access_token, expires, scope);
+            return cb(null, access_token, expires, scope);
         }));
     }
 
-    function get_userinfo(access_token, expires, token_scope) {
-        self.userinfo(access_token, ef(error, function(res) {
+    function get_userinfo(access_token, expires, token_scope, cb) {
+        self.userinfo(access_token, ef(cb, function(res) {
             var t = {
                     userinfo: res,
                     access_token: access_token,
