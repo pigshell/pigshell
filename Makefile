@@ -28,7 +28,6 @@ CHECK_SOURCES = src/mimeMap.js\
     src/pigutils.js\
     src/cache.js\
     src/vfs.js\
-	src/env.js\
     src/jsonfs.js\
     src/uploads.js\
     src/downloads.js\
@@ -96,7 +95,7 @@ etc/httpd-vhosts.conf: etc/httpd-vhosts.conf.in src/version.js
 	sed 's,PATH_TO_PIGSHELL,$(CURDIR),g;s,PIGSHELL_VERSION,$(VERSION_STR),g' < $< >$@
 
 src/version.js: FORCE
-	@printf '!function(){ var pigshell = {version: {str: "%s", major: %d, minor: %d, patch: %d, git: "%s"}, site: {name: "%s", url: "%s", env: "%s"}};\n' $(VERSION_STR) $(VERSION_MAJOR) $(VERSION_MINOR) $(VERSION_PATCH) $(VERSION_GIT) $(SITE_NAME) $(SITE_URL) $(SITE_ENV) >$@.mk
+	@printf '!function(){ var pigshell = {version: {str: "%s", major: %d, minor: %d, patch: %d, git: "%s"}, site: {name: "%s", url: "%s"}};\n' $(VERSION_STR) $(VERSION_MAJOR) $(VERSION_MINOR) $(VERSION_PATCH) $(VERSION_GIT) $(SITE_NAME) $(SITE_URL) >$@.mk
 	@cmp $@ $@.mk >/dev/null 2>&1 || mv $@.mk $@
 	@rm -f $@.mk 
 
