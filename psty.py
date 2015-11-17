@@ -99,7 +99,7 @@ def guard(f):
     def decorator(self, *args, **kwargs):
         origin = self.headers.getheader("origin") or self.headers.getheader("referer") or ""
         if not origin or origin.find(psty_options["cors_allow"]) != 0:
-            self.send_error(403, "Bad origin")
+            return self.send_error(403, "Bad origin")
         if self.proxy_re.match(self.path):
             if not psty_options["enable_proxy"]:
                 return self.send_error(403, "Proxy service not enabled")
