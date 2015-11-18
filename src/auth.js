@@ -268,7 +268,7 @@ DropboxOA2.defaults = {
     scope_sep: " ",
     auth_url: "https://www.dropbox.com/1/oauth2/authorize",
     userinfo_url: "https://api.dropbox.com/1/account/info?access_token=",
-    redirect_uri: "https://" + pigshell.site.name + "/common/oauth2_redirect_https.html"
+    redirect_uri: "https://" + pigshell.site.name + "/common/oauth2_redirect.html"
 };
 
 DropboxOA2.prototype.get_params = function(name, centry, opts) {

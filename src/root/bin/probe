@@ -22,7 +22,9 @@ if ! docopt $usage $*; then
     exit false
 fi
 
-HTML=<<EOH
+BASEURL=$(uname -u)
+
+echo <<EOH
 <!DOCTYPE html>
 <html>
 
@@ -67,9 +69,9 @@ HTML=<<EOH
 </head>
 
 <body>
-    <script src="http://pigshell.com/common/lib/jquery-1.7.2/jquery-1.7.2.min.js"></script>
-    <script src="http://pigshell.com/extra/pframe.v0.js"></script>
-    <script src="http://pigshell.com/common/lib/d3-3.4.1/d3.v3.min.js"></script>
+    <script src='$"BASEURL/common/lib/jquery-1.7.2/jquery-1.7.2.min.js'></script>
+    <script src='$"BASEURL/extra/pframe.v0.js'></script>
+    <script src='$"BASEURL/common/lib/d3-3.4.1/d3.v3.min.js'></script>
 
     <div class="control">
         Process 
@@ -376,5 +378,5 @@ HTML=<<EOH
 
 </html>
 
-EOH
+EOH | varsub | read HTML
 iframe -a "scripts,same-origin" -o $docopt -s $HTML

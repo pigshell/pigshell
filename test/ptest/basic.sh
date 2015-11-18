@@ -5,7 +5,7 @@
 sh -s testlib.sh
 echo "Basic tests started on" $(date)
 
-PSTYFS="http://localhost:50937/"
+PSTYFS=$(jf window.location.protocol 1)//localhost:50937/
 TMNT=(/tmnt1 /tmnt2)
 
 mkdir $TMNT

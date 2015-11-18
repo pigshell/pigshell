@@ -31,18 +31,20 @@ if [ -n $"l ]; then
     exit true
 fi
 
-HTML=<<EOH
+BASEURL=$(uname -u)
+
+echo <<EOH
 <!DOCTYPE html>
 <html>
 
 <head>
-<link rel="stylesheet" type="text/css" href="http://pigshell.com/common/lib/leaflet-0.7.2/leaflet.css" />
-<script src="http://pigshell.com/common/lib/jquery-1.7.2/jquery-1.7.2.min.js"></script>
-<script type='text/javascript' src='http://pigshell.com/common/lib/leaflet-0.7.2/leaflet.js'></script>
-<script src="http://pigshell.com/extra/pframe.v0.js"></script>
-<script src="http://pigshell.com/common/lib/leaflet-0.7.2/leaflet-providers.js"></script>
-<script src="http://pigshell.com/common/lib/d3-3.4.1/d3.v3.min.js"></script>
-<script src="http://pigshell.com/common/lib/leaflet-0.7.2/PingLayer.js"></script>
+<link rel="stylesheet" type="text/css" href='$"BASEURL/common/lib/leaflet-0.7.2/leaflet.css' />
+<script src='$"BASEURL/common/lib/jquery-1.7.2/jquery-1.7.2.min.js'></script>
+<script type='text/javascript' src='$"BASEURL/common/lib/leaflet-0.7.2/leaflet.js'></script>
+<script src='$"BASEURL/extra/pframe.v0.js'></script>
+<script src='$"BASEURL/common/lib/leaflet-0.7.2/leaflet-providers.js'></script>
+<script src='$"BASEURL/common/lib/d3-3.4.1/d3.v3.min.js'></script>
+<script src='$"BASEURL/common/lib/leaflet-0.7.2/PingLayer.js'></script>
 <style>
 body { margin: 0; padding: 0; }
 circle.ping {
@@ -139,7 +141,7 @@ pframe.onconfig = function(c) {
 </body>
 
 </html>
-EOH
+EOH | varsub | read HTML
 
 cssopts=$([ -n $"c ] && echo "" "-c" $"c)
 iframe -a "scripts,same-origin" -o tilesrc=$"TILESRC,ping=$"p $cssopts -O -s $HTML

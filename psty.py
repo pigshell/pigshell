@@ -19,7 +19,7 @@ This program is free software - see the file COPYING for license details.
 
 """
 
-__version__ = "0.5"
+__version__ = "0.7"
 
 import os
 import sys
@@ -46,6 +46,7 @@ from hashlib import sha1, md5
 from cookielib import CookieJar, Cookie
 from urllib2 import Request
 import sqlite3
+import ssl
 
 
 try:
@@ -65,7 +66,8 @@ psty_options = {
     "enable_proxy": False,       # Enable proxy
     "enable_cookies": False,     # Borrow cookies from Chrome/Firefox,
                                  # set False to disable sending all cookies
-    "cors_allow": "http://dev.pigshell.com"
+    "sslcert": False,            # Set to SSL certificate file
+    "cors_allow": "dev.pigshell.com"
 
 # Change the cors_allow setting if you are running pigshell on your own
 # site. *** DO NOT, UNDER ANY CIRCUMSTANCES, SET THIS TO '*'. ***
@@ -99,7 +101,7 @@ def guard(f):
     def decorator(self, *args, **kwargs):
         origin = self.headers.getheader("origin") or self.headers.getheader("referer") or ""
         if not origin or origin.find(psty_options["cors_allow"]) != 0:
-            self.send_error(403, "Bad origin")
+            return self.send_error(403, "Bad origin")
         if self.proxy_re.match(self.path):
             if not psty_options["enable_proxy"]:
                 return self.send_error(403, "Proxy service not enabled")
@@ -595,7 +597,7 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             # so the browser comes back to the proxy for the redirected URL
             if not urlparse.urlsplit(comps[1]).scheme:
                 comps[1] = urlparse.urljoin(path, comps[1])
-            comps[1] = "http://%s:%d/" % self.proxy_address + comps[1]
+            comps[1] = self.proxy_address + comps[1]
         elif name == "connection":
             comps[1] = "close\r\n"
         return ": ".join(comps)
@@ -1110,7 +1112,7 @@ cookiejar = SQLiteCookieJar()
 
 def usage():
     u = """
-Usage: %s (-a|-pwfc) [-d <dir>] [<port>]
+Usage: %s (-a|-pwfc) [-d <dir>] [-s <cert>] [-o <origin>] [<port>]
        %s -h
 
 Options:
@@ -1121,7 +1123,12 @@ Options:
     -c          enable cookies
     -a          enable all services
     -d <dir>    export <dir> via file server (default: current directory)
+    -s <cert>   enable SSL, using certificate <cert>
+    -o <origin> allow requests only from <origin> (default: pigshell.com)
     <port>      server port (default: 50937)
+
+To generate a self-signed certificate for use with -s,
+# openssl req -new -x509 -keyout localhost.pem -out localhost.pem -days 365 -nodes -subj /CN=localhost
 """
     print u.strip() % (sys.argv[0], sys.argv[0])
     sys.exit(1)
@@ -1130,7 +1137,7 @@ Options:
 if __name__ == '__main__':
     port = 50937
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'apwfd:c')
+        opts, args = getopt.getopt(sys.argv[1:], 'apwfd:s:o:c')
         for o, a in opts:
             if o == '-h':
                 usage()
@@ -1145,6 +1152,10 @@ if __name__ == '__main__':
                     psty_options['export_path'] = a
                 else:
                     raise Exception("Directory %s not found" % a)
+            elif o == '-s':
+                psty_options['sslcert'] = a
+            elif o == '-o':
+                psty_options['cors_allow'] = a
         if len(args) > 1:
             usage()
         if len(args) == 1:
@@ -1163,10 +1174,18 @@ if __name__ == '__main__':
     server_address = ('localhost', port)
 
     PstyRequestHandler.protocol_version = "HTTP/1.1"
-    PstyRequestHandler.proxy_address = server_address
     httpd = PstyServer(server_address, PstyRequestHandler)
+    sslcert = psty_options['sslcert']
+    if sslcert:
+        httpd.socket = ssl.wrap_socket(httpd.socket, certfile=sslcert, server_side=True)
+        PstyRequestHandler.proxy_address = 'https://%s:%d/' % server_address
+        psty_options['cors_allow'] = 'https://' + psty_options['cors_allow']
+    else:
+        PstyRequestHandler.proxy_address = 'http://%s:%d/' % server_address
+        psty_options['cors_allow'] = 'http://' + psty_options['cors_allow']
 
     sa = httpd.socket.getsockname()
     services = ", ".join([k[7:] for (k, v) in psty_options.items() if k.startswith('enable') and v])
-    print "Serving", services, "on", sa[0], "port", sa[1], "..."
+    sstatus = "HTTPS" if sslcert else "HTTP"
+    print "Serving %s on %s:%d over %s..." % (services, sa[0], sa[1], sstatus)
     httpd.serve_forever()

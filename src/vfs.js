@@ -3,6 +3,9 @@
  * This program is free software - see the file COPYING for license details.
  */
 
+pigshell.site.url = window.location.protocol + "//" + pigshell.site.name;
+pigshell.site.vurl = pigshell.site.url + "/v/" + pigshell.version.str + "/";
+
 var Sys = {
 };
 

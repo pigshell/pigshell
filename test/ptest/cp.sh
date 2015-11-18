@@ -129,7 +129,7 @@ function pstyfs_test {
     TMP3=$TMP0/bundletest1
     TMP4=$TMP0/linktest1
 
-    PSTYFS_URL=http://localhost:50937/
+    PSTYFS_URL=$(jf window.location.protocol 1)//localhost:50937/
 
     mkdir $TMP0 $TMP1 $TMP2 $TMP3 $TMP4 2>/dev/null
     rm -r $TMP1/*  2>/dev/null

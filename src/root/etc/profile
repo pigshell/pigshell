@@ -1,7 +1,15 @@
 # Common environment variables, utility functions
+
+# e.g. echo "foo bar baz" | read envvar; echo $envvar
 function read {
     jf -g 'sys.putenv(self, "'^$1^'", x)'
     return true
+}
+
+# Substitutes shell variables like $"varname in a string
+# Useful in scripts to substitute pigshell variables in "here documents"
+function varsub {
+    jf 'x.replace(/\$"([a-zA-Z0-9_]+)/mg, function r(m, p1) { return sys.getenv(self, p1).join(""); })'
 }
 
 # cat document files from gdrive as pdf

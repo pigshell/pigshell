@@ -80,13 +80,18 @@
     <script src="libs.js"></script>
     <script src="pigshell.js"></script>
     <script type="text/javascript">
-        var examples = [
+        var baseurl = pigshell.site.url,
+            examples = [
             ['Life expectancy map', 'cat http://pigshell.com/sample/life-expectancy.html | hgrep table.wikitable | table2js foo country data | iframe /usr/template/d3-worldmap1'],
             ['Life expectancy top 10', 'cat http://pigshell.com/sample/life-expectancy.html | table2js foo country data | sort -rnf data | head | printf "%(country)s %(data)s\\n"'],
             ['GDP (PPP) map', 'cat http://pigshell.com/sample/gdp-ppp.html | hgrep -r 0 table | table2js foo country data | jf \'x.data = x.data / 1000, x\' | iframe -o title="GDP PPP (thousand USD)",proj=orthographic /usr/template/d3-worldmap1'],
             ['Display image from URL', 'cat http://pigshell.com/sample/photos/bchips.jpg'],
             ['Display PDF from URL', 'cat http://pigshell.com/sample/clickingofcuthbert.pdf']
         ];
+        examples = examples.map(function(e) {
+            e[1] = e[1].replace("http://pigshell.com", baseurl);
+            return e;
+        });
         $(document).ready(function() {
             var ps = pigshell,
                 sorry = "Pigshell is known to  work on recent (~2013-14) versions of Firefox and Chrome. It is unlikely to work on other browsers like IE and platforms like the iPad.";

@@ -802,11 +802,11 @@ function dec_uri(str) {
 
 /*
  * URL encode only those characters which cause trouble when used as
- * pathname components. Currently, only /
+ * pathname components. Currently, only / and :
  */
 
 function enc_uri_path(str) {
-    return str.replace(/[\/%]/g, function(c) {
+    return str.replace(/[\/:%]/g, function(c) {
         return "%" + c.charCodeAt(0).toString(16);
     });
 }
@@ -1390,11 +1390,7 @@ function loadjs(url, opts, cb) {
             scriptlist.push(this.src.toString());
         }
     });
-    var baseuri = URI.parse(pigshell_baseurl);
-    if (!baseuri.isAbsolute()) {
-        baseuri = URI.parse(window.location.href);
-    }
-    baseuri.setFragment("");
+    var baseuri = URI.parse(pigshell.site.url + "/");
     async.forEachSeries(urllist, function(u, acb) {
         var uri = URI.parse(u);
         if (!uri.isAbsolute()) {

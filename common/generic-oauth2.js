@@ -50,23 +50,40 @@ function OAuth2(options) {
 }
 
 OAuth2.prototype.recvmsg = function(event) {
+    var self = this;
+
     if (event.origin !== "http://" + window.location.hostname &&
         event.origin !== "https://" + window.location.hostname) {
         return;
     }
     var msg = event.data;
     if (!msg || (msg.hash === undefined || msg.search === undefined ||
-        !msg.name || msg.name !== this.name)) {
+        !msg.name || msg.name !== self.name)) {
         return;
     }
     var hp = parseqs(msg.hash.slice(1)),
-        sp = parseqs(msg.search.slice(1));
+        sp = parseqs(msg.search.slice(1)),
+        res;
 
-    if (!hp['access_token'] && !hp['error'] && !sp['error']) {
+    self.cleanup();
+
+    if (!hp.access_token && !hp.error && !sp.error) {
         console.log("Unknown message: ", msg);
-        return this.process_msg({'error': 'Unknown'});
+        res = {error: "Unknown"};
+    } else if (sp.error) {
+        res = sp;
+    } else if (hp.error) {
+        res = hp;
+    } else if (hp.state !== self.state) {
+        res = {error: "State mismatch"};
+    } else {
+        res = hp;
     }
-    this.process_msg(sp.error ? sp : hp);
+    if (self.onlogin) {
+        self.onlogin(res.error || null, res);
+    } else {
+        console.log("onlogin not set!");
+    }
 };
 
 function makeqs(opts) {
@@ -95,8 +112,8 @@ function parseqs(str) {
 OAuth2.prototype.login = function(cb) {
     var self = this;
     self.state = Math.random().toString(36).substr(2);
-    self.oauth2['state'] = self.state;
-    self.name = self.name + self.state;
+    self.oauth2.state = self.state;
+    self.name = window.location.protocol + self.name + self.state;
     var qs = makeqs(self.oauth2),
         url = self.url + '?' + qs;
 
@@ -133,20 +150,6 @@ OAuth2.prototype.login = function(cb) {
     }
 };
 
-OAuth2.prototype.process_msg = function(msg) {
-    var self = this;
-
-    self.cleanup();
-    if (msg.state && msg.state !== self.state) {
-        msg = {'error': 'State mismatch'};
-    }
-    if (self.onlogin) {
-        self.onlogin(msg.error || null, msg);
-    } else {
-        console.log("onlogin not set!");
-    }
-};
-
 OAuth2.prototype.cleanup = function() {
     var self = this;
 
@@ -178,10 +181,12 @@ function sendmsg() {
         name: window.name || '',
         search: window.location.search || '',
         hash: window.location.hash || ''
-    };
-    opener.postMessage(msg, "http://" + window.location.hostname);
+    },
+    proto = window.name.match(/^(http[s]?:)/)[1];
+    opener.postMessage(msg, proto + "//" + window.location.hostname);
 }
 
-if (window.name.match(/^oauth2-win/)) {
+
+if (window.name.match(/^http[s]?:oauth2-win/)) {
     sendmsg();
 }

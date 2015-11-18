@@ -51,15 +51,17 @@ Wsh.prototype.next = check_next(do_docopt(function() {
     }
 
     self.inited = true;
-    var server = "ws://127.0.0.1:50937"; // TODO Make this configurable
+    var wsuri = URI.parse(VFS.lookup_tx("proxy").uri);
+    wsuri.scheme(wsuri.scheme() === "http" ? "ws" : "wss");
+    var server = wsuri.toString();
 
     var cmdstr = $.param({cmd: [self.docopts['<cmd>']].concat(self.docopts['<arg>'])}),
         pwd = self.pwd(),
         pwdcomps = pwd.split('/'),
-        dir = '/';
+        dir = '';
 
     if (pwdcomps[1] === 'home') {
-        dir = dir + pwdcomps.slice(2).join('/');
+        dir = pwdcomps.slice(2).join('/');
     }
     try {
         self.ws = new WebSocket(server + dir + '?' + cmdstr);

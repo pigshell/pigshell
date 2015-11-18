@@ -26,7 +26,6 @@ VERSION_GIT = $(shell git rev-list --max-count=1 HEAD)
 
 CHECK_SOURCES = src/mimeMap.js\
     src/pigutils.js\
-    src/cache.js\
     src/vfs.js\
     src/jsonfs.js\
     src/uploads.js\
@@ -40,9 +39,9 @@ CHECK_SOURCES = src/mimeMap.js\
     src/lstorfs.js\
     src/facebook.js\
     src/dev.js\
+    src/init.js\
     common/generic-oauth2.js\
     src/auth.js\
-    src/init.js\
     src/httpfs.js\
     src/httptx.js\
     src/uri.js\
@@ -95,7 +94,7 @@ etc/httpd-vhosts.conf: etc/httpd-vhosts.conf.in src/version.js
 	sed 's,PATH_TO_PIGSHELL,$(CURDIR),g;s,PIGSHELL_VERSION,$(VERSION_STR),g' < $< >$@
 
 src/version.js: FORCE
-	@printf '!function(){ var pigshell = {version: {str: "%s", major: %d, minor: %d, patch: %d, git: "%s"}, site: {name: "%s", url: "%s"}};\n' $(VERSION_STR) $(VERSION_MAJOR) $(VERSION_MINOR) $(VERSION_PATCH) $(VERSION_GIT) $(SITE_NAME) $(SITE_URL) >$@.mk
+	@printf '!function(){ var pigshell = {version: {str: "%s", major: %d, minor: %d, patch: %d, git: "%s"}, site: {name: "%s"}};\n' $(VERSION_STR) $(VERSION_MAJOR) $(VERSION_MINOR) $(VERSION_PATCH) $(VERSION_GIT) $(SITE_NAME) >$@.mk
 	@cmp $@ $@.mk >/dev/null 2>&1 || mv $@.mk $@
 	@rm -f $@.mk 
 

@@ -114,5 +114,5 @@ HttpTX.prototype.DELETE = function(url, opts, cb) {
 
 VFS.register_handler("HttpTX", HttpTX);
 VFS.register_tx_handler("direct", "HttpTX", {"uri": ""});
-VFS.register_tx_handler("proxy", "HttpTX", {"uri": "http://localhost:50937/"});
-VFS.register_tx_handler("fallthrough", "HttpTX", {"uri": "http://localhost:50937/", "fallthrough": true});
+VFS.register_tx_handler("proxy", "HttpTX", {"uri": window.location.protocol + "//localhost:50937/"});
+VFS.register_tx_handler("fallthrough", "HttpTX", {"uri": window.location.protocol + "//localhost:50937/", "fallthrough": true});

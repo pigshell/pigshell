@@ -188,7 +188,7 @@ Iframe.prototype.next = check_next(do_docopt(objargs(function(opts, cb) {
         }
         if (self.proto && !self.config_sent) {
             self.config_sent = true;
-            sendmsg('config', {opts: self.cliopts, pigshell_baseurl: pigshell_baseurl});
+            sendmsg('config', {opts: self.cliopts});
         }
         if (self.proto && self.next_pending) {
             self.next_pending = false;
