@@ -14,6 +14,13 @@ inherit(PicasaFS, HttpFS);
 PicasaFS.defaults = { "tx": "direct" };
 PicasaFS.lookup_uri = HttpFS.lookup_uri;
 
+PicasaFS.rooturi = function(opts) {
+    var ainfo = VFS.lookup_auth_handler("google").handler.get_auth(opts.user),
+        userinfo = ainfo.userinfo,
+        rooturi = "https://picasaweb.google.com/data/feed/api/user/" +
+            userinfo.id + "/";
+    return rooturi;
+};
 
 PicasaFS.prototype.access_token = function() {
     var auth = this.auth_handler.get_auth(this.opts.user);
@@ -482,12 +489,12 @@ function picasa_getmime(raw) {
     return known[raw.category[0].term] || null;
 }
 
-VFS.register_handler("PicasaFS", PicasaFS);
+VFS.register_handler("picasa", PicasaFS);
 VFS.register_handler("PicasaUser", PicasaUser);
 VFS.register_handler("PicasaAlbum", PicasaAlbum);
 VFS.register_handler("PicasaPhoto", PicasaPhoto);
 
-VFS.register_uri_handler("https://picasaweb.google.com/data/", "PicasaFS", {});
+VFS.register_uri_handler("https://picasaweb.google.com/data/", "picasa", {});
 VFS.register_media_handler("application/vnd.pigshell.picasa.user", "PicasaUser", {});
 VFS.register_media_handler("application/vnd.pigshell.picasa.album", "PicasaAlbum", {});
 VFS.register_media_handler("application/vnd.pigshell.picasa.photo", "PicasaPhoto", {});

@@ -301,57 +301,28 @@ function setup_authbuttons(service) {
     });
 }
 
-[["google", "gdrive", "https://www.googleapis.com/drive/v2/files/root"],
- ["dropbox", "dropbox", "https://api.dropbox.com/1/metadata/dropbox/"],
- ["windows", "onedrive", "https://apis.live.net/v5.0/me/skydrive/"]].forEach(function(f) {
-    var authname = f[0],
-        fsname = f[1],
-        rooturi = f[2];
+var automounts = {
+    "google": ["gdrive", "picasa"],
+    "dropbox": ["dropbox"],
+    "windows": ["onedrive"]
+};
 
-    subscribe("auth.login", function(a) {
-        if (a.network !== authname) {
-            return;
-        }
-            
-        var authinfo = VFS.lookup_auth_handler(authname).handler.get_auth(a.user),
-            userinfo = authinfo.userinfo,
-            cmd = sprintf("mkdir /%s/%s; mount -o user=%s %s /%s/%s", fsname,
-                a.user, a.user, rooturi, fsname, a.user);
-        popen(cmd, {}, null, {shopts: "-sc"}).read({}, function(){});
-    });
-
-    subscribe("auth.logout", function(a) {
-        if (a.network !== authname) {
-            return;
-        }
-        var cmd = sprintf("umount /%s/%s", fsname, a.user);
+subscribe("auth.login", function(a) {
+    var fslist = automounts[a.network] || [];
+    fslist.forEach(function(fs) {
+        var cmd = sprintf("mkdir /%s/%s; mount -t %s -o user=%s /%s/%s",
+            fs, a.user, fs, a.user, fs, a.user);
         popen(cmd, {}, null, {shopts: "-sc"}).read({}, function(){});
     });
 });
-    
-    
-function automount_picasa() {
-    subscribe("auth.login", function(a) {
-        if (a.network !== "google") {
-            return;
-        }
-        var authinfo = VFS.lookup_auth_handler("google").handler.get_auth(a.user),
-            userinfo = authinfo.userinfo,
-            picasacmd = sprintf("mkdir /picasa/%s; mount -o user=%s https://picasaweb.google.com/data/feed/api/user/%s/ /picasa/%s", a.user, a.user,
-                userinfo.id, a.user);
-        popen(picasacmd, {}, null, {shopts: "-sc"}).read({}, function(){});
-    });
 
-    subscribe("auth.logout", function(a) {
-        if (a.network !== "google") {
-            return;
-        }
-        var cmd = sprintf("umount /picasa/%s", a.user);
+subscribe("auth.logout", function(a) {
+    var fslist = automounts[a.network] || [];
+    fslist.forEach(function(fs) {
+        var cmd = sprintf("umount /%s/%s", fs, a.user);
         popen(cmd, {}, null, {shopts: "-sc"}).read({}, function(){});
     });
-}
-
-automount_picasa();
+});
 
 // FILE UPLOAD START
 function startupload(cb) {

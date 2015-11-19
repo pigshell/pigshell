@@ -188,6 +188,7 @@
     "cookbdl": false,
     "islink": false,
     "optstr_make": false,
-    "popen": false
+    "popen": false,
+    "loadhandler": false
     }
 }

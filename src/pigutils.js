@@ -1234,7 +1234,7 @@ function loadscripts(next) {
         var self = this,
             args = [].slice.call(arguments),
             cb = (self instanceof Command) ? self.exit : args[args.length - 1],
-            self2 = (self instanceof Command) ? self.constructor : self;
+            self2 = self.constructor || self;
         if (self2.scripts && self2._scripts_loaded === undefined) {
             loadjs(self2.scripts, {}, function(err, res) {
                 if (err) {
@@ -1412,6 +1412,29 @@ function loadjs(url, opts, cb) {
     }, function(err) {
         return cb(err);
     });
+}
+
+/*
+ * Loads handler JS from /usr/src if not already present. Called in the
+ * context of a command.
+ */
+
+function loadhandler(name, cb) {
+    var self = this;
+
+    var handler = VFS.lookup_handler(name);
+    if (handler) {
+        return cb(null, handler);
+    }
+    fread.call(self, "/usr/src/" + name + ".js", ef(cb, function(data) {
+        to("text", data, {}, ef(cb, function(js) {
+            eval(js);
+            if (!VFS.lookup_handler(name)) {
+                return cb("Loaded " + name + " but not registered?!");
+            }
+            return cb(null, null);
+        }));
+    }));
 }
 
 /*

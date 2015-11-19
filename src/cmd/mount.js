@@ -18,10 +18,12 @@ inherit(Mount, Command);
 Mount.prototype.usage = 'mount        -- mount filesystem\n\n' +
     'Usage:\n' +
     '    mount [-o <opts>] <uri> <dir>\n' +
+    '    mount [-o <opts>] -t <fstype> <dir>\n' +
     '    mount [-h | --help]\n\n' +
     'Options:\n' +
-    '    -h --help    Show this message.\n' +
-    '    -o <opts>    Mount options\n' +
+    '   -h --help     Show this message.\n' +
+    '   -t <fstype>   File system type\n' +
+    '   -o <opts>     Mount options\n' +
     '   <uri>         URI to mount as root\n' +
     '   <dir>         Mountpoint\n';
 
@@ -30,9 +32,10 @@ Mount.prototype.next = check_next(do_docopt(function() {
         dir = self.docopts['<dir>'],
         optstring = self.docopts['-o'] || "",
         uri = self.docopts['<uri>'],
+        fstype = self.docopts['-t'],
         opts = optstr_parse(optstring);
 
-    if (!uri) {
+    if (!dir) {
         var mounts = self.shell.ns.mountlist(),
             list = [];
         list = Object.keys(mounts).map(function(m) {
@@ -47,9 +50,26 @@ Mount.prototype.next = check_next(do_docopt(function() {
         return self.output(list.join('\n') + '\n');
     }
 
-    mount_uri.call(self, uri, dir, opts, self.shell, function(err, res) {
-        return self.exit(err);
-    });
+    if (fstype) {
+        loadhandler.call(self, fstype, function(err, res) {
+            if (err) {
+                return self.exit(err);
+            }
+            var handler = VFS.lookup_handler(fstype),
+                rooturi = handler.rooturi ? handler.rooturi(opts) : null;
+            if (!rooturi) {
+                return self.exit(err);
+            }
+            mount_uri.call(self, rooturi, dir, opts, self.shell,
+                function(err, res) {
+                return self.exit(err);
+            });
+        });
+    } else {
+        mount_uri.call(self, uri, dir, opts, self.shell, function(err, res) {
+            return self.exit(err);
+        });
+    }
 }));
 
 Command.register("mount", Mount);

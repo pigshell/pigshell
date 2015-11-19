@@ -26,6 +26,10 @@ DropboxFS.defaults = {
     linkext: "href",
 };
 
+DropboxFS.rooturi = function(opts) {
+    return "https://api.dropbox.com/1/metadata/dropbox/";
+};
+
 DropboxFS.prototype.access_token = function() {
     var auth = this.auth_handler.get_auth(this.opts.user);
 
@@ -244,5 +248,5 @@ DropboxFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
     });
 };
 
-VFS.register_handler("DropboxFS", DropboxFS);
-VFS.register_uri_handler("https://api.dropbox.com/1/metadata/dropbox", "DropboxFS", {});
+VFS.register_handler("dropbox", DropboxFS);
+VFS.register_uri_handler("https://api.dropbox.com/1/metadata/dropbox", "dropbox", {});

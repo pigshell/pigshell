@@ -26,6 +26,10 @@ OneDriveFS.defaults = {
     linkext: "href",
 };
 
+OneDriveFS.rooturi = function(opts) {
+    return "https://apis.live.net/v5.0/me/skydrive/";
+};
+
 OneDriveFS.prototype.access_token = function() {
     var auth = this.auth_handler.get_auth(this.opts.user);
 
@@ -219,5 +223,5 @@ OneDriveFS.prototype.rename = function(srcfile, srcdir, sfilename, dstdir,
     });
 };
 
-VFS.register_handler("OneDriveFS", OneDriveFS);
-VFS.register_uri_handler("https://apis.live.net/v5.0", "OneDriveFS", {});
+VFS.register_handler("onedrive", OneDriveFS);
+VFS.register_uri_handler("https://apis.live.net/v5.0", "onedrive", {});

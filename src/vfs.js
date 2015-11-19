@@ -32,6 +32,10 @@ var VFS = {
         return null;
     },
 
+    lookup_handler: function(name) {
+        return VFS.handler[name];
+    },
+
     /*
      * Converts URI to a file object. URI may have embedded options as hash
      * fragment, or explicitly supplied as in the case of mount.

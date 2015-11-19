@@ -27,17 +27,24 @@ GDriveFS.defaults = {
     },
 };
 
+GDriveFS.rooturi = function(opts) {
+    return "https://www.googleapis.com/drive/v2/files/root";
+};
+
 GDriveFS.prototype.docmimes = [
     'application/vnd.google-apps.document',
     'application/vnd.google-apps.spreadsheet',
     'application/vnd.google-apps.presentation',
     'application/vnd.google-apps.form',
-    'application/vnd.google-apps.drawing' ];
+    'application/vnd.google-apps.drawing'
+];
+
 GDriveFS.prototype.officemimes = [
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/vnd.openxmlformats-officedocument.presentationml.presentation'
 ];
+
 GDriveFS.prototype.extlist = ['docx', 'xlsx', 'pptx', 'doc', 'xls', 'ppt'];
 GDriveFS.prototype.rooturi = 'https://www.googleapis.com/drive/v2/files/root';
 GDriveFS.prototype.synthdirs = {
@@ -462,10 +469,10 @@ GDriveFile.prototype.link = function(str, linkname, opts, cb) {
     return self.putdir(linkname + "." + self.fs.opts.linkext, str, opts, cb);
 };
 
-VFS.register_handler("GDriveFS", GDriveFS);
+VFS.register_handler("gdrive", GDriveFS);
 VFS.register_handler("GDriveDoc", GDriveDoc);
 
-VFS.register_uri_handler("https://www.googleapis.com/drive/v2", "GDriveFS", {});
+VFS.register_uri_handler("https://www.googleapis.com/drive/v2", "gdrive", {});
 VFS.register_media_handler("application/vnd.google-apps.folder", "Dir", {cache_time: 5 * 60 * 1000});
 VFS.register_media_handler("application/vnd.google-apps.presentation", "GDriveDoc", {});
 VFS.register_media_handler("application/vnd.google-apps.spreadsheet", "GDriveDoc", {});
