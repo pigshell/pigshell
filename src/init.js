@@ -151,6 +151,7 @@ function mountcloud(opts, cb) {
     setup_authbuttons("google");
     setup_authbuttons("dropbox");
     setup_authbuttons("windows");
+    setup_authbuttons("amazon");
     return cb(null);
 }
 
