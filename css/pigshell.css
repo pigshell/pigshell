@@ -181,7 +181,16 @@
     height: 4em;
     font-size: 12px;
 }
+.pigshell .dsbuttons button i {
+    font-size: 2.5em;
+}
 .pigshell .dsbuttons button::-moz-focus-inner { border: 0; padding: 0; margin:0; }
+.pigshell [class^="icon-"]:before, [class*=" icon-"]:before {
+    margin-left: 0;
+    margin-right: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
 
 .pigshell .fbenabled {
     color: #3b5998;
@@ -200,7 +209,11 @@
 }
 
 .pigshell .windows_enabled {
-    color: #0078d7
+    color: #0078d7;
+}
+
+.pigshell .amazon_enabled {
+    color: #f28010;
 }
 
 .pigshell .dspopover {

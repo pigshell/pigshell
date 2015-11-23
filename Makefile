@@ -73,7 +73,7 @@ CSS_FILES = css/pigshell.css\
 	css/pmarkdown.css\
 	css/codemirror.css\
 	css/bootstrap.css\
-	css/font-awesome.css
+	css/fontello-embedded.css
 
 USRDOCS = $(addprefix $(USRDOCDIR)/,$(patsubst %.md,%.html,$(notdir $(wildcard src/doc/*.md))))
 
