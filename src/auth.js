@@ -40,6 +40,8 @@ OA2Client.prototype.get_params = function(name, centry, opts) {
     opts2.url = self.opts.auth_url;
     opts2.force = force;
     opts2.display = display;
+    opts2.popupWidth = self.opts.popupWidth;
+    opts2.popupHeight = self.opts.popupHeight;
     opts2.scope = scope;
     oauth2.scope = scope.map(function(s) { return self.opts.scope_map[s]; })
         .filter(function(s) { return !!s; })
@@ -268,7 +270,8 @@ DropboxOA2.defaults = {
     scope_sep: " ",
     auth_url: "https://www.dropbox.com/1/oauth2/authorize",
     userinfo_url: "https://api.dropbox.com/1/account/info?access_token=",
-    redirect_uri: "https://" + pigshell.site.name + "/common/oauth2_redirect.html"
+    redirect_uri: "https://" + pigshell.site.name + "/common/oauth2_redirect.html",
+    popupHeight: 550
 };
 
 DropboxOA2.prototype.get_params = function(name, centry, opts) {
@@ -347,7 +350,7 @@ VFS.register_handler("WindowsAuth", new WindowsOA2());
 VFS.register_auth_handler("windows", "WindowsAuth");
 
 var AmazonOA2 = function(opts) {
-    this.name = "google";
+    this.name = "amazon";
     AmazonOA2.base.call(this, opts);
 };
 
@@ -355,15 +358,17 @@ inherit(AmazonOA2, OA2Client);
 
 AmazonOA2.defaults = {
     cache: "amazon-oauth2",
-    client_id: "amzn1.application.990b550877e24a258b32e400b6e53304",
+    client_id: "amzn1.application-oa2-client.814724a1168844f5bcb1bb59e98cc906",
     scope_map: {
         basic: "profile"
     },
     scope_sep: " ",
     scope: ["basic"],
     auth_url: "https://www.amazon.com/ap/oa",
-    userinfo_url: "https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=",
-    redirect_uri: pigshell.site.url + "/common/oauth2_redirect.html"
+    userinfo_url: "https://api.amazon.com/user/profile?access_token=",
+    redirect_uri: "https://" + pigshell.site.name + "/common/oauth2_redirect.html",
+    popupWidth: 800,
+    popupHeight: 550
 };
 
 VFS.register_handler("AmazonAuth", new AmazonOA2());
