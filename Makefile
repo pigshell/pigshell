@@ -51,7 +51,10 @@ CHECK_SOURCES = src/mimeMap.js\
     src/picasa.js\
     src/gdrive.js\
     src/dropbox.js\
-    src/onedrive.js
+    src/onedrive.js\
+    src/s3.js
+
+CHECK_USR_SOURCES =
 
 LIB_SOURCES = src/lib/jquery-1.7.2.js\
     src/lib/jquery.ba-resize.js\
@@ -136,6 +139,7 @@ src/commands.js: $(shell ls src/cmd/*js)
 
 check: $(CHECK_SOURCES)
 	jshint --config jshintrc $(CHECK_SOURCES)
+	jshint --config jshintrc $(CHECK_USR_SOURCES)
 
 clean:
 	rm -f $(DOCS) $(USRDOCS) usr/doc/README.html $(MANPAGES) $(ROOT) $(PIGSHELL) $(LIBS) $(PARSER) $(CSS) src/version.js src/commands.js etc/httpd-vhosts.conf

@@ -76,6 +76,16 @@ function to(dtype, item, opts, cb) {
         stype = 'blob';
     } else if (item.constructor === Object) {
         stype = 'object';
+    } else if (item instanceof Uint8Array ||
+        item instanceof Int8Array ||
+        item instanceof Uint8ClampedArray ||
+        item instanceof Int16Array ||
+        item instanceof Uint16Array ||
+        item instanceof Int32Array ||
+        item instanceof Uint32Array ||
+        item instanceof Float32Array ||
+        item instanceof Float64Array) {
+        stype = 'arraybuffer';
     } else {
         // TODO Handle arraybuffers some day
         return cb('Converter not found for item');

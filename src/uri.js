@@ -15,7 +15,7 @@ var URI = {
     },
 
     parse: function(uri) {
-        var x = uri.match(/^([a-z]+):[^ ]/),
+        var x = uri.match(/^([a-z][a-z0-9]*):[^ ]/),
             scheme = x ? x[1]: 'unknown',
             parser = this.uri_parsers[scheme] || this.uri_parsers['unknown'];
 

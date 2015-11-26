@@ -189,6 +189,7 @@
     "islink": false,
     "optstr_make": false,
     "popen": false,
-    "loadhandler": false
+    "loadhandler": false,
+    "AWS": false
     }
 }

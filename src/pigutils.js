@@ -1234,8 +1234,8 @@ function loadscripts(next) {
         var self = this,
             args = [].slice.call(arguments),
             cb = (self instanceof Command) ? self.exit : args[args.length - 1],
-            self2 = self.constructor || self;
-        if (self2.scripts && self2._scripts_loaded === undefined) {
+            self2 = self.scripts ? self : self.constructor.scripts ? self.constructor : null;
+        if (self2 && self2._scripts_loaded === undefined) {
             loadjs(self2.scripts, {}, function(err, res) {
                 if (err) {
                     return cb.call(self, err);
