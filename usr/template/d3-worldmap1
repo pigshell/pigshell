@@ -131,14 +131,14 @@ echo '[{"country": 356, "data": 100}, {"country": "Antarctica", "data": 0}]'| jf
         <div class="hint">mousewheel to zoom, drag to rotate</div>
         </div>
     </div>
-<script src="//pigshell.com/common/lib/jquery-1.7.2/jquery-1.7.2.min.js"></script>
-<script src="//pigshell.com/common/lib/d3-3.4.1/d3.v3.min.js"></script>
-<script src="//pigshell.com/common/lib/d3-3.4.1/d3.geo.projection.v0.min.js"></script>
-<script src="//pigshell.com/common/lib/d3-3.4.1/topojson.v1.min.js"></script>
-<script src="//pigshell.com/common/lib/d3-3.4.1/colorbrewer.v1.min.js"></script>
-<script src="//pigshell.com/common/lib/d3-3.4.1/queue.v1.min.js"></script>
-<script src="//pigshell.com/common/lib/d3-3.4.1/d3.geo.zoom.js"></script>
-<script src="//pigshell.com/extra/pframe.v0.js"></script>
+<script src="//dev.pigshell.com/common/lib/jquery-1.7.2/jquery-1.7.2.min.js"></script>
+<script src="//dev.pigshell.com/common/lib/d3-3.4.1/d3.v3.min.js"></script>
+<script src="//dev.pigshell.com/common/lib/d3-3.4.1/d3.geo.projection.v0.min.js"></script>
+<script src="//dev.pigshell.com/common/lib/d3-3.4.1/topojson.v1.min.js"></script>
+<script src="//dev.pigshell.com/common/lib/d3-3.4.1/colorbrewer.v1.min.js"></script>
+<script src="//dev.pigshell.com/common/lib/d3-3.4.1/queue.v1.min.js"></script>
+<script src="//dev.pigshell.com/common/lib/d3-3.4.1/d3.geo.zoom.js"></script>
+<script src="//dev.pigshell.com/extra/pframe.v0.js"></script>
 <script>
 
 var width = 960,
@@ -285,8 +285,8 @@ function main(data) {
 
         
     queue()
-        .defer(d3.json, "//pigshell.com/common/d3.v3/world-110m.json")
-        .defer(d3.json, "//pigshell.com/common/d3.v3/countries.json")
+        .defer(d3.json, "//dev.pigshell.com/common/d3.v3/world-110m.json")
+        .defer(d3.json, "//dev.pigshell.com/common/d3.v3/countries.json")
         .await(loaded);
 
     function loaded(err, world, countrydb) {

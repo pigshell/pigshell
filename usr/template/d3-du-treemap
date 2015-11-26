@@ -75,9 +75,9 @@ rect.parent,
 <body>
 <div id="chart"></div>
 
-<script src="//pigshell.com/common/lib/jquery-1.7.2/jquery-1.7.2.min.js"></script>
-<script src="//pigshell.com/common/lib/d3-3.4.1/d3.v3.min.js"></script>
-<script src="//pigshell.com/extra/pframe.v0.js"></script>
+<script src="//dev.pigshell.com/common/lib/jquery-1.7.2/jquery-1.7.2.min.js"></script>
+<script src="//dev.pigshell.com/common/lib/d3-3.4.1/d3.v3.min.js"></script>
+<script src="//dev.pigshell.com/extra/pframe.v0.js"></script>
 <script>
 
 function readablesize(bytes) {
