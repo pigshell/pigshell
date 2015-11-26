@@ -91,6 +91,7 @@ HttpFile.prototype.getmeta = function(opts, cb) {
     self.fs.tx.HEAD(self.ident, opts, ef(cb, function(res) {
         var headers = header_dict(res),
             meta = self._process_headers(headers);
+            meta.mime = meta.mime || "application/octet-stream";
         return cb(null, meta);
     }));
 };
