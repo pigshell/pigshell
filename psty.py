@@ -99,10 +99,11 @@ class WException(Exception):
 
 def guard(f):
     def decorator(self, *args, **kwargs):
-        origin = self.headers.getheader("origin") or self.headers.getheader("referer") or ""
+        origin = self.headers.getheader("origin") or ""
         if not origin or origin.find(psty_options["cors_allow"]) != 0:
             return self.send_error(403, "Bad origin")
         if self.proxy_re.match(self.path):
+            print "MATCHED SELF PATH", self.command, self.path
             if not psty_options["enable_proxy"]:
                 return self.send_error(403, "Proxy service not enabled")
             if self.command == 'OPTIONS':
@@ -152,6 +153,10 @@ class PstyRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     @guard
     def do_DELETE(self):
         self.send_error(403, "DELETE not implemented")
+
+    @guard
+    def do_PUT(self):
+        self.send_error(403, "PUT not implemented")
 
     @guard
     def do_GET(self):

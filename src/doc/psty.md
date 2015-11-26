@@ -144,6 +144,23 @@ prefer pure client-side, self-scaling architectures (basically we don't want the
 headache of maintaining a server) _Psty_ lets us do all these things while
 still being easy to deploy and use.
     
+HTTPS
+-----
+
+If _pigshell_ is being served from an https domain, then we need to run
+_psty_ in https mode as well, otherwise browsers complain bitterly about
+mixed content. First generate a self-signed certificate for localhost:
+
+    bash$ openssl req -new -x509 -keyout localhost.pem -out localhost.pem -days 365 -nodes -subj /CN=localhost
+
+Now run psty as follows:
+
+    bash$ python psty.py -a -d /tmp/scratch -s localhost.pem
+
+You may want to visit https://localhost:50937/ once directly from the browser
+and click until it accepts the self-signed certificate and stores a permanent
+exception.
+
 Security
 --------
 
